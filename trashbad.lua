@@ -52,9 +52,9 @@ local AutoBuyZone = false
 local SelectedBall = "Beach"
 local SelectedEgg = "Tree"
 local SelectedZone = "1"
-local SelectedWinZone = "1" -- Отдельная зона для побед
+local SelectedWinZone = "1"
+local SelectedBuyZone = "1"
 
--- Списки
 local AllBalls = {
     "Aurion Nova", "Basic", "Beach", "Bomb", "Camo", "Candy", "Crystal", "Electric Ball", 
     "Enchanted", "Galaxy", "Halloween", "Hauntkin", "Hologramic", "Ice", "Magic", 
@@ -74,17 +74,11 @@ local AllEggs = {
 
 local AllZones = {"1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16"}
 
--- Функции
 local function equipBall(ballName)
     pcall(function()
         local success, result = pcall(function()
             return InvokeServerAction:InvokeServer("Balls", "Equip", ballName)
         end)
-        if success then
-            print("✅ Equipped: " .. ballName)
-        else
-            print("❌ Failed to equip: " .. ballName)
-        end
     end)
 end
 
@@ -101,38 +95,26 @@ local function openEgg(eggName, amount)
                 }
             )
         end)
-        if success then
-            print("🥚 Opened " .. (amount or "max") .. " " .. eggName .. " eggs")
-        else
-            print("❌ Failed to open " .. eggName)
-        end
     end)
 end
 
-local function buyZone()
+local function buyZone(zoneNumber)
     pcall(function()
         local success, result = pcall(function()
-            return InvokeServerAction:InvokeServer("Zone", "Purchase")
+            return InvokeServerAction:InvokeServer("Zone", "Purchase", zoneNumber)
         end)
-        if success then
-            print("🗺️ Zone purchased!")
-        else
-            print("❌ Failed to buy zone")
-        end
     end)
 end
 
 local function train(zoneNumber, trainType)
     pcall(function()
         RequestServerAction:FireServer("Gameplay", "Train", {trainType, zoneNumber})
-        print("🏋️ Training type " .. trainType .. " in zone " .. zoneNumber)
     end)
 end
 
 local function win(zoneNumber)
     pcall(function()
         InvokeServerAction:InvokeServer("Gameplay", "Win", zoneNumber)
-        print("🏆 Win in zone " .. zoneNumber)
     end)
 end
 
@@ -212,14 +194,12 @@ AutoSection:AddToggle({
     end,
 })
 
--- Настройки побед
 WinSection:AddDropdown({
     Title = "Select Win Zone",
     Values = AllZones,
     Default = '1',
     Callback = function(value)
         SelectedWinZone = value
-        print("🎯 Selected win zone: " .. value)
     end,
 })
 
@@ -230,14 +210,12 @@ WinSection:AddButton({
     end,
 })
 
--- Настройки тренировки
 TrainSection:AddDropdown({
     Title = "Select Training Zone",
     Values = AllZones,
     Default = '1',
     Callback = function(value)
         SelectedZone = value
-        print("🎯 Selected training zone: " .. value)
     end,
 })
 
@@ -327,7 +305,6 @@ AutoBallsSection:AddDropdown({
     end,
 })
 
--- Ручная экипировка
 ManualBallsSection:AddDropdown({
     Title = "Select Ball to Equip",
     Values = AllBalls,
@@ -374,7 +351,6 @@ local ManualEggsSection = EggsTab:AddSection({
     Title = "Manual Eggs"
 });
 
--- Auto Open All Eggs
 AutoEggsSection:AddToggle({
     Title = "Auto Open All Eggs",
     Default = false,
@@ -395,7 +371,6 @@ AutoEggsSection:AddToggle({
     end,
 })
 
--- Auto Open Selected Egg
 AutoEggsSection:AddToggle({
     Title = "Auto Open Selected Egg",
     Default = false,
@@ -412,7 +387,6 @@ AutoEggsSection:AddToggle({
     end,
 })
 
--- Dropdown для выбора яйца
 AutoEggsSection:AddDropdown({
     Title = "Select Egg to Auto Open",
     Values = AllEggs,
@@ -422,7 +396,6 @@ AutoEggsSection:AddDropdown({
     end,
 })
 
--- Ручное открытие яиц
 ManualEggsSection:AddDropdown({
     Title = "Select Egg to Open",
     Values = AllEggs,
@@ -467,16 +440,25 @@ local ManualZonesSection = ZonesTab:AddSection({
     Title = "Manual Zones"
 });
 
+AutoZonesSection:AddDropdown({
+    Title = "Select Zone to Purchase",
+    Values = AllZones,
+    Default = '1',
+    Callback = function(value)
+        SelectedBuyZone = value
+    end,
+})
+
 -- Auto Buy Zone
 AutoZonesSection:AddToggle({
-    Title = "Auto Buy Zone",
+    Title = "Auto Buy Selected Zone",
     Default = false,
     Callback = function(value)
         AutoBuyZone = value
         if value then
             spawn(function()
                 while AutoBuyZone do
-                    buyZone()
+                    buyZone(tonumber(SelectedBuyZone))
                     wait(0.5)
                 end
             end)
@@ -486,19 +468,31 @@ AutoZonesSection:AddToggle({
 
 -- Manual Zone Buttons
 ManualZonesSection:AddButton({
-    Title = "Buy Zone Once",
+    Title = "Buy Selected Zone Once",
     Callback = function()
-        buyZone()
+        buyZone(tonumber(SelectedBuyZone))
     end,
 })
 
 ManualZonesSection:AddButton({
-    Title = "Buy Zone 10 Times",
+    Title = "Buy Selected Zone 10 Times",
     Callback = function()
         spawn(function()
             for i = 1, 10 do
-                buyZone()
+                buyZone(tonumber(SelectedBuyZone))
                 wait(0.1)
+            end
+        end)
+    end,
+})
+
+ManualZonesSection:AddButton({
+    Title = "Buy All Zones Once",
+    Callback = function()
+        spawn(function()
+            for _, zoneNumber in ipairs(AllZones) do
+                buyZone(tonumber(zoneNumber))
+                wait(0.2)
             end
         end)
     end,
@@ -652,11 +646,13 @@ local StatusSection = SettingsTab:AddSection({
     Title = "Status"
 });
 
+-- Status Display
 local StatusParagraph = StatusSection:AddParagraph({
     Title = 'Current Status',
     Content = "Loading..."
 })
 
+-- Update status function
 local function updateStatus()
     local status = {}
     if AutoWin then table.insert(status, "Auto Win: ON (Zone "..SelectedWinZone..")") else table.insert(status, "Auto Win: OFF") end
@@ -665,7 +661,7 @@ local function updateStatus()
     if AutoEquipSelectedBall then table.insert(status, "Auto Equip "..SelectedBall..": ON") else table.insert(status, "Auto Equip "..SelectedBall..": OFF") end
     if AutoOpenAllEggs then table.insert(status, "Auto Open All Eggs: ON") else table.insert(status, "Auto Open All Eggs: OFF") end
     if AutoOpenSelectedEgg then table.insert(status, "Auto Open "..SelectedEgg..": ON") else table.insert(status, "Auto Open "..SelectedEgg..": OFF") end
-    if AutoBuyZone then table.insert(status, "Auto Buy Zone: ON") else table.insert(status, "Auto Buy Zone: OFF") end
+    if AutoBuyZone then table.insert(status, "Auto Buy Zone: ON (Zone "..SelectedBuyZone..")") else table.insert(status, "Auto Buy Zone: OFF") end
     if Noclip then table.insert(status, "Noclip: ON") else table.insert(status, "Noclip: OFF") end
     if SpeedEnabled then table.insert(status, "Speed: "..Speed) else table.insert(status, "Speed: OFF") end
     if JumpEnabled then table.insert(status, "Jump: "..Jump) else table.insert(status, "Jump: OFF") end
@@ -673,9 +669,10 @@ local function updateStatus()
     StatusParagraph:SetContent(table.concat(status, "\n"))
 end
 
+-- Configuration
 ConfigSection:AddParagraph({
     Title = 'Information',
-    Content = "Complete Auto Farm Script\n• 25 Balls\n• 43 Eggs\n• 16 Win Zones\n• 16 Training Zones\n• Auto Zones\n• Player Utilities"
+    Content = "Complete Auto Farm Script\n• 25 Balls\n• 43 Eggs\n• 16 Win Zones\n• 16 Training Zones\n• 16 Purchase Zones\n• Player Utilities"
 })
 
 ConfigSection:AddButton({
