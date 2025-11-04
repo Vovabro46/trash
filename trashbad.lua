@@ -41,6 +41,7 @@ local Workspace = game:GetService("Workspace")
 local InvokeServerAction = ReplicatedStorage.Events.InvokeServerAction
 local RequestServerAction = ReplicatedStorage.Events.RequestServerAction
 
+-- Auto Variables
 local AutoWin = false
 local AutoTrain = false
 local AutoRebirth = false
@@ -51,7 +52,9 @@ local AutoBuyZone = false
 local SelectedBall = "Beach"
 local SelectedEgg = "Tree"
 local SelectedZone = "1"
+local SelectedWinZone = "1" -- Отдельная зона для побед
 
+-- Списки
 local AllBalls = {
     "Aurion Nova", "Basic", "Beach", "Bomb", "Camo", "Candy", "Crystal", "Electric Ball", 
     "Enchanted", "Galaxy", "Halloween", "Hauntkin", "Hologramic", "Ice", "Magic", 
@@ -71,6 +74,7 @@ local AllEggs = {
 
 local AllZones = {"1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16"}
 
+-- Функции
 local function equipBall(ballName)
     pcall(function()
         local success, result = pcall(function()
@@ -125,9 +129,20 @@ local function train(zoneNumber, trainType)
     end)
 end
 
+local function win(zoneNumber)
+    pcall(function()
+        InvokeServerAction:InvokeServer("Gameplay", "Win", zoneNumber)
+        print("🏆 Win in zone " .. zoneNumber)
+    end)
+end
+
 -- ========== MAIN TAB ==========
 local AutoSection = MainTab:AddSection({
     Title = "Auto Features"
+});
+
+local WinSection = MainTab:AddSection({
+    Title = "Win Settings"
 });
 
 local TrainSection = MainTab:AddSection({
@@ -147,9 +162,7 @@ AutoSection:AddToggle({
         if value then
             spawn(function()
                 while AutoWin do
-                    pcall(function()
-                        InvokeServerAction:InvokeServer("Gameplay", "Win", 1)
-                    end)
+                    win(tonumber(SelectedWinZone))
                     wait(0.1)
                 end
             end)
@@ -167,7 +180,6 @@ AutoSection:AddToggle({
             spawn(function()
                 while AutoTrain do
                     pcall(function()
-                        -- Training всех 3 типов в выбранной зоне
                         train(tonumber(SelectedZone), 1)
                         wait(0.05)
                         train(tonumber(SelectedZone), 2)
@@ -200,6 +212,24 @@ AutoSection:AddToggle({
     end,
 })
 
+-- Настройки побед
+WinSection:AddDropdown({
+    Title = "Select Win Zone",
+    Values = AllZones,
+    Default = '1',
+    Callback = function(value)
+        SelectedWinZone = value
+        print("🎯 Selected win zone: " .. value)
+    end,
+})
+
+WinSection:AddButton({
+    Title = "Win Once (Current Zone)",
+    Callback = function()
+        win(tonumber(SelectedWinZone))
+    end,
+})
+
 -- Настройки тренировки
 TrainSection:AddDropdown({
     Title = "Select Training Zone",
@@ -207,7 +237,7 @@ TrainSection:AddDropdown({
     Default = '1',
     Callback = function(value)
         SelectedZone = value
-        print("🎯 Selected zone: " .. value)
+        print("🎯 Selected training zone: " .. value)
     end,
 })
 
@@ -236,9 +266,7 @@ TrainSection:AddButton({
 TogglesSection:AddButton({
     Title = "Win Once",
     Callback = function()
-        pcall(function()
-            InvokeServerAction:InvokeServer("Gameplay", "Win", 1)
-        end)
+        win(tonumber(SelectedWinZone))
     end,
 })
 
@@ -273,6 +301,7 @@ local ManualBallsSection = BallsTab:AddSection({
     Title = "Manual Balls"
 });
 
+-- Auto Equip Selected Ball
 AutoBallsSection:AddToggle({
     Title = "Auto Equip Selected Ball",
     Default = false,
@@ -289,7 +318,6 @@ AutoBallsSection:AddToggle({
     end,
 })
 
--- Dropdown для выбора мяча
 AutoBallsSection:AddDropdown({
     Title = "Select Ball to Auto Equip",
     Values = AllBalls,
@@ -299,6 +327,7 @@ AutoBallsSection:AddDropdown({
     end,
 })
 
+-- Ручная экипировка
 ManualBallsSection:AddDropdown({
     Title = "Select Ball to Equip",
     Values = AllBalls,
@@ -345,6 +374,7 @@ local ManualEggsSection = EggsTab:AddSection({
     Title = "Manual Eggs"
 });
 
+-- Auto Open All Eggs
 AutoEggsSection:AddToggle({
     Title = "Auto Open All Eggs",
     Default = false,
@@ -365,6 +395,7 @@ AutoEggsSection:AddToggle({
     end,
 })
 
+-- Auto Open Selected Egg
 AutoEggsSection:AddToggle({
     Title = "Auto Open Selected Egg",
     Default = false,
@@ -381,6 +412,7 @@ AutoEggsSection:AddToggle({
     end,
 })
 
+-- Dropdown для выбора яйца
 AutoEggsSection:AddDropdown({
     Title = "Select Egg to Auto Open",
     Values = AllEggs,
@@ -390,6 +422,7 @@ AutoEggsSection:AddDropdown({
     end,
 })
 
+-- Ручное открытие яиц
 ManualEggsSection:AddDropdown({
     Title = "Select Egg to Open",
     Values = AllEggs,
@@ -626,7 +659,7 @@ local StatusParagraph = StatusSection:AddParagraph({
 
 local function updateStatus()
     local status = {}
-    if AutoWin then table.insert(status, "Auto Win: ON") else table.insert(status, "Auto Win: OFF") end
+    if AutoWin then table.insert(status, "Auto Win: ON (Zone "..SelectedWinZone..")") else table.insert(status, "Auto Win: OFF") end
     if AutoTrain then table.insert(status, "Auto Train: ON (Zone "..SelectedZone..")") else table.insert(status, "Auto Train: OFF") end
     if AutoRebirth then table.insert(status, "Auto Rebirth: ON") else table.insert(status, "Auto Rebirth: OFF") end
     if AutoEquipSelectedBall then table.insert(status, "Auto Equip "..SelectedBall..": ON") else table.insert(status, "Auto Equip "..SelectedBall..": OFF") end
@@ -642,7 +675,7 @@ end
 
 ConfigSection:AddParagraph({
     Title = 'Information',
-    Content = "Complete Auto Farm Script\n• 25 Balls\n• 43 Eggs\n• 16 Training Zones\n• Auto Zones\n• Player Utilities"
+    Content = "Complete Auto Farm Script\n• 25 Balls\n• 43 Eggs\n• 16 Win Zones\n• 16 Training Zones\n• Auto Zones\n• Player Utilities"
 })
 
 ConfigSection:AddButton({
