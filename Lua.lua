@@ -1,8 +1,5 @@
 --[[
     RED ONYX UI LIBRARY V16 (NOTIFICATIONS FIXED)
-    - Fixed: Notifications now animate properly off-screen.
-    - Fixed: Container resizing logic prevents visual glitches.
-    - All features included: Configs, Themes, Watermark, Tabs.
 ]]
 
 local TweenService = game:GetService("TweenService")
@@ -16,7 +13,6 @@ local Stats = game:GetService("Stats")
 local Player = Players.LocalPlayer
 local Mouse = Player:GetMouse()
 
--- // LIBRARY TABLE //
 local Library = {
     Flags = {},
     Items = {},
@@ -38,12 +34,11 @@ local Library = {
     }
 }
 
--- // NOTIFICATION SYSTEM (FIXED) //
 function Library:InitNotifications(ScreenGui)
     local Holder = Instance.new("Frame")
     Holder.Name = "Notifications"
     Holder.Size = UDim2.new(0, 300, 1, -20)
-    Holder.Position = UDim2.new(1, -310, 0, 10) -- Справа экрана
+    Holder.Position = UDim2.new(1, -310, 0, 10)
     Holder.AnchorPoint = Vector2.new(0, 0)
     Holder.BackgroundTransparency = 1
     Holder.Parent = ScreenGui
@@ -60,19 +55,17 @@ function Library:Notify(Title, Content, Duration)
     if not Library.NotifyContainer then return end
     Duration = Duration or 3
     
-    -- 1. Контейнер (Ограничитель)
     local Wrapper = Instance.new("Frame")
     Wrapper.Name = "NotifyWrapper"
-    Wrapper.Size = UDim2.new(1, 0, 0, 0) -- Начальная высота 0
+    Wrapper.Size = UDim2.new(1, 0, 0, 0)
     Wrapper.BackgroundTransparency = 1
-    Wrapper.ClipsDescendants = true -- ВАЖНО: Обрезает все, что выходит за границы
+    Wrapper.ClipsDescendants = true
     Wrapper.Parent = Library.NotifyContainer
     
-    -- 2. Само уведомление (Фон)
     local Box = Instance.new("Frame")
     Box.Name = "Box"
-    Box.Size = UDim2.new(1, 0, 1, 0) -- Заполняет wrapper, когда тот вырастет
-    Box.Position = UDim2.new(1, 20, 0, 0) -- Спрятан справа за экраном
+    Box.Size = UDim2.new(1, 0, 1, 0)
+    Box.Position = UDim2.new(1, 20, 0, 0)
     Box.BackgroundColor3 = Library.Theme.Background
     Box.Parent = Wrapper
     
@@ -81,13 +74,11 @@ function Library:Notify(Title, Content, Duration)
     Stroke.Thickness = 1
     Stroke.Color = Library.Theme.Outline
     
-    -- Полоска цвета
     local Line = Instance.new("Frame", Box)
     Line.Size = UDim2.new(0, 2, 1, 0)
     Line.BackgroundColor3 = Library.Theme.Accent
     Instance.new("UICorner", Line).CornerRadius = UDim.new(0, 4)
     
-    -- Текст Заголовка
     local TLab = Instance.new("TextLabel", Box)
     TLab.Size = UDim2.new(1, -15, 0, 20)
     TLab.Position = UDim2.new(0, 10, 0, 5)
@@ -98,7 +89,6 @@ function Library:Notify(Title, Content, Duration)
     TLab.TextColor3 = Library.Theme.Text
     TLab.TextXAlignment = Enum.TextXAlignment.Left
     
-    -- Текст Контента
     local CLab = Instance.new("TextLabel", Box)
     CLab.Size = UDim2.new(1, -15, 0, 20)
     CLab.Position = UDim2.new(0, 10, 0, 25)
@@ -109,21 +99,15 @@ function Library:Notify(Title, Content, Duration)
     CLab.TextColor3 = Library.Theme.TextDark
     CLab.TextXAlignment = Enum.TextXAlignment.Left
 
-    -- АНИМАЦИЯ ПОЯВЛЕНИЯ
-    -- Сначала расширяем контейнер по высоте
     TweenService:Create(Wrapper, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Size = UDim2.new(1, 0, 0, 50)}):Play()
-    -- Затем выезжает плашка
     TweenService:Create(Box, TweenInfo.new(0.4, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Position = UDim2.new(0, 0, 0, 0)}):Play()
     
     task.delay(Duration, function()
-        -- АНИМАЦИЯ ИСЧЕЗНОВЕНИЯ
         if not Box or not Wrapper then return end
-        -- 1. Уезжаем вправо
         local OutTween = TweenService:Create(Box, TweenInfo.new(0.4, Enum.EasingStyle.Back, Enum.EasingDirection.In), {Position = UDim2.new(1, 50, 0, 0)})
         OutTween:Play()
         OutTween.Completed:Wait()
         
-        -- 2. Схлопываем контейнер
         local ShrinkTween = TweenService:Create(Wrapper, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Size = UDim2.new(1, 0, 0, 0)})
         ShrinkTween:Play()
         ShrinkTween.Completed:Wait()
@@ -132,7 +116,6 @@ function Library:Notify(Title, Content, Duration)
     end)
 end
 
--- // CONFIG & UTILS //
 function Library:InitConfig()
     if writefile and readfile and makefolder and listfiles then
         if not isfolder(self.ConfigFolder) then makefolder(self.ConfigFolder) end
@@ -156,7 +139,7 @@ function Library:SaveConfig(Name)
     if not self:InitConfig() or not Name or Name == "" then return end
     local Encoded = HttpService:JSONEncode(self.Flags)
     writefile(self.ConfigFolder.."/"..Name..self.ConfigExt, Encoded)
-    Library:Notify("Config Saved", "Successfully saved: " .. Name, 3)
+    Library:Notify("", "", 3)
 end
 
 function Library:LoadConfig(Name)
@@ -170,7 +153,7 @@ function Library:LoadConfig(Name)
                     self.Items[Flag].Set(Value)
                 end
             end
-            Library:Notify("Config Loaded", "Loaded settings: " .. Name, 3)
+            Library:Notify("", "", 3)
         end
     end
 end
@@ -218,7 +201,6 @@ function Library:Watermark(Name)
     ScreenGui.ResetOnSpawn = false
     if RunService:IsStudio() then ScreenGui.Parent = Player:WaitForChild("PlayerGui") else pcall(function() ScreenGui.Parent = CoreGui end) end
 
-    -- Initialize Notifications here
     Library:InitNotifications(ScreenGui)
 
     local Frame = Instance.new("Frame")
@@ -820,7 +802,7 @@ function Library:Window(TitleText)
                     B.Size=UDim2.new(1,0,0,22)
                     B.Position=UDim2.new(0,0,0,18)
                     B.BackgroundColor3=Color3.fromRGB(35,35,35)
-                    B.Text="  Select..."
+                    B.Text="  ..."
                     B.Font=Enum.Font.Gotham
                     B.TextSize=12
                     B.TextColor3=Color3.fromRGB(200,200,200)
@@ -913,7 +895,7 @@ function Library:Window(TitleText)
                     Library.Flags[Flag]=Sel
                     local function Upd()
                         local t={} for k,v in pairs(Sel) do if v then table.insert(t,k) end end
-                        B.Text=#t==0 and "  None" or (#t==1 and "  "..t[1] or "  "..#t.." Selected")
+                        B.Text=#t==0 and "  ..." or (#t==1 and "  "..t[1] or "  "..#t.." ...")
                         pcall(Call,Sel)
                     end
 
