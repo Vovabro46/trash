@@ -1,7 +1,3 @@
---[[
-    RED ONYX UI LIBRARY V16 (NOTIFICATIONS FIXED)
-]]
-
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 local CoreGui = game:GetService("CoreGui")
@@ -19,6 +15,7 @@ local Library = {
     ActivePicker = nil,
     WatermarkObj = nil,
     NotifyContainer = nil,
+    Preview = nil,
     ConfigFolder = "RedOnyx_Configs",
     ConfigExt = ".json",
     
@@ -107,11 +104,9 @@ function Library:Notify(Title, Content, Duration)
         local OutTween = TweenService:Create(Box, TweenInfo.new(0.4, Enum.EasingStyle.Back, Enum.EasingDirection.In), {Position = UDim2.new(1, 50, 0, 0)})
         OutTween:Play()
         OutTween.Completed:Wait()
-        
         local ShrinkTween = TweenService:Create(Wrapper, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Size = UDim2.new(1, 0, 0, 0)})
         ShrinkTween:Play()
         ShrinkTween.Completed:Wait()
-        
         Wrapper:Destroy()
     end)
 end
@@ -139,7 +134,7 @@ function Library:SaveConfig(Name)
     if not self:InitConfig() or not Name or Name == "" then return end
     local Encoded = HttpService:JSONEncode(self.Flags)
     writefile(self.ConfigFolder.."/"..Name..self.ConfigExt, Encoded)
-    Library:Notify("", "", 3)
+    Library:Notify("Config Saved", "Successfully saved: " .. Name, 3)
 end
 
 function Library:LoadConfig(Name)
@@ -153,7 +148,7 @@ function Library:LoadConfig(Name)
                     self.Items[Flag].Set(Value)
                 end
             end
-            Library:Notify("", "", 3)
+            Library:Notify("Config Loaded", "Loaded settings: " .. Name, 3)
         end
     end
 end
@@ -234,8 +229,7 @@ function Library:Watermark(Name)
     RunService.RenderStepped:Connect(function()
         local FPS = math.floor(1 / RunService.RenderStepped:Wait())
         local Ping = math.floor(Stats.Network.ServerStatsItem["Data Ping"]:GetValueString():split(" ")[1])
-        local Time = os.date("%H:%M:%S")
-        Text.Text = string.format("%s | FPS: %d | Ping: %d | %s", Name, FPS, Ping, Time)
+        Text.Text = string.format("%s | FPS: %d | Ping: %d | %s", Name, FPS, Ping, os.date("%H:%M:%S"))
         Frame.Size = UDim2.new(0, Text.TextBounds.X + 14, 0, 24)
     end)
     Library.WatermarkObj = ScreenGui
@@ -243,7 +237,7 @@ end
 
 function Library:Window(TitleText)
     local ScreenGui = Instance.new("ScreenGui")
-    ScreenGui.Name = "RedOnyxV16"
+    ScreenGui.Name = "RedOnyxV17"
     ScreenGui.ResetOnSpawn = false
     ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
     if RunService:IsStudio() then ScreenGui.Parent = Player:WaitForChild("PlayerGui") else pcall(function() ScreenGui.Parent = CoreGui end) end
@@ -505,7 +499,7 @@ function Library:Window(TitleText)
                         Library.ActivePicker = nil
                     end
                 end
-                
+        
                 function BoxFuncs:ESPPreview()
                     local F = Instance.new("Frame", C)
                     F.Size = UDim2.new(1, 0, 0, 200)
@@ -522,32 +516,52 @@ function Library:Window(TitleText)
                     local Cam = Instance.new("Camera", VP)
                     VP.CurrentCamera = Cam
                     
-                    pcall(function()
+                    task.spawn(function()
                         local Char = Player.Character or Player.CharacterAdded:Wait()
                         Char.Archivable = true
                         local Clone = Char:Clone()
                         Clone.Parent = VP
-                        local HRP = Clone:WaitForChild("HumanoidRootPart")
-                        Cam.CFrame = CFrame.new(HRP.Position + (HRP.CFrame.LookVector * 6) + Vector3.new(0, 2, 0), HRP.Position)
                         
+                        local HRP = Clone:WaitForChild("HumanoidRootPart")
+                        Cam.CFrame = CFrame.new(HRP.Position + (HRP.CFrame.LookVector * 6) + Vector3.new(0, 1, 0), HRP.Position)
+                    
                         local BoxESP = Instance.new("Frame", VP)
                         BoxESP.Size = UDim2.new(0.5, 0, 0.8, 0)
                         BoxESP.Position = UDim2.new(0.25, 0, 0.1, 0)
                         BoxESP.BackgroundTransparency = 1
                         BoxESP.BorderColor3 = Color3.new(1, 0, 0)
-                        BoxESP.BorderSizePixel = 1
-                        BoxESP.Visible = true
+                        BoxESP.BorderSizePixel = 2
+                        BoxESP.Visible = false
                         
                         local NameESP = Instance.new("TextLabel", VP)
                         NameESP.Text = Player.Name
                         NameESP.Size = UDim2.new(1, 0, 0, 20)
-                        NameESP.Position = UDim2.new(0, 0, 0, 10)
+                        NameESP.Position = UDim2.new(0, 0, 0, 5)
                         NameESP.BackgroundTransparency = 1
                         NameESP.TextColor3 = Color3.new(1, 1, 1)
                         NameESP.Font = Enum.Font.GothamBold
                         NameESP.TextSize = 12
+                        NameESP.Visible = false
                         
-                        Library.Preview = {Box = BoxESP, Name = NameESP}
+                        local HealthBar = Instance.new("Frame", VP)
+                        HealthBar.Size = UDim2.new(0, 3, 0.8, 0)
+                        HealthBar.Position = UDim2.new(0.23, 0, 0.1, 0)
+                        HealthBar.BackgroundColor3 = Color3.new(0, 1, 0)
+                        HealthBar.BorderSizePixel = 0
+                        HealthBar.Visible = false
+                        
+                        local Highlight = Instance.new("Highlight", Clone)
+                        Highlight.FillColor = Color3.new(1, 0, 0)
+                        Highlight.FillTransparency = 0.5
+                        Highlight.OutlineTransparency = 0
+                        Highlight.Enabled = false
+                        
+                        Library.Preview = {
+                            Box = BoxESP,
+                            Name = NameESP,
+                            Health = HealthBar,
+                            Chams = Highlight
+                        }
                     end)
                 end
 
@@ -802,7 +816,7 @@ function Library:Window(TitleText)
                     B.Size=UDim2.new(1,0,0,22)
                     B.Position=UDim2.new(0,0,0,18)
                     B.BackgroundColor3=Color3.fromRGB(35,35,35)
-                    B.Text="  ..."
+                    B.Text="  Select..."
                     B.Font=Enum.Font.Gotham
                     B.TextSize=12
                     B.TextColor3=Color3.fromRGB(200,200,200)
@@ -895,7 +909,7 @@ function Library:Window(TitleText)
                     Library.Flags[Flag]=Sel
                     local function Upd()
                         local t={} for k,v in pairs(Sel) do if v then table.insert(t,k) end end
-                        B.Text=#t==0 and "  ..." or (#t==1 and "  "..t[1] or "  "..#t.." ...")
+                        B.Text=#t==0 and "  None" or (#t==1 and "  "..t[1] or "  "..#t.." Selected")
                         pcall(Call,Sel)
                     end
 
