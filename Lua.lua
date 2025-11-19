@@ -1,9 +1,7 @@
 --[[
-    RED ONYX UI LIBRARY V13 (ULTIMATE)
-    - Fixed: Dropdown spacing (Perfect fit now)
-    - Added: ESP Preview (Real Character Viewport)
-    - Added: Toggleable Watermark
-    - Full Features: Configs, Themes, SubTabs
+    RED ONYX UI LIBRARY V14 (FINAL RELEASE)
+    - Features: Config System, Themes, ESP Preview, SubTabs, Watermark.
+    - Fixes: Dropdown Spacing, ColorPicker Conflicts, Mobile Touch.
 ]]
 
 local TweenService = game:GetService("TweenService")
@@ -17,44 +15,17 @@ local Stats = game:GetService("Stats")
 local Player = Players.LocalPlayer
 local Mouse = Player:GetMouse()
 
--- // FILESYSTEM //
-local ConfigFolder = "RedOnyx_V13_Cfg"
-local ConfigExt = ".json"
-local CanSave = false
-if writefile and readfile and makefolder and listfiles then
-    CanSave = true
-    if not isfolder(ConfigFolder) then makefolder(ConfigFolder) end
-end
-
-local function SaveCfg(Name, Data)
-    if not CanSave then return end
-    writefile(ConfigFolder.."/"..Name..ConfigExt, HttpService:JSONEncode(Data))
-end
-
-local function LoadCfg(Name)
-    if not CanSave then return nil end
-    local Path = ConfigFolder.."/"..Name..ConfigExt
-    if isfile(Path) then return HttpService:JSONDecode(readfile(Path)) end
-    return nil
-end
-
-local function GetCfgs()
-    if not CanSave then return {} end
-    local Files = listfiles(ConfigFolder)
-    local Names = {}
-    for _, File in pairs(Files) do
-        local N = File:match("([^\\/]+)"..ConfigExt.."$")
-        if N then table.insert(Names, N) end
-    end
-    return Names
-end
-
--- // LIBRARY SETUP //
+-- // LIBRARY TABLE //
 local Library = {
     Flags = {},
     Items = {},
     ActivePicker = nil,
     WatermarkObj = nil,
+    Preview = nil,
+    -- Config Settings
+    ConfigFolder = "RedOnyx_Configs",
+    ConfigExt = ".json",
+    
     Theme = {
         Background = Color3.fromRGB(15, 15, 15),
         Sidebar    = Color3.fromRGB(20, 20, 20),
@@ -67,6 +38,50 @@ local Library = {
     }
 }
 
+-- // CONFIG FUNCTIONS //
+function Library:InitConfig()
+    if writefile and readfile and makefolder and listfiles then
+        if not isfolder(self.ConfigFolder) then
+            makefolder(self.ConfigFolder)
+        end
+        return true
+    end
+    return false
+end
+
+function Library:GetConfigs()
+    if not self:InitConfig() then return {} end
+    local Files = listfiles(self.ConfigFolder)
+    local Names = {}
+    for _, File in pairs(Files) do
+        local N = File:match("([^\\/]+)"..self.ConfigExt.."$")
+        if N then table.insert(Names, N) end
+    end
+    return Names
+end
+
+function Library:SaveConfig(Name)
+    if not self:InitConfig() or not Name or Name == "" then return end
+    local Encoded = HttpService:JSONEncode(self.Flags)
+    writefile(self.ConfigFolder.."/"..Name..self.ConfigExt, Encoded)
+end
+
+function Library:LoadConfig(Name)
+    if not self:InitConfig() or not Name then return end
+    local Path = self.ConfigFolder.."/"..Name..self.ConfigExt
+    if isfile(Path) then
+        local Data = HttpService:JSONDecode(readfile(Path))
+        if Data then
+            for Flag, Value in pairs(Data) do
+                if self.Items[Flag] and self.Items[Flag].Set then
+                    self.Items[Flag].Set(Value)
+                end
+            end
+        end
+    end
+end
+
+-- // THEME MANAGER //
 local ThemeObjects = {}
 function Library:RegisterTheme(Obj, Prop, Key)
     if not ThemeObjects[Key] then ThemeObjects[Key] = {} end
@@ -104,7 +119,6 @@ local function MakeDraggable(dragFrame, moveFrame)
     end)
 end
 
--- // WATERMARK //
 function Library:Watermark(Name)
     local ScreenGui = Instance.new("ScreenGui")
     ScreenGui.Name = "Watermark"
@@ -146,14 +160,12 @@ function Library:Watermark(Name)
         Text.Text = string.format("%s | FPS: %d | Ping: %d | %s", Name, FPS, Ping, Time)
         Frame.Size = UDim2.new(0, Text.TextBounds.X + 14, 0, 24)
     end)
-    
     Library.WatermarkObj = ScreenGui
-    return ScreenGui
 end
 
 function Library:Window(TitleText)
     local ScreenGui = Instance.new("ScreenGui")
-    ScreenGui.Name = "RedOnyxV13"
+    ScreenGui.Name = "RedOnyxV14"
     ScreenGui.ResetOnSpawn = false
     ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
     if RunService:IsStudio() then ScreenGui.Parent = Player:WaitForChild("PlayerGui") else pcall(function() ScreenGui.Parent = CoreGui end) end
@@ -256,6 +268,7 @@ function Library:Window(TitleText)
         Library:RegisterTheme(Btn,"TextColor3","TextDark")
         local P=Instance.new("UIPadding",Btn)
         P.PaddingLeft=UDim.new(0,25)
+        
         local Ind=Instance.new("Frame")
         Ind.Size=UDim2.new(0,3,0.6,0)
         Ind.Position=UDim2.new(0,-25,0.2,0)
@@ -416,7 +429,6 @@ function Library:Window(TitleText)
                     end
                 end
                 
-                -- // ESP PREVIEW ELEMENT //
                 function BoxFuncs:ESPPreview()
                     local F = Instance.new("Frame", C)
                     F.Size = UDim2.new(1, 0, 0, 200)
@@ -442,7 +454,6 @@ function Library:Window(TitleText)
                         local HRP = Clone:WaitForChild("HumanoidRootPart")
                         Cam.CFrame = CFrame.new(HRP.Position + (HRP.CFrame.LookVector * 6) + Vector3.new(0, 2, 0), HRP.Position)
                         
-                        -- Fake ESP UI
                         local BoxESP = Instance.new("Frame", VP)
                         BoxESP.Size = UDim2.new(0.5, 0, 0.8, 0)
                         BoxESP.Position = UDim2.new(0.25, 0, 0.1, 0)
@@ -460,11 +471,7 @@ function Library:Window(TitleText)
                         NameESP.Font = Enum.Font.GothamBold
                         NameESP.TextSize = 12
                         
-                        -- Store in library for update usage
-                        Library.Preview = {
-                            Box = BoxESP,
-                            Name = NameESP
-                        }
+                        Library.Preview = {Box = BoxESP, Name = NameESP}
                     end)
                 end
 
@@ -668,7 +675,7 @@ function Library:Window(TitleText)
                     H.Image=""
                     H.ZIndex=201
                     local Gr=Instance.new("UIGradient",H)
-                    Gr.Color=ColorSequence.new{ColorSequenceKeypoint.new(0.00, Color3.new(1,0,0)),ColorSequenceKeypoint.new(0.17, Color3.new(1,1,0)),ColorSequenceKeypoint.new(0.33, Color3.new(0,1,0)),ColorSequenceKeypoint.new(0.50, Color3.new(0,1,1)),ColorSequenceKeypoint.new(0.67, Color3.new(0,0,1)),ColorSequenceKeypoint.new(0.83, Color3.new(1,0,1)),ColorSequenceKeypoint.new(1.00, Color3.new(1,0,0))}
+                    Gr.Color=ColorSequence.new{ColorSequenceKeypoint.new(0,Color3.new(1,0,0)),ColorSequenceKeypoint.new(0.17,Color3.new(1,1,0)),ColorSequenceKeypoint.new(0.33,Color3.new(0,1,0)),ColorSequenceKeypoint.new(0.5,Color3.new(0,1,1)),ColorSequenceKeypoint.new(0.67,Color3.new(0,0,1)),ColorSequenceKeypoint.new(0.83,Color3.new(1,0,1)),ColorSequenceKeypoint.new(1,Color3.new(1,0,0))}
                     
                     local h,s,v = Def:ToHSV()
                     local function Upd()
@@ -731,7 +738,6 @@ function Library:Window(TitleText)
                     List.BackgroundColor3=Color3.fromRGB(35,35,35)
                     List.BorderSizePixel=0
                     List.ZIndex=200
-                    -- FIXED: AUTOMATIC SIZE
                     List.AutomaticCanvasSize = Enum.AutomaticSize.Y
                     Instance.new("UIStroke",List).Color=Library.Theme.Outline
                     local LL=Instance.new("UIListLayout",List)
@@ -765,9 +771,9 @@ function Library:Window(TitleText)
                         if List.Visible then List.Visible=false DropdownHolder.Visible=false else
                             CheckActivePicker()
                             List.Position=UDim2.new(0,B.AbsolutePosition.X,0,B.AbsolutePosition.Y+25)
-                            -- FIXED HEIGHT CALC
                             local ContentH = LL.AbsoluteContentSize.Y
                             List.Size=UDim2.new(0,B.AbsoluteSize.X,0,math.min(ContentH, 150))
+                            List.CanvasSize=UDim2.new(0,0,0,ContentH)
                             List.Visible=true
                             DropdownHolder.Visible=true
                         end
@@ -837,6 +843,7 @@ function Library:Window(TitleText)
                             List.Position=UDim2.new(0,B.AbsolutePosition.X,0,B.AbsolutePosition.Y+25)
                             local ContentH = LL.AbsoluteContentSize.Y
                             List.Size=UDim2.new(0,B.AbsoluteSize.X,0,math.min(ContentH, 150))
+                            List.CanvasSize=UDim2.new(0,0,0,ContentH)
                             List.Visible=true
                             DropdownHolder.Visible=true
                         end
