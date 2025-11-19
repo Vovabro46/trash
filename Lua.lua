@@ -1,7 +1,8 @@
 --[[
-    RED ONYX UI LIBRARY V15 (NOTIFICATIONS ADDED)
-    - New: Library:Notify("Title", "Text", Duration)
-    - All previous features included (Configs, ESP Preview, Watermark, etc.)
+    RED ONYX UI LIBRARY V16 (NOTIFICATIONS FIXED)
+    - Fixed: Notifications now animate properly off-screen.
+    - Fixed: Container resizing logic prevents visual glitches.
+    - All features included: Configs, Themes, Watermark, Tabs.
 ]]
 
 local TweenService = game:GetService("TweenService")
@@ -21,7 +22,7 @@ local Library = {
     Items = {},
     ActivePicker = nil,
     WatermarkObj = nil,
-    NotifyContainer = nil, -- Для уведомлений
+    NotifyContainer = nil,
     ConfigFolder = "RedOnyx_Configs",
     ConfigExt = ".json",
     
@@ -37,7 +38,101 @@ local Library = {
     }
 }
 
--- // CONFIG //
+-- // NOTIFICATION SYSTEM (FIXED) //
+function Library:InitNotifications(ScreenGui)
+    local Holder = Instance.new("Frame")
+    Holder.Name = "Notifications"
+    Holder.Size = UDim2.new(0, 300, 1, -20)
+    Holder.Position = UDim2.new(1, -310, 0, 10) -- Справа экрана
+    Holder.AnchorPoint = Vector2.new(0, 0)
+    Holder.BackgroundTransparency = 1
+    Holder.Parent = ScreenGui
+    
+    local List = Instance.new("UIListLayout", Holder)
+    List.SortOrder = Enum.SortOrder.LayoutOrder
+    List.VerticalAlignment = Enum.VerticalAlignment.Bottom
+    List.Padding = UDim.new(0, 6)
+    
+    Library.NotifyContainer = Holder
+end
+
+function Library:Notify(Title, Content, Duration)
+    if not Library.NotifyContainer then return end
+    Duration = Duration or 3
+    
+    -- 1. Контейнер (Ограничитель)
+    local Wrapper = Instance.new("Frame")
+    Wrapper.Name = "NotifyWrapper"
+    Wrapper.Size = UDim2.new(1, 0, 0, 0) -- Начальная высота 0
+    Wrapper.BackgroundTransparency = 1
+    Wrapper.ClipsDescendants = true -- ВАЖНО: Обрезает все, что выходит за границы
+    Wrapper.Parent = Library.NotifyContainer
+    
+    -- 2. Само уведомление (Фон)
+    local Box = Instance.new("Frame")
+    Box.Name = "Box"
+    Box.Size = UDim2.new(1, 0, 1, 0) -- Заполняет wrapper, когда тот вырастет
+    Box.Position = UDim2.new(1, 20, 0, 0) -- Спрятан справа за экраном
+    Box.BackgroundColor3 = Library.Theme.Background
+    Box.Parent = Wrapper
+    
+    Instance.new("UICorner", Box).CornerRadius = UDim.new(0, 4)
+    local Stroke = Instance.new("UIStroke", Box)
+    Stroke.Thickness = 1
+    Stroke.Color = Library.Theme.Outline
+    
+    -- Полоска цвета
+    local Line = Instance.new("Frame", Box)
+    Line.Size = UDim2.new(0, 2, 1, 0)
+    Line.BackgroundColor3 = Library.Theme.Accent
+    Instance.new("UICorner", Line).CornerRadius = UDim.new(0, 4)
+    
+    -- Текст Заголовка
+    local TLab = Instance.new("TextLabel", Box)
+    TLab.Size = UDim2.new(1, -15, 0, 20)
+    TLab.Position = UDim2.new(0, 10, 0, 5)
+    TLab.BackgroundTransparency = 1
+    TLab.Text = Title
+    TLab.Font = Enum.Font.GothamBold
+    TLab.TextSize = 13
+    TLab.TextColor3 = Library.Theme.Text
+    TLab.TextXAlignment = Enum.TextXAlignment.Left
+    
+    -- Текст Контента
+    local CLab = Instance.new("TextLabel", Box)
+    CLab.Size = UDim2.new(1, -15, 0, 20)
+    CLab.Position = UDim2.new(0, 10, 0, 25)
+    CLab.BackgroundTransparency = 1
+    CLab.Text = Content
+    CLab.Font = Enum.Font.Gotham
+    CLab.TextSize = 12
+    CLab.TextColor3 = Library.Theme.TextDark
+    CLab.TextXAlignment = Enum.TextXAlignment.Left
+
+    -- АНИМАЦИЯ ПОЯВЛЕНИЯ
+    -- Сначала расширяем контейнер по высоте
+    TweenService:Create(Wrapper, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Size = UDim2.new(1, 0, 0, 50)}):Play()
+    -- Затем выезжает плашка
+    TweenService:Create(Box, TweenInfo.new(0.4, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Position = UDim2.new(0, 0, 0, 0)}):Play()
+    
+    task.delay(Duration, function()
+        -- АНИМАЦИЯ ИСЧЕЗНОВЕНИЯ
+        if not Box or not Wrapper then return end
+        -- 1. Уезжаем вправо
+        local OutTween = TweenService:Create(Box, TweenInfo.new(0.4, Enum.EasingStyle.Back, Enum.EasingDirection.In), {Position = UDim2.new(1, 50, 0, 0)})
+        OutTween:Play()
+        OutTween.Completed:Wait()
+        
+        -- 2. Схлопываем контейнер
+        local ShrinkTween = TweenService:Create(Wrapper, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Size = UDim2.new(1, 0, 0, 0)})
+        ShrinkTween:Play()
+        ShrinkTween.Completed:Wait()
+        
+        Wrapper:Destroy()
+    end)
+end
+
+-- // CONFIG & UTILS //
 function Library:InitConfig()
     if writefile and readfile and makefolder and listfiles then
         if not isfolder(self.ConfigFolder) then makefolder(self.ConfigFolder) end
@@ -61,7 +156,7 @@ function Library:SaveConfig(Name)
     if not self:InitConfig() or not Name or Name == "" then return end
     local Encoded = HttpService:JSONEncode(self.Flags)
     writefile(self.ConfigFolder.."/"..Name..self.ConfigExt, Encoded)
-    Library:Notify("Config", "Saved configuration: "..Name, 3)
+    Library:Notify("Config Saved", "Successfully saved: " .. Name, 3)
 end
 
 function Library:LoadConfig(Name)
@@ -75,12 +170,11 @@ function Library:LoadConfig(Name)
                     self.Items[Flag].Set(Value)
                 end
             end
-            Library:Notify("Config", "Loaded configuration: "..Name, 3)
+            Library:Notify("Config Loaded", "Loaded settings: " .. Name, 3)
         end
     end
 end
 
--- // THEMES //
 local ThemeObjects = {}
 function Library:RegisterTheme(Obj, Prop, Key)
     if not ThemeObjects[Key] then ThemeObjects[Key] = {} end
@@ -97,7 +191,6 @@ function Library:UpdateTheme(Key, Col)
     end
 end
 
--- // DRAG //
 local function MakeDraggable(dragFrame, moveFrame)
     local dragging, dragInput, dragStart, startPos
     dragFrame.InputBegan:Connect(function(input)
@@ -119,128 +212,56 @@ local function MakeDraggable(dragFrame, moveFrame)
     end)
 end
 
--- // NOTIFICATIONS & WATERMARK //
 function Library:Watermark(Name)
     local ScreenGui = Instance.new("ScreenGui")
     ScreenGui.Name = "Watermark"
     ScreenGui.ResetOnSpawn = false
     if RunService:IsStudio() then ScreenGui.Parent = Player:WaitForChild("PlayerGui") else pcall(function() ScreenGui.Parent = CoreGui end) end
-    
+
+    -- Initialize Notifications here
+    Library:InitNotifications(ScreenGui)
+
     local Frame = Instance.new("Frame")
-    Frame.Size = UDim2.new(0,0,0,22)
-    Frame.Position = UDim2.new(0.01,0,0.01,0)
+    Frame.Size = UDim2.new(0, 0, 0, 22)
+    Frame.Position = UDim2.new(0.01, 0, 0.01, 0)
     Frame.BackgroundColor3 = Library.Theme.Background
     Frame.Parent = ScreenGui
-    Instance.new("UICorner", Frame).CornerRadius = UDim.new(0,4)
+    Instance.new("UICorner", Frame).CornerRadius = UDim.new(0, 4)
     Library:RegisterTheme(Frame, "BackgroundColor3", "Background")
     
     local Stroke = Instance.new("UIStroke", Frame)
     Stroke.Thickness = 1
     Library:RegisterTheme(Stroke, "Color", "Outline")
-    local TopLine = Instance.new("Frame", Frame)
-    TopLine.Size = UDim2.new(1,0,0,2)
-    TopLine.BorderSizePixel = 0
-    Library:RegisterTheme(TopLine, "BackgroundColor3", "Accent")
     
-    local Text = Instance.new("TextLabel", Frame)
-    Text.Size = UDim2.new(1,-10,1,0)
-    Text.Position = UDim2.new(0,5,0,0)
+    local TopLine = Instance.new("Frame")
+    TopLine.Size = UDim2.new(1, 0, 0, 2)
+    TopLine.BorderSizePixel = 0
+    TopLine.Parent = Frame
+    Library:RegisterTheme(TopLine, "BackgroundColor3", "Accent")
+
+    local Text = Instance.new("TextLabel")
+    Text.Size = UDim2.new(1, -10, 1, 0)
+    Text.Position = UDim2.new(0, 5, 0, 0)
     Text.BackgroundTransparency = 1
     Text.Font = Enum.Font.GothamBold
     Text.TextSize = 12
+    Text.Text = Name
+    Text.Parent = Frame
     Library:RegisterTheme(Text, "TextColor3", "Text")
     
     RunService.RenderStepped:Connect(function()
-        local FPS = math.floor(1/RunService.RenderStepped:Wait())
+        local FPS = math.floor(1 / RunService.RenderStepped:Wait())
         local Ping = math.floor(Stats.Network.ServerStatsItem["Data Ping"]:GetValueString():split(" ")[1])
-        Text.Text = string.format("%s | FPS: %d | Ping: %d | %s", Name, FPS, Ping, os.date("%H:%M:%S"))
-        Frame.Size = UDim2.new(0, Text.TextBounds.X+14, 0, 24)
+        local Time = os.date("%H:%M:%S")
+        Text.Text = string.format("%s | FPS: %d | Ping: %d | %s", Name, FPS, Ping, Time)
+        Frame.Size = UDim2.new(0, Text.TextBounds.X + 14, 0, 24)
     end)
     Library.WatermarkObj = ScreenGui
-    
-    -- Init Notification Container Here
-    local NotifyHolder = Instance.new("Frame")
-    NotifyHolder.Name = "Notifications"
-    NotifyHolder.Size = UDim2.new(0, 250, 1, -20)
-    NotifyHolder.Position = UDim2.new(1, -260, 0, 10)
-    NotifyHolder.AnchorPoint = Vector2.new(0, 0)
-    NotifyHolder.BackgroundTransparency = 1
-    NotifyHolder.Parent = ScreenGui
-    
-    local NList = Instance.new("UIListLayout", NotifyHolder)
-    NList.SortOrder = Enum.SortOrder.LayoutOrder
-    NList.VerticalAlignment = Enum.VerticalAlignment.Bottom
-    NList.Padding = UDim.new(0, 5)
-    
-    Library.NotifyContainer = NotifyHolder
 end
 
-function Library:Notify(Title, Content, Duration)
-    if not Library.NotifyContainer then return end
-    Duration = Duration or 3
-    
-    -- Outer container for animation sizing
-    local Container = Instance.new("Frame")
-    Container.Size = UDim2.new(1, 0, 0, 0) -- Start closed
-    Container.BackgroundTransparency = 1
-    Container.Parent = Library.NotifyContainer
-    
-    -- The visual box
-    local Box = Instance.new("Frame")
-    Box.Size = UDim2.new(1, 0, 0, 50)
-    Box.Position = UDim2.new(1, 0, 0, 0) -- Offscreen right
-    Box.BackgroundColor3 = Library.Theme.Background
-    Box.Parent = Container
-    
-    Instance.new("UICorner", Box).CornerRadius = UDim.new(0, 4)
-    local Stroke = Instance.new("UIStroke", Box)
-    Stroke.Thickness = 1
-    Stroke.Color = Library.Theme.Outline
-    
-    -- Accent line
-    local Line = Instance.new("Frame", Box)
-    Line.Size = UDim2.new(0, 3, 1, 0)
-    Line.BackgroundColor3 = Library.Theme.Accent
-    Instance.new("UICorner", Line).CornerRadius = UDim.new(0, 4)
-    
-    local TVal = Instance.new("TextLabel", Box)
-    TVal.Size = UDim2.new(1, -15, 0, 20)
-    TVal.Position = UDim2.new(0, 10, 0, 5)
-    TVal.BackgroundTransparency = 1
-    TVal.Text = Title
-    TVal.Font = Enum.Font.GothamBold
-    TVal.TextSize = 13
-    TVal.TextColor3 = Library.Theme.Text
-    TVal.TextXAlignment = Enum.TextXAlignment.Left
-    
-    local CVal = Instance.new("TextLabel", Box)
-    CVal.Size = UDim2.new(1, -15, 0, 20)
-    CVal.Position = UDim2.new(0, 10, 0, 22)
-    CVal.BackgroundTransparency = 1
-    CVal.Text = Content
-    CVal.Font = Enum.Font.Gotham
-    CVal.TextSize = 12
-    CVal.TextColor3 = Library.Theme.TextDark
-    CVal.TextXAlignment = Enum.TextXAlignment.Left
-
-    -- Animation IN
-    TweenService:Create(Container, TweenInfo.new(0.3), {Size = UDim2.new(1,0,0,55)}):Play()
-    TweenService:Create(Box, TweenInfo.new(0.4, Enum.EasingStyle.Back), {Position = UDim2.new(0,0,0,0)}):Play()
-    
-    task.delay(Duration, function()
-        -- Animation OUT
-        TweenService:Create(Box, TweenInfo.new(0.4, Enum.EasingStyle.Back, Enum.EasingDirection.In), {Position = UDim2.new(1,50,0,0)}):Play()
-        wait(0.2)
-        TweenService:Create(Container, TweenInfo.new(0.3), {Size = UDim2.new(1,0,0,0)}):Play()
-        wait(0.3)
-        Container:Destroy()
-    end)
-end
-
--- // MAIN WINDOW //
 function Library:Window(TitleText)
     local ScreenGui = Instance.new("ScreenGui")
-    ScreenGui.Name = "RedOnyxV15"
+    ScreenGui.Name = "RedOnyxV16"
     ScreenGui.ResetOnSpawn = false
     ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
     if RunService:IsStudio() then ScreenGui.Parent = Player:WaitForChild("PlayerGui") else pcall(function() ScreenGui.Parent = CoreGui end) end
@@ -343,7 +364,6 @@ function Library:Window(TitleText)
         Library:RegisterTheme(Btn,"TextColor3","TextDark")
         local P=Instance.new("UIPadding",Btn)
         P.PaddingLeft=UDim.new(0,25)
-        
         local Ind=Instance.new("Frame")
         Ind.Size=UDim2.new(0,3,0.6,0)
         Ind.Position=UDim2.new(0,-25,0.2,0)
@@ -525,7 +545,6 @@ function Library:Window(TitleText)
                         Char.Archivable = true
                         local Clone = Char:Clone()
                         Clone.Parent = VP
-                        
                         local HRP = Clone:WaitForChild("HumanoidRootPart")
                         Cam.CFrame = CFrame.new(HRP.Position + (HRP.CFrame.LookVector * 6) + Vector3.new(0, 2, 0), HRP.Position)
                         
