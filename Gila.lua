@@ -1,8 +1,8 @@
 --[[
-    GILA MONSTER LIBRARY [SOURCE v10]
-    - Fixed: ColorPicker clipping (Now floats above everything)
-    - Fixed: SubTabs recoloring & spacing
-    - Full Mobile Support & Configs
+    GILA MONSTER LIBRARY [SOURCE v11]
+    - Fixed: SubTabs allow instant theme updating (Smart Re-registering)
+    - Fixed: SubTabs spacing (Added padding from top)
+    - Fixed: ColorPicker visibility
 ]]
 
 local UserInputService = game:GetService("UserInputService")
@@ -16,7 +16,7 @@ local Library = {
     Flags = {}, 
     Items = {}, 
     ThemeObjects = {},
-    Screen = nil, -- Ссылка на ScreenGui для ColorPicker
+    Screen = nil,
     Theme = {
         Main      = Color3.fromRGB(20, 20, 20),
         Sidebar   = Color3.fromRGB(25, 25, 28),
@@ -36,7 +36,8 @@ Library.ThemePresets = {
     ["Blood Moon"] = { Main = Color3.fromRGB(20, 15, 15), Sidebar = Color3.fromRGB(25, 20, 20), Section = Color3.fromRGB(30, 25, 25), Accent = Color3.fromRGB(230, 60, 60), Text = Color3.fromRGB(255, 255, 255) },
     ["Oceanic"] = { Main = Color3.fromRGB(15, 20, 25), Sidebar = Color3.fromRGB(20, 25, 30), Section = Color3.fromRGB(25, 30, 35), Accent = Color3.fromRGB(0, 160, 255), Text = Color3.fromRGB(255, 255, 255) },
     ["Midnight"] = { Main = Color3.fromRGB(10, 10, 15), Sidebar = Color3.fromRGB(15, 15, 20), Section = Color3.fromRGB(20, 20, 25), Accent = Color3.fromRGB(80, 80, 255), Text = Color3.fromRGB(255, 255, 255) },
-    ["Nature"] = { Main = Color3.fromRGB(20, 25, 20), Sidebar = Color3.fromRGB(25, 30, 25), Section = Color3.fromRGB(30, 35, 30), Accent = Color3.fromRGB(100, 200, 100), Text = Color3.fromRGB(255, 255, 255) }
+    ["Nature"] = { Main = Color3.fromRGB(20, 25, 20), Sidebar = Color3.fromRGB(25, 30, 25), Section = Color3.fromRGB(30, 35, 30), Accent = Color3.fromRGB(100, 200, 100), Text = Color3.fromRGB(255, 255, 255) },
+    ["Void"] = { Main = Color3.fromRGB(5, 5, 5), Sidebar = Color3.fromRGB(10, 10, 10), Section = Color3.fromRGB(15, 15, 15), Accent = Color3.fromRGB(255, 255, 255), Text = Color3.fromRGB(200, 200, 200) }
 }
 
 local CfgFolder = "GilaConfigs"
@@ -51,8 +52,29 @@ end
 --// THEME SYSTEM
 function Library:RegisterThemeObj(type, obj, property)
     if not Library.ThemeObjects[type] then Library.ThemeObjects[type] = {} end
+    -- Удаляем старую регистрацию для этого объекта и свойства, если есть (чтобы не дублировать при переключении вкладок)
+    for i, item in pairs(Library.ThemeObjects[type]) do
+        if item.Object == obj and item.Property == property then
+            table.remove(Library.ThemeObjects[type], i)
+            break
+        end
+    end
     table.insert(Library.ThemeObjects[type], {Object = obj, Property = property})
     if Library.Theme[type] then pcall(function() obj[property] = Library.Theme[type] end) end
+end
+
+-- Функция для смены типа темы у объекта (например, с DimText на Accent)
+function Library:ChangeThemeType(obj, property, newType)
+    -- Удаляем из всех списков
+    for typeName, list in pairs(Library.ThemeObjects) do
+        for i = #list, 1, -1 do
+            if list[i].Object == obj and list[i].Property == property then
+                table.remove(list, i)
+            end
+        end
+    end
+    -- Регистрируем в новом
+    Library:RegisterThemeObj(newType, obj, property)
 end
 
 function Library:UpdateTheme(type, color)
@@ -161,19 +183,26 @@ function Library:Window(opts)
 
     function Tabs:Tab(name)
         local TBtn = Create("TextButton", {Parent = SidebarList, Size = UDim2.new(1,0,0,36), BackgroundTransparency=1, Text = "    "..name:upper(), TextColor3 = Library.Theme.DimText, Font = Library.Theme.FontMain, TextSize = 12, TextXAlignment = Enum.TextXAlignment.Left, AutoButtonColor=false, ZIndex=4})
-        local Ind = Create("Frame", {Parent=TBtn, BackgroundColor3=Library.Theme.Accent, Size=UDim2.new(0,2,0,18), Position=UDim2.new(0,0,0.5,-9), Visible=false, ZIndex=5}); Library:RegisterThemeObj("Accent", Ind, "BackgroundColor3")
+        Library:RegisterThemeObj("DimText", TBtn, "TextColor3") -- Default inactive
         
+        local Ind = Create("Frame", {Parent=TBtn, BackgroundColor3=Library.Theme.Accent, Size=UDim2.new(0,2,0,18), Position=UDim2.new(0,0,0.5,-9), Visible=false, ZIndex=5}); Library:RegisterThemeObj("Accent", Ind, "BackgroundColor3")
         local Page = Create("Frame", {Parent=Content, Size=UDim2.new(1,0,1,0), BackgroundTransparency=1, Visible=false, ZIndex=3})
         
-        -- SUBTABS (Increased height to 36, moved content down)
-        local SubTabBox = Create("ScrollingFrame", {Parent=Page, Size=UDim2.new(1,0,0,36), BackgroundTransparency=1, CanvasSize=UDim2.new(0,0,0,0), ScrollBarThickness=0, ZIndex=5}); Create("UIListLayout", {Parent=SubTabBox, FillDirection=Enum.FillDirection.Horizontal, SortOrder=Enum.SortOrder.LayoutOrder, Padding=UDim.new(0,5)})
-        Create("UIPadding", {Parent=SubTabBox, PaddingLeft=UDim.new(0,5), PaddingTop=UDim.new(0,4)})
-        local SubContent = Create("Frame", {Parent=Page, Size=UDim2.new(1,0,1,-42), Position=UDim2.new(0,0,0,42), BackgroundTransparency=1, ZIndex=4})
+        -- SUBTABS CONTAINER (Moved Down slightly, Added Padding)
+        local SubTabBox = Create("ScrollingFrame", {Parent=Page, Size=UDim2.new(1,0,0,32), Position=UDim2.new(0,0,0,10), BackgroundTransparency=1, CanvasSize=UDim2.new(0,0,0,0), ScrollBarThickness=0, ZIndex=5})
+        Create("UIListLayout", {Parent=SubTabBox, FillDirection=Enum.FillDirection.Horizontal, SortOrder=Enum.SortOrder.LayoutOrder, Padding=UDim.new(0,8)}); Create("UIPadding", {Parent=SubTabBox, PaddingLeft=UDim.new(0,10)})
+        local SubContent = Create("Frame", {Parent=Page, Size=UDim2.new(1,0,1,-45), Position=UDim2.new(0,0,0,45), BackgroundTransparency=1, ZIndex=4})
         
         local function ShowTab()
-            for _, v in pairs(SidebarList:GetChildren()) do if v:IsA("TextButton") then TweenService:Create(v, TweenInfo.new(0.2), {TextColor3 = Library.Theme.DimText}):Play() v.Frame.Visible=false end end
+            for _, v in pairs(SidebarList:GetChildren()) do 
+                if v:IsA("TextButton") then 
+                    Library:ChangeThemeType(v, "TextColor3", "DimText") -- Deactivate others
+                    v.Frame.Visible=false 
+                end 
+            end
             for _, v in pairs(Content:GetChildren()) do v.Visible=false end
-            TweenService:Create(TBtn, TweenInfo.new(0.2), {TextColor3 = Library.Theme.Text}):Play() Ind.Visible=true Page.Visible=true
+            Library:ChangeThemeType(TBtn, "TextColor3", "Text") -- Activate current
+            Ind.Visible=true Page.Visible=true
         end
         TBtn.MouseButton1Click:Connect(ShowTab)
         if firstTab then firstTab=false ShowTab() end
@@ -184,6 +213,7 @@ function Library:Window(opts)
         function SubTabs:SubTab(subName)
             local SBtn = Create("TextButton", {Parent=SubTabBox, BackgroundColor3=Library.Theme.Section, Size=UDim2.new(0,0,1,0), AutomaticSize=Enum.AutomaticSize.X, Text="  "..subName.."  ", TextColor3=Library.Theme.DimText, Font=Library.Theme.FontSmall, TextSize=11, ZIndex=6})
             Library:RegisterThemeObj("Section", SBtn, "BackgroundColor3")
+            Library:RegisterThemeObj("DimText", SBtn, "TextColor3") -- Register as inactive initially
             Create("UICorner", {Parent=SBtn, CornerRadius=UDim.new(0,4)})
             
             local SPage = Create("Frame", {Parent=SubContent, Size=UDim2.new(1,0,1,0), BackgroundTransparency=1, Visible=false, ZIndex=4})
@@ -194,11 +224,14 @@ function Library:Window(opts)
             local function ShowSub()
                 for _, v in pairs(SubTabBox:GetChildren()) do 
                     if v:IsA("TextButton") then 
-                        TweenService:Create(v, TweenInfo.new(0.2), {TextColor3 = Library.Theme.DimText}):Play() 
+                        -- Re-register all as DimText
+                        Library:ChangeThemeType(v, "TextColor3", "DimText")
                     end 
                 end
                 for _, v in pairs(SubContent:GetChildren()) do v.Visible=false end
-                TweenService:Create(SBtn, TweenInfo.new(0.2), {TextColor3 = Library.Theme.Accent}):Play() -- Use Accent when active
+                
+                -- Re-register Active as Accent
+                Library:ChangeThemeType(SBtn, "TextColor3", "Accent")
                 SPage.Visible=true
             end
             SBtn.MouseButton1Click:Connect(ShowSub)
@@ -221,7 +254,7 @@ function Library:Window(opts)
                 end
                 function E:Paragraph(h, d)
                    local Box = Create("Frame", {Parent=Items, BackgroundTransparency=1, Size=UDim2.new(1,0,0,0), AutomaticSize=Enum.AutomaticSize.Y, ZIndex=7})
-                   Create("TextLabel", {Parent=Box, Text=h, TextColor3=Library.Theme.Text, Font=Library.Theme.FontSmall, TextSize=12, Size=UDim2.new(1,0,0,15), BackgroundTransparency=1, TextXAlignment=Enum.TextXAlignment.Left, ZIndex=8})
+                   Create("TextLabel", {Parent=Box, Text=h, TextColor3=Library.Theme.Text, Font=Library.Theme.FontSmall, TextSize=12, Size=UDim2.new(1,0,0,15), BackgroundTransparency=1, TextXAlignment=Enum.TextXAlignment.Left, ZIndex=8}); Library:RegisterThemeObj("Text", Box.TextLabel, "TextColor3")
                    Create("TextLabel", {Parent=Box, Text=d, TextColor3=Library.Theme.DimText, Font=Library.Theme.FontSmall, TextSize=11, Size=UDim2.new(1,0,0,0), Position=UDim2.new(0,0,0,15), BackgroundTransparency=1, TextXAlignment=Enum.TextXAlignment.Left, TextWrapped=true, AutomaticSize=Enum.AutomaticSize.Y, ZIndex=8})
                    Create("UIPadding", {Parent=Box, PaddingBottom=UDim.new(0,5)}); return Box
                 end
