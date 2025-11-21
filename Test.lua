@@ -500,6 +500,73 @@ function Library:Window(TitleText)
                     end
                 end
         
+                function BoxFuncs:ESPPreview()
+                    local F = Instance.new("Frame", C)
+                    F.Size = UDim2.new(1, 0, 0, 200)
+                    F.BackgroundTransparency = 1
+                    
+                    local VP = Instance.new("ViewportFrame", F)
+                    VP.Size = UDim2.new(1, -10, 1, 0)
+                    VP.Position = UDim2.new(0, 5, 0, 0)
+                    VP.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+                    VP.BorderColor3 = Library.Theme.Outline
+                    Instance.new("UICorner", VP).CornerRadius = UDim.new(0, 4)
+                    Instance.new("UIStroke", VP).Color = Library.Theme.Outline
+                    
+                    local Cam = Instance.new("Camera", VP)
+                    VP.CurrentCamera = Cam
+                    
+                    task.spawn(function()
+                        local Char = Player.Character or Player.CharacterAdded:Wait()
+                        if not Char then return end
+                        local CharClone = Char:Clone()
+                        CharClone.Parent = VP
+                        
+                        local HRP = CharClone:FindFirstChild("HumanoidRootPart")
+                        if HRP then
+                            Cam.CFrame = CFrame.new(HRP.Position + (HRP.CFrame.LookVector * 6) + Vector3.new(0, 1, 0), HRP.Position)
+                        end
+                    
+                        local BoxESP = Instance.new("Frame", VP)
+                        BoxESP.Size = UDim2.new(0.5, 0, 0.8, 0)
+                        BoxESP.Position = UDim2.new(0.25, 0, 0.1, 0)
+                        BoxESP.BackgroundTransparency = 1
+                        BoxESP.BorderColor3 = Color3.new(1, 0, 0)
+                        BoxESP.BorderSizePixel = 2
+                        BoxESP.Visible = false
+                        
+                        local NameESP = Instance.new("TextLabel", VP)
+                        NameESP.Text = Player.Name
+                        NameESP.Size = UDim2.new(1, 0, 0, 20)
+                        NameESP.Position = UDim2.new(0, 0, 0, 5)
+                        NameESP.BackgroundTransparency = 1
+                        NameESP.TextColor3 = Color3.new(1, 1, 1)
+                        NameESP.Font = Enum.Font.GothamBold
+                        NameESP.TextSize = 12
+                        NameESP.Visible = false
+                        
+                        local HealthBar = Instance.new("Frame", VP)
+                        HealthBar.Size = UDim2.new(0, 3, 0.8, 0)
+                        HealthBar.Position = UDim2.new(0.23, 0, 0.1, 0)
+                        HealthBar.BackgroundColor3 = Color3.new(0, 1, 0)
+                        HealthBar.BorderSizePixel = 0
+                        HealthBar.Visible = false
+                        
+                        local Highlight = Instance.new("Highlight", CharClone)
+                        Highlight.FillColor = Color3.new(1, 0, 0)
+                        Highlight.FillTransparency = 0.5
+                        Highlight.OutlineTransparency = 0
+                        Highlight.Enabled = false
+                        
+                        Library.Preview = {
+                            Box = BoxESP,
+                            Name = NameESP,
+                            Health = HealthBar,
+                            Chams = Highlight
+                        }
+                    end)
+                end
+
                 function BoxFuncs:AddLabel(Config)
                     local Text = type(Config) == "table" and Config.Title or Config
                     local F=Instance.new("Frame",C)
@@ -540,7 +607,6 @@ function Library:Window(TitleText)
                     C1.TextWrapped=true
                     Library:RegisterTheme(C1,"TextColor3","TextDark")
                     
-                    -- Auto resize paragraph based on content
                     local TextBounds = game:GetService("TextService"):GetTextSize(Cont, 11, Enum.Font.Gotham, Vector2.new(C.AbsoluteSize.X, 10000))
                     C1.Size = UDim2.new(1, 0, 0, TextBounds.Y)
                     F.Size = UDim2.new(1, 0, 0, TextBounds.Y + 15)
@@ -584,6 +650,10 @@ function Library:Window(TitleText)
                     Library.Items[Flag]={Set=Set}
                     F.MouseButton1Click:Connect(function() Set(not Library.Flags[Flag]) end)
                     Library.Flags[Flag]=Default
+                end
+
+                function BoxFuncs:AddCheckbox(Config)
+                    return BoxFuncs:AddToggle(Config) -- Алиас для удобства
                 end
 
                 function BoxFuncs:AddSlider(Config)
@@ -632,7 +702,6 @@ function Library:Window(TitleText)
                     
                     local function Set(v)
                         v=math.clamp(v,Min,Max)
-                        -- Apply rounding if needed
                         if Rounding > 0 then
                             v = math.floor(v * (10^Rounding)) / (10^Rounding)
                         else
@@ -775,7 +844,7 @@ function Library:Window(TitleText)
                     LL.SortOrder=Enum.SortOrder.LayoutOrder
 
                     if not Multi then
-                        -- SINGLE DROPDOWN LOGIC
+                        -- SINGLE DROPDOWN
                         B.Text = "  " .. (Default or "Select...")
                         local function Set(v)
                             B.Text="  "..v
@@ -815,7 +884,7 @@ function Library:Window(TitleText)
                         end)
 
                     else
-                        -- MULTI DROPDOWN LOGIC
+                        -- MULTI DROPDOWN
                         local Sel={}
                         if type(Default) == "table" then
                             for _, val in pairs(Default) do Sel[val] = true end
@@ -843,7 +912,6 @@ function Library:Window(TitleText)
                                 bt.TextColor3=Sel[v] and Library.Theme.Accent or Color3.fromRGB(200,200,200)
                                 Upd()
                             end)
-                            -- Sync initial state
                             if Sel[v] then bt.TextColor3 = Library.Theme.Accent end
                         end
                         
