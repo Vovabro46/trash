@@ -1,9 +1,8 @@
 --[[
-    GILA MONSTER LIBRARY [SOURCE v6]
-    Features:
-    - PRESET THEMES (Red, Blue, Green, etc.)
-    - FULL MOBILE SUPPORT
-    - Configs & ColorPickers
+    GILA MONSTER LIBRARY [SOURCE v7]
+    - Full Dynamic Recoloring (All elements update instantly)
+    - Mobile Support Restored
+    - Configs, Keybinds, Inputs
 ]]
 
 local UserInputService = game:GetService("UserInputService")
@@ -16,7 +15,8 @@ local Players = game:GetService("Players")
 local Library = { 
     Flags = {}, 
     Items = {}, 
-    ThemeObjects = { Accent = {}, Text = {}, Main = {}, Sidebar = {}, Section = {} },
+    -- Хранилище всех объектов для перекраски
+    ThemeObjects = { Accent = {}, Text = {}, Main = {}, Sidebar = {}, Section = {}, Border = {} },
     Theme = {
         Main      = Color3.fromRGB(20, 20, 20),
         Sidebar   = Color3.fromRGB(25, 25, 28),
@@ -30,34 +30,18 @@ local Library = {
     }
 }
 
---// [NEW] THEME PRESETS
+--// THEME PRESETS
 Library.ThemePresets = {
-    ["Default"] = {
-        Main = Color3.fromRGB(20, 20, 20), Sidebar = Color3.fromRGB(25, 25, 28), Section = Color3.fromRGB(30, 30, 35), Accent = Color3.fromRGB(120, 110, 225)
-    },
-    ["Blood Moon"] = {
-        Main = Color3.fromRGB(20, 15, 15), Sidebar = Color3.fromRGB(25, 20, 20), Section = Color3.fromRGB(30, 25, 25), Accent = Color3.fromRGB(230, 60, 60)
-    },
-    ["Oceanic"] = {
-        Main = Color3.fromRGB(15, 20, 25), Sidebar = Color3.fromRGB(20, 25, 30), Section = Color3.fromRGB(25, 30, 35), Accent = Color3.fromRGB(0, 160, 255)
-    },
-    ["Toxic"] = {
-        Main = Color3.fromRGB(15, 20, 15), Sidebar = Color3.fromRGB(20, 25, 20), Section = Color3.fromRGB(25, 30, 25), Accent = Color3.fromRGB(100, 255, 100)
-    },
-    ["Cotton Candy"] = {
-        Main = Color3.fromRGB(25, 20, 25), Sidebar = Color3.fromRGB(30, 25, 30), Section = Color3.fromRGB(35, 30, 35), Accent = Color3.fromRGB(255, 150, 210)
-    },
-    ["Midnight"] = {
-        Main = Color3.fromRGB(10, 10, 15), Sidebar = Color3.fromRGB(15, 15, 20), Section = Color3.fromRGB(20, 20, 25), Accent = Color3.fromRGB(80, 80, 255)
-    }
+    ["Default"] = { Main = Color3.fromRGB(20, 20, 20), Sidebar = Color3.fromRGB(25, 25, 28), Section = Color3.fromRGB(30, 30, 35), Accent = Color3.fromRGB(120, 110, 225) },
+    ["Blood Moon"] = { Main = Color3.fromRGB(20, 15, 15), Sidebar = Color3.fromRGB(25, 20, 20), Section = Color3.fromRGB(30, 25, 25), Accent = Color3.fromRGB(230, 60, 60) },
+    ["Oceanic"] = { Main = Color3.fromRGB(15, 20, 25), Sidebar = Color3.fromRGB(20, 25, 30), Section = Color3.fromRGB(25, 30, 35), Accent = Color3.fromRGB(0, 160, 255) },
+    ["Toxic"] = { Main = Color3.fromRGB(15, 20, 15), Sidebar = Color3.fromRGB(20, 25, 20), Section = Color3.fromRGB(25, 30, 25), Accent = Color3.fromRGB(100, 255, 100) },
+    ["Midnight"] = { Main = Color3.fromRGB(10, 10, 15), Sidebar = Color3.fromRGB(15, 15, 20), Section = Color3.fromRGB(20, 20, 25), Accent = Color3.fromRGB(80, 80, 255) },
+    ["Void"] = { Main = Color3.fromRGB(5, 5, 5), Sidebar = Color3.fromRGB(10, 10, 10), Section = Color3.fromRGB(15, 15, 15), Accent = Color3.fromRGB(255, 255, 255) }
 }
 
 local CfgFolder = "GilaConfigs"
-local Icons = {
-    ["menu"] = "rbxassetid://6031091000", ["minimize"] = "rbxassetid://6031094670",
-    ["x"] = "rbxassetid://6031094678", ["arrow_d"] = "rbxassetid://6031091304",
-    ["info"] = "rbxassetid://6031225819"
-}
+local Icons = { ["menu"] = "rbxassetid://6031091000", ["minimize"] = "rbxassetid://6031094670", ["x"] = "rbxassetid://6031094678", ["arrow_d"] = "rbxassetid://6031091304", ["info"] = "rbxassetid://6031225819" }
 
 local function Create(class, props)
     local inst = Instance.new(class)
@@ -65,10 +49,14 @@ local function Create(class, props)
     return inst
 end
 
---// THEME SYSTEM
+--// THEME MANAGER (REGISTRY)
 function Library:RegisterThemeObj(type, obj, property)
     if not Library.ThemeObjects[type] then Library.ThemeObjects[type] = {} end
     table.insert(Library.ThemeObjects[type], {Object = obj, Property = property})
+    -- Применяем цвет сразу при регистрации
+    if Library.Theme[type] then
+        obj[property] = Library.Theme[type]
+    end
 end
 
 function Library:UpdateTheme(type, color)
@@ -80,7 +68,6 @@ function Library:UpdateTheme(type, color)
     end
 end
 
---// [NEW] SET PRESET FUNCTION
 function Library:SetTheme(themeName)
     local preset = Library.ThemePresets[themeName]
     if not preset then return end
@@ -97,7 +84,7 @@ function Library:GetThemes()
     return t
 end
 
---// MOBILE DRAG (PRESERVED)
+--// MOBILE DRAG FIX
 local function MakeDraggable(trigger, target, isButton)
     local dragging, dragStart, startPos, hasMoved = false, nil, nil, false
     trigger.InputBegan:Connect(function(input)
@@ -133,10 +120,16 @@ local NotifContainer = Create("Frame", {Parent = NotifGui, BackgroundTransparenc
 Create("UIListLayout", {Parent = NotifContainer, SortOrder = Enum.SortOrder.LayoutOrder, Padding = UDim.new(0,10), VerticalAlignment = Enum.VerticalAlignment.Bottom, HorizontalAlignment = Enum.HorizontalAlignment.Right})
 function Library:Notify(title, desc, duration)
     local Frame = Create("Frame", {Parent = NotifContainer, BackgroundColor3 = Color3.fromRGB(25,25,25), Size = UDim2.new(1,0,0,60), AutomaticSize=Enum.AutomaticSize.Y, BorderSizePixel=0})
-    Create("UICorner", {Parent=Frame, CornerRadius=UDim.new(0,6)}); Create("UIStroke", {Parent=Frame, Color=Library.Theme.Accent, Thickness=1.5, Transparency=0.5})
-    Library:RegisterThemeObj("Accent", Frame.UIStroke, "Color")
-    Create("TextLabel", {Parent=Frame, Text=title:upper(), TextColor3=Library.Theme.Accent, Font=Enum.Font.GothamBlack, TextSize=13, BackgroundTransparency=1, Size=UDim2.new(1,-20,0,20), Position=UDim2.new(0,10,0,5), TextXAlignment=Enum.TextXAlignment.Left})
-    Create("TextLabel", {Parent=Frame, Text=desc, TextColor3=Library.Theme.Text, Font=Enum.Font.GothamMedium, TextSize=11, BackgroundTransparency=1, Size=UDim2.new(1,-20,0,0), Position=UDim2.new(0,10,0,25), TextXAlignment=Enum.TextXAlignment.Left, TextWrapped=true, AutomaticSize=Enum.AutomaticSize.Y})
+    Create("UICorner", {Parent=Frame, CornerRadius=UDim.new(0,6)}); 
+    local Stroke = Create("UIStroke", {Parent=Frame, Color=Library.Theme.Accent, Thickness=1.5, Transparency=0.5})
+    Library:RegisterThemeObj("Accent", Stroke, "Color")
+    
+    local Ti = Create("TextLabel", {Parent=Frame, Text=title:upper(), TextColor3=Library.Theme.Accent, Font=Enum.Font.GothamBlack, TextSize=13, BackgroundTransparency=1, Size=UDim2.new(1,-20,0,20), Position=UDim2.new(0,10,0,5), TextXAlignment=Enum.TextXAlignment.Left})
+    Library:RegisterThemeObj("Accent", Ti, "TextColor3")
+    
+    local Tx = Create("TextLabel", {Parent=Frame, Text=desc, TextColor3=Library.Theme.Text, Font=Enum.Font.GothamMedium, TextSize=11, BackgroundTransparency=1, Size=UDim2.new(1,-20,0,0), Position=UDim2.new(0,10,0,25), TextXAlignment=Enum.TextXAlignment.Left, TextWrapped=true, AutomaticSize=Enum.AutomaticSize.Y})
+    Library:RegisterThemeObj("Text", Tx, "TextColor3")
+    
     Frame:TweenPosition(UDim2.new(0,0,0,0), "Out", "Back", 0.5); task.delay(duration or 4, function() if Frame then Frame:Destroy() end end)
 end
 
@@ -147,18 +140,22 @@ function Library:Window(opts)
     
     local Screen = Create("ScreenGui", {Name = "GilaFixed", Parent = TargetParent, DisplayOrder=50})
     local MobToggle = Create("ImageButton", {Parent = Screen, BackgroundColor3 = Library.Theme.Main, Position = UDim2.new(0,50,0,50), Size = UDim2.new(0,45,0,45), Image = Icons.menu, ImageColor3 = Library.Theme.Accent, Active = true, ZIndex = 100})
-    Create("UICorner", {Parent=MobToggle, CornerRadius=UDim.new(0,8)}); Create("UIStroke", {Parent=MobToggle, Color=Library.Theme.Accent, Thickness=2})
+    Library:RegisterThemeObj("Main", MobToggle, "BackgroundColor3"); Library:RegisterThemeObj("Accent", MobToggle, "ImageColor3")
+    Create("UICorner", {Parent=MobToggle, CornerRadius=UDim.new(0,8)}); 
+    local MStr = Create("UIStroke", {Parent=MobToggle, Color=Library.Theme.Accent, Thickness=2}); Library:RegisterThemeObj("Accent", MStr, "Color")
     local TouchClick = Instance.new("BindableEvent", MobToggle); TouchClick.Name = "TouchClick"
     
     local Main = Create("Frame", {Parent = Screen, BackgroundColor3 = Library.Theme.Main, Position = UDim2.new(0.5,-325,0.5,-225), Size = UDim2.new(0,650,0,450), ClipsDescendants = true})
     Library:RegisterThemeObj("Main", Main, "BackgroundColor3")
-    Create("UICorner", {Parent=Main, CornerRadius=UDim.new(0,6)}); Create("UIStroke", {Parent=Main, Color=Library.Theme.Border, Thickness=1.5})
+    Create("UICorner", {Parent=Main, CornerRadius=UDim.new(0,6)}); 
+    local MainStr = Create("UIStroke", {Parent=Main, Color=Library.Theme.Border, Thickness=1.5}); Library:RegisterThemeObj("Border", MainStr, "Color")
     
     TouchClick.Event:Connect(function() Main.Visible = not Main.Visible end); MakeDraggable(MobToggle, MobToggle, true)
     
     local Top = Create("Frame", {Parent = Main, BackgroundColor3 = Library.Theme.Main, Size = UDim2.new(1,0,0,40), BorderSizePixel = 0})
     Library:RegisterThemeObj("Main", Top, "BackgroundColor3")
-    Create("TextLabel", {Parent = Top, Text = "GILA", TextColor3 = Library.Theme.Text, Font = Enum.Font.GothamBlack, TextSize = 16, Size = UDim2.new(0,50,1,0), Position = UDim2.new(0,15,0,0), BackgroundTransparency=1, TextXAlignment=Enum.TextXAlignment.Left})
+    local Logo1 = Create("TextLabel", {Parent = Top, Text = "GILA", TextColor3 = Library.Theme.Text, Font = Enum.Font.GothamBlack, TextSize = 16, Size = UDim2.new(0,50,1,0), Position = UDim2.new(0,15,0,0), BackgroundTransparency=1, TextXAlignment=Enum.TextXAlignment.Left})
+    Library:RegisterThemeObj("Text", Logo1, "TextColor3")
     local Logo2 = Create("TextLabel", {Parent = Top, Text = "MONSTER", TextColor3 = Library.Theme.Accent, Font = Enum.Font.GothamBlack, TextSize = 16, Size = UDim2.new(0,100,1,0), Position = UDim2.new(0,60,0,0), BackgroundTransparency=1, TextXAlignment=Enum.TextXAlignment.Left})
     Library:RegisterThemeObj("Accent", Logo2, "TextColor3")
     MakeDraggable(Top, Main, false)
@@ -201,26 +198,34 @@ function Library:Window(opts)
             Create("UIListLayout", {Parent=Items, SortOrder=Enum.SortOrder.LayoutOrder, Padding=UDim.new(0,6)}); Create("UIPadding", {Parent=Items, PaddingBottom=UDim.new(0,10)})
             
             local E = {}
-            function E:Label(t) return Create("TextLabel", {Parent=Items, Text=t, TextColor3=Library.Theme.DimText, Font=Library.Theme.FontSmall, TextSize=12, BackgroundTransparency=1, Size=UDim2.new(1,0,0,18), TextXAlignment=Enum.TextXAlignment.Left}) end
+            function E:Label(t) 
+                local Lab = Create("TextLabel", {Parent=Items, Text=t, TextColor3=Library.Theme.DimText, Font=Library.Theme.FontSmall, TextSize=12, BackgroundTransparency=1, Size=UDim2.new(1,0,0,18), TextXAlignment=Enum.TextXAlignment.Left}) 
+                return Lab
+            end
             function E:Button(t, cb)
                 local Btn = Create("TextButton", {Parent=Items, BackgroundColor3=Library.Theme.Main, Size=UDim2.new(1,0,0,25), Text=t, TextColor3=Library.Theme.Text, Font=Library.Theme.FontSmall, TextSize=11})
-                Library:RegisterThemeObj("Main", Btn, "BackgroundColor3")
-                Create("UICorner", {Parent=Btn, CornerRadius=UDim.new(0,4)}); Create("UIStroke", {Parent=Btn, Color=Library.Theme.Border})
+                Library:RegisterThemeObj("Main", Btn, "BackgroundColor3"); Library:RegisterThemeObj("Text", Btn, "TextColor3")
+                Create("UICorner", {Parent=Btn, CornerRadius=UDim.new(0,4)}); 
+                local S = Create("UIStroke", {Parent=Btn, Color=Library.Theme.Border}); Library:RegisterThemeObj("Border", S, "Color")
                 Btn.MouseButton1Click:Connect(cb); return Btn
             end
             function E:TextBox(txt, ph, flag, cb)
                 local Box = Create("Frame", {Parent=Items, BackgroundTransparency=1, Size=UDim2.new(1,0,0,40)})
-                Create("TextLabel", {Parent=Box, Text=txt, TextColor3=Library.Theme.Text, Font=Library.Theme.FontSmall, TextSize=12, Size=UDim2.new(1,0,0,15), BackgroundTransparency=1, TextXAlignment=Enum.TextXAlignment.Left})
+                local T = Create("TextLabel", {Parent=Box, Text=txt, TextColor3=Library.Theme.Text, Font=Library.Theme.FontSmall, TextSize=12, Size=UDim2.new(1,0,0,15), BackgroundTransparency=1, TextXAlignment=Enum.TextXAlignment.Left})
+                Library:RegisterThemeObj("Text", T, "TextColor3")
                 local Input = Create("TextBox", {Parent=Box, BackgroundColor3=Library.Theme.Main, TextColor3=Library.Theme.Text, PlaceholderText=ph, Text="", Size=UDim2.new(1,0,0,20), Position=UDim2.new(0,0,0,20), Font=Library.Theme.FontSmall, TextSize=11})
-                Library:RegisterThemeObj("Main", Input, "BackgroundColor3")
-                Create("UICorner", {Parent=Input, CornerRadius=UDim.new(0,4)}); Create("UIStroke", {Parent=Input, Color=Library.Theme.Border})
+                Library:RegisterThemeObj("Main", Input, "BackgroundColor3"); Library:RegisterThemeObj("Text", Input, "TextColor3")
+                Create("UICorner", {Parent=Input, CornerRadius=UDim.new(0,4)}); 
+                local S = Create("UIStroke", {Parent=Input, Color=Library.Theme.Border}); Library:RegisterThemeObj("Border", S, "Color")
                 Input.FocusLost:Connect(function() if flag then Library.Flags[flag]=Input.Text end if cb then cb(Input.Text) end end)
             end
             function E:Toggle(txt, def, flag, cb)
                 local TogBtn = Create("TextButton", {Parent=Items, BackgroundTransparency=1, Size=UDim2.new(1,0,0,20), Text=""})
-                Create("TextLabel", {Parent=TogBtn, Text=txt, TextColor3=Library.Theme.Text, Font=Library.Theme.FontSmall, TextSize=12, BackgroundTransparency=1, Size=UDim2.new(1,-25,1,0), TextXAlignment=Enum.TextXAlignment.Left})
-                local Box = Create("Frame", {Parent=TogBtn, BackgroundColor3=Library.Theme.Main, Size=UDim2.new(0,14,0,14), Position=UDim2.new(1,-14,0.5,-7)}); Create("UICorner", {Parent=Box, CornerRadius=UDim.new(0,3)}); Create("UIStroke", {Parent=Box, Color=Library.Theme.Border})
+                local T = Create("TextLabel", {Parent=TogBtn, Text=txt, TextColor3=Library.Theme.Text, Font=Library.Theme.FontSmall, TextSize=12, BackgroundTransparency=1, Size=UDim2.new(1,-25,1,0), TextXAlignment=Enum.TextXAlignment.Left})
+                Library:RegisterThemeObj("Text", T, "TextColor3")
+                local Box = Create("Frame", {Parent=TogBtn, BackgroundColor3=Library.Theme.Main, Size=UDim2.new(0,14,0,14), Position=UDim2.new(1,-14,0.5,-7)}); Create("UICorner", {Parent=Box, CornerRadius=UDim.new(0,3)}); 
                 Library:RegisterThemeObj("Main", Box, "BackgroundColor3")
+                local S = Create("UIStroke", {Parent=Box, Color=Library.Theme.Border}); Library:RegisterThemeObj("Border", S, "Color")
                 local Fill = Create("Frame", {Parent=Box, BackgroundColor3=Library.Theme.Accent, Size=UDim2.new(1,-2,1,-2), Position=UDim2.new(0,1,0,1), Visible=def or false})
                 Library:RegisterThemeObj("Accent", Fill, "BackgroundColor3")
                 Create("UICorner", {Parent=Fill, CornerRadius=UDim.new(0,2)})
@@ -230,7 +235,8 @@ function Library:Window(opts)
             end
             function E:Slider(txt, min, max, def, flag, cb)
                 local Box = Create("Frame", {Parent=Items, BackgroundTransparency=1, Size=UDim2.new(1,0,0,35)})
-                Create("TextLabel", {Parent=Box, Text=txt, TextColor3=Library.Theme.Text, Font=Library.Theme.FontSmall, TextSize=12, Size=UDim2.new(1,0,0,15), BackgroundTransparency=1, TextXAlignment=Enum.TextXAlignment.Left})
+                local T = Create("TextLabel", {Parent=Box, Text=txt, TextColor3=Library.Theme.Text, Font=Library.Theme.FontSmall, TextSize=12, Size=UDim2.new(1,0,0,15), BackgroundTransparency=1, TextXAlignment=Enum.TextXAlignment.Left})
+                Library:RegisterThemeObj("Text", T, "TextColor3")
                 local Val = Create("TextLabel", {Parent=Box, Text=tostring(def), TextColor3=Library.Theme.Accent, Font=Library.Theme.FontSmall, TextSize=12, Size=UDim2.new(1,0,0,15), BackgroundTransparency=1, TextXAlignment=Enum.TextXAlignment.Right})
                 Library:RegisterThemeObj("Accent", Val, "TextColor3")
                 local Bar = Create("Frame", {Parent=Box, BackgroundColor3=Library.Theme.Main, Size=UDim2.new(1,0,0,5), Position=UDim2.new(0,0,0,22)}); Create("UICorner", {Parent=Bar, CornerRadius=UDim.new(0,2)})
@@ -246,10 +252,11 @@ function Library:Window(opts)
             end
             function E:Dropdown(txt, opts, def, flag, cb)
                 local Main = Create("Frame", {Parent=Items, BackgroundTransparency=1, Size=UDim2.new(1,0,0,40), ZIndex=5})
-                Create("TextLabel", {Parent=Main, Text=txt, TextColor3=Library.Theme.Text, Font=Library.Theme.FontSmall, TextSize=12, Size=UDim2.new(1,0,0,15), BackgroundTransparency=1, TextXAlignment=Enum.TextXAlignment.Left})
+                local T = Create("TextLabel", {Parent=Main, Text=txt, TextColor3=Library.Theme.Text, Font=Library.Theme.FontSmall, TextSize=12, Size=UDim2.new(1,0,0,15), BackgroundTransparency=1, TextXAlignment=Enum.TextXAlignment.Left})
+                Library:RegisterThemeObj("Text", T, "TextColor3")
                 local Btn = Create("TextButton", {Parent=Main, BackgroundColor3=Library.Theme.Main, Size=UDim2.new(1,0,0,20), Position=UDim2.new(0,0,0,20), Text="  "..(def or "..."), TextXAlignment=Enum.TextXAlignment.Left, TextColor3=Library.Theme.DimText, Font=Library.Theme.FontSmall, TextSize=11})
                 Library:RegisterThemeObj("Main", Btn, "BackgroundColor3")
-                Create("UIStroke", {Parent=Btn, Color=Library.Theme.Border})
+                local S = Create("UIStroke", {Parent=Btn, Color=Library.Theme.Border}); Library:RegisterThemeObj("Border", S, "Color")
                 Create("ImageLabel", {Parent=Btn, BackgroundTransparency=1, Image=Icons.arrow_d, ImageColor3=Library.Theme.DimText, Size=UDim2.new(0,16,0,16), Position=UDim2.new(1,-20,0,2)})
                 local List = Create("ScrollingFrame", {Parent=Btn, Visible=false, Size=UDim2.new(1,0,0,0), Position=UDim2.new(0,0,1,2), BackgroundColor3=Library.Theme.Section, BorderColor3=Library.Theme.Accent, ZIndex=20, ScrollBarThickness=2, AutomaticSize=Enum.AutomaticSize.Y, CanvasSize=UDim2.new(0,0,0,0)})
                 Library:RegisterThemeObj("Section", List, "BackgroundColor3"); Library:RegisterThemeObj("Accent", List, "BorderColor3")
@@ -261,18 +268,22 @@ function Library:Window(opts)
             end
             function E:ColorPicker(txt, def, flag, cb)
                 local Box = Create("Frame", {Parent=Items, BackgroundTransparency=1, Size=UDim2.new(1,0,0,40), ZIndex=5})
-                Create("TextLabel", {Parent=Box, Text=txt, TextColor3=Library.Theme.Text, Font=Library.Theme.FontSmall, TextSize=12, Size=UDim2.new(1,0,0,15), BackgroundTransparency=1, TextXAlignment=Enum.TextXAlignment.Left})
+                local T = Create("TextLabel", {Parent=Box, Text=txt, TextColor3=Library.Theme.Text, Font=Library.Theme.FontSmall, TextSize=12, Size=UDim2.new(1,0,0,15), BackgroundTransparency=1, TextXAlignment=Enum.TextXAlignment.Left})
+                Library:RegisterThemeObj("Text", T, "TextColor3")
                 local Preview = Create("TextButton", {Parent=Box, BackgroundColor3=def, Text="", Size=UDim2.new(1,0,0,20), Position=UDim2.new(0,0,0,20)})
-                Create("UICorner", {Parent=Preview, CornerRadius=UDim.new(0,4)}); Create("UIStroke", {Parent=Preview, Color=Library.Theme.Border})
+                Create("UICorner", {Parent=Preview, CornerRadius=UDim.new(0,4)}); 
+                local S = Create("UIStroke", {Parent=Preview, Color=Library.Theme.Border}); Library:RegisterThemeObj("Border", S, "Color")
                 local PickFrame = Create("Frame", {Parent=Preview, Visible=false, BackgroundColor3=Library.Theme.Section, Size=UDim2.new(1,0,0,95), Position=UDim2.new(0,0,1,5), ZIndex=10})
                 Library:RegisterThemeObj("Section", PickFrame, "BackgroundColor3")
-                Create("UIStroke", {Parent=PickFrame, Color=Library.Theme.Border}); Create("UICorner", {Parent=PickFrame, CornerRadius=UDim.new(0,4)})
+                local S2 = Create("UIStroke", {Parent=PickFrame, Color=Library.Theme.Border}); Library:RegisterThemeObj("Border", S2, "Color")
+                Create("UICorner", {Parent=PickFrame, CornerRadius=UDim.new(0,4)})
                 local R,G,B = def.R*255, def.G*255, def.B*255
                 local function Update() local c=Color3.fromRGB(R,G,B) Preview.BackgroundColor3=c if flag then Library.Flags[flag]=c end if cb then cb(c) end end
                 local function MakeS(t,y,val,set)
                     local SBox = Create("Frame", {Parent=PickFrame, BackgroundTransparency=1, Size=UDim2.new(1,-10,0,25), Position=UDim2.new(0,5,0,y), ZIndex=11})
                     Create("TextLabel", {Parent=SBox, Text=t, TextColor3=Library.Theme.DimText, Size=UDim2.new(0,15,1,0), BackgroundTransparency=1, ZIndex=11})
                     local Bar = Create("Frame", {Parent=SBox, BackgroundColor3=Library.Theme.Main, Size=UDim2.new(1,-20,0,5), Position=UDim2.new(0,20,0.5,-2), ZIndex=11})
+                    Library:RegisterThemeObj("Main", Bar, "BackgroundColor3")
                     local Fill = Create("Frame", {Parent=Bar, BackgroundColor3=Library.Theme.Accent, Size=UDim2.new(val/255,0,1,0), ZIndex=11}); Library:RegisterThemeObj("Accent", Fill, "BackgroundColor3")
                     local Trig = Create("TextButton", {Parent=Bar, BackgroundTransparency=1, Size=UDim2.new(1,0,1,0), Text="", ZIndex=12})
                     local d=false; local function In(i) local s=math.clamp((i.Position.X-Bar.AbsolutePosition.X)/Bar.AbsoluteSize.X,0,1) Fill.Size=UDim2.new(s,0,1,0) set(s*255) Update() end
@@ -283,7 +294,6 @@ function Library:Window(opts)
                 MakeS("R", 5, R, function(v) R=v end); MakeS("G", 35, G, function(v) G=v end); MakeS("B", 65, B, function(v) B=v end)
                 Preview.MouseButton1Click:Connect(function() PickFrame.Visible = not PickFrame.Visible end)
             end
-            
             return E
         end return Funcs
     end return Tabs
