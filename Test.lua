@@ -500,72 +500,8 @@ function Library:Window(TitleText)
                     end
                 end
         
-                function BoxFuncs:ESPPreview()
-                    local F = Instance.new("Frame", C)
-                    F.Size = UDim2.new(1, 0, 0, 200)
-                    F.BackgroundTransparency = 1
-                    
-                    local VP = Instance.new("ViewportFrame", F)
-                    VP.Size = UDim2.new(1, -10, 1, 0)
-                    VP.Position = UDim2.new(0, 5, 0, 0)
-                    VP.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-                    VP.BorderColor3 = Library.Theme.Outline
-                    Instance.new("UICorner", VP).CornerRadius = UDim.new(0, 4)
-                    Instance.new("UIStroke", VP).Color = Library.Theme.Outline
-                    
-                    local Cam = Instance.new("Camera", VP)
-                    VP.CurrentCamera = Cam
-                    
-                    task.spawn(function()
-                        local Char = Player.Character or Player.CharacterAdded:Wait()
-                        Char.Archivable = true
-                        local Clone = Char:Clone()
-                        Clone.Parent = VP
-                        
-                        local HRP = Clone:WaitForChild("HumanoidRootPart")
-                        Cam.CFrame = CFrame.new(HRP.Position + (HRP.CFrame.LookVector * 6) + Vector3.new(0, 1, 0), HRP.Position)
-                    
-                        local BoxESP = Instance.new("Frame", VP)
-                        BoxESP.Size = UDim2.new(0.5, 0, 0.8, 0)
-                        BoxESP.Position = UDim2.new(0.25, 0, 0.1, 0)
-                        BoxESP.BackgroundTransparency = 1
-                        BoxESP.BorderColor3 = Color3.new(1, 0, 0)
-                        BoxESP.BorderSizePixel = 2
-                        BoxESP.Visible = false
-                        
-                        local NameESP = Instance.new("TextLabel", VP)
-                        NameESP.Text = Player.Name
-                        NameESP.Size = UDim2.new(1, 0, 0, 20)
-                        NameESP.Position = UDim2.new(0, 0, 0, 5)
-                        NameESP.BackgroundTransparency = 1
-                        NameESP.TextColor3 = Color3.new(1, 1, 1)
-                        NameESP.Font = Enum.Font.GothamBold
-                        NameESP.TextSize = 12
-                        NameESP.Visible = false
-                        
-                        local HealthBar = Instance.new("Frame", VP)
-                        HealthBar.Size = UDim2.new(0, 3, 0.8, 0)
-                        HealthBar.Position = UDim2.new(0.23, 0, 0.1, 0)
-                        HealthBar.BackgroundColor3 = Color3.new(0, 1, 0)
-                        HealthBar.BorderSizePixel = 0
-                        HealthBar.Visible = false
-                        
-                        local Highlight = Instance.new("Highlight", Clone)
-                        Highlight.FillColor = Color3.new(1, 0, 0)
-                        Highlight.FillTransparency = 0.5
-                        Highlight.OutlineTransparency = 0
-                        Highlight.Enabled = false
-                        
-                        Library.Preview = {
-                            Box = BoxESP,
-                            Name = NameESP,
-                            Health = HealthBar,
-                            Chams = Highlight
-                        }
-                    end)
-                end
-
-                function BoxFuncs:Label(Text)
+                function BoxFuncs:AddLabel(Config)
+                    local Text = type(Config) == "table" and Config.Title or Config
                     local F=Instance.new("Frame",C)
                     F.Size=UDim2.new(1,0,0,15)
                     F.BackgroundTransparency=1
@@ -579,7 +515,9 @@ function Library:Window(TitleText)
                     Library:RegisterTheme(Lb,"TextColor3","Text")
                 end
                 
-                function BoxFuncs:Paragraph(Head,Cont)
+                function BoxFuncs:AddParagraph(Config)
+                    local Head = Config.Title or "Paragraph"
+                    local Cont = Config.Content or ""
                     local F=Instance.new("Frame",C)
                     F.Size=UDim2.new(1,0,0,40)
                     F.BackgroundTransparency=1
@@ -601,40 +539,19 @@ function Library:Window(TitleText)
                     C1.TextXAlignment=Enum.TextXAlignment.Left
                     C1.TextWrapped=true
                     Library:RegisterTheme(C1,"TextColor3","TextDark")
+                    
+                    -- Auto resize paragraph based on content
+                    local TextBounds = game:GetService("TextService"):GetTextSize(Cont, 11, Enum.Font.Gotham, Vector2.new(C.AbsoluteSize.X, 10000))
+                    C1.Size = UDim2.new(1, 0, 0, TextBounds.Y)
+                    F.Size = UDim2.new(1, 0, 0, TextBounds.Y + 15)
                 end
 
-                function BoxFuncs:Checkbox(Text, Default, Callback, Flag)
-                    Flag = Flag or Text
-                    local F=Instance.new("TextButton",C)
-                    F.Size=UDim2.new(1,0,0,20)
-                    F.BackgroundTransparency=1
-                    F.Text=""
-                    local Lb=Instance.new("TextLabel",F)
-                    Lb.Size=UDim2.new(1,-25,1,0)
-                    Lb.BackgroundTransparency=1
-                    Lb.Text=Text
-                    Lb.Font=Enum.Font.Gotham
-                    Lb.TextSize=12
-                    Lb.TextXAlignment=Enum.TextXAlignment.Left
-                    Library:RegisterTheme(Lb,"TextColor3","Text")
-                    local B=Instance.new("Frame",F)
-                    B.Size=UDim2.new(0,18,0,18)
-                    B.Position=UDim2.new(1,-18,0.5,-9)
-                    B.BackgroundColor3=Default and Library.Theme.Accent or Color3.fromRGB(35,35,35)
-                    Instance.new("UICorner",B).CornerRadius=UDim.new(0,3)
-                    
-                    local function Set(v)
-                        Library.Flags[Flag]=v
-                        TweenService:Create(B,TweenInfo.new(0.1),{BackgroundColor3=v and Library.Theme.Accent or Color3.fromRGB(35,35,35)}):Play()
-                        pcall(Callback,v)
-                    end
-                    Library.Items[Flag]={Set=Set}
-                    F.MouseButton1Click:Connect(function() Set(not Library.Flags[Flag]) end)
-                    Library.Flags[Flag]=Default
-                end
-                
-                function BoxFuncs:Toggle(Text, Default, Callback, Flag)
-                    Flag = Flag or Text
+                function BoxFuncs:AddToggle(Config)
+                    local Text = Config.Title or "Toggle"
+                    local Default = Config.Default or false
+                    local Callback = Config.Callback or function() end
+                    local Flag = Config.Flag or Text
+
                     local F=Instance.new("TextButton",C)
                     F.Size=UDim2.new(1,0,0,20)
                     F.BackgroundTransparency=1
@@ -669,8 +586,15 @@ function Library:Window(TitleText)
                     Library.Flags[Flag]=Default
                 end
 
-                function BoxFuncs:Slider(Text,Min,Max,Def,Callback,Flag)
-                    Flag = Flag or Text
+                function BoxFuncs:AddSlider(Config)
+                    local Text = Config.Title or "Slider"
+                    local Min = Config.Min or 0
+                    local Max = Config.Max or 100
+                    local Def = Config.Default or Min
+                    local Callback = Config.Callback or function() end
+                    local Flag = Config.Flag or Text
+                    local Rounding = Config.Rounding or 0
+
                     local F=Instance.new("Frame",C)
                     F.Size=UDim2.new(1,0,0,38)
                     F.BackgroundTransparency=1
@@ -708,6 +632,13 @@ function Library:Window(TitleText)
                     
                     local function Set(v)
                         v=math.clamp(v,Min,Max)
+                        -- Apply rounding if needed
+                        if Rounding > 0 then
+                            v = math.floor(v * (10^Rounding)) / (10^Rounding)
+                        else
+                            v = math.floor(v)
+                        end
+                        
                         Library.Flags[Flag]=v
                         Vl.Text=tostring(v)
                         TweenService:Create(Fil,TweenInfo.new(0.1),{Size=UDim2.new((v-Min)/(Max-Min),0,1,0)}):Play()
@@ -718,15 +649,20 @@ function Library:Window(TitleText)
                     local drag=false
                     local function Upd(i)
                         local x=math.clamp((i.Position.X-B.AbsolutePosition.X)/B.AbsoluteSize.X,0,1)
-                        Set(math.floor(((Max-Min)*x)+Min))
+                        local newVal = ((Max-Min)*x)+Min
+                        Set(newVal)
                     end
                     Btn.InputBegan:Connect(function(i) if i.UserInputType==Enum.UserInputType.MouseButton1 or i.UserInputType==Enum.UserInputType.Touch then drag=true Upd(i) end end)
                     UserInputService.InputEnded:Connect(function(i) if i.UserInputType==Enum.UserInputType.MouseButton1 or i.UserInputType==Enum.UserInputType.Touch then drag=false end end)
                     UserInputService.InputChanged:Connect(function(i) if drag and (i.UserInputType==Enum.UserInputType.MouseMovement or i.UserInputType==Enum.UserInputType.Touch) then Upd(i) end end)
                 end
                 
-                function BoxFuncs:ColorPicker(Text, Def, Callback, Flag)
-                    Flag = Flag or Text
+                function BoxFuncs:AddColorPicker(Config)
+                    local Text = Config.Title or "Color"
+                    local Def = Config.Default or Color3.new(1,1,1)
+                    local Callback = Config.Callback or function() end
+                    local Flag = Config.Flag or Text
+
                     local F=Instance.new("Frame",C)
                     F.Size=UDim2.new(1,0,0,25)
                     F.BackgroundTransparency=1
@@ -799,9 +735,14 @@ function Library:Window(TitleText)
                     DropdownHolder.InputBegan:Connect(function(i) if i.UserInputType==Enum.UserInputType.MouseButton1 then Win.Visible=false if Library.ActivePicker==Win then Library.ActivePicker=nil end end end)
                 end
 
-                -- [MODIFIED] Updated Dropdown with Search and Large List Support
-                function BoxFuncs:Dropdown(Text,Opt,Call,Flag)
-                    Flag=Flag or Text
+                function BoxFuncs:AddDropdown(Config)
+                    local Text = Config.Title or "Dropdown"
+                    local Opt = Config.Values or {}
+                    local Default = Config.Default
+                    local Callback = Config.Callback or function() end
+                    local Multi = Config.Multi or false
+                    local Flag = Config.Flag or Text
+
                     local F=Instance.new("Frame",C)
                     F.Size=UDim2.new(1,0,0,40)
                     F.BackgroundTransparency=1
@@ -817,136 +758,6 @@ function Library:Window(TitleText)
                     B.Size=UDim2.new(1,0,0,22)
                     B.Position=UDim2.new(0,0,0,18)
                     B.BackgroundColor3=Color3.fromRGB(35,35,35)
-                    B.Text="  Select..."
-                    B.Font=Enum.Font.Gotham
-                    B.TextSize=12
-                    B.TextColor3=Color3.fromRGB(200,200,200)
-                    B.TextXAlignment=Enum.TextXAlignment.Left
-                    Instance.new("UICorner",B).CornerRadius=UDim.new(0,4)
-                    
-                    -- Main Container for Dropdown
-                    local Container = Instance.new("Frame", ScreenGui)
-                    Container.Visible = false
-                    Container.BackgroundColor3 = Color3.fromRGB(35,35,35)
-                    Container.BorderSizePixel = 0
-                    Container.ZIndex = 200
-                    Instance.new("UIStroke", Container).Color = Library.Theme.Outline
-                    Instance.new("UICorner", Container).CornerRadius = UDim.new(0,4)
-                    
-                    -- Search Bar
-                    local SearchBar = Instance.new("TextBox", Container)
-                    SearchBar.Size = UDim2.new(1, -10, 0, 20)
-                    SearchBar.Position = UDim2.new(0, 5, 0, 5)
-                    SearchBar.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
-                    SearchBar.PlaceholderText = "Search..."
-                    SearchBar.Text = ""
-                    SearchBar.TextColor3 = Library.Theme.Text
-                    SearchBar.PlaceholderColor3 = Library.Theme.TextDark
-                    SearchBar.Font = Enum.Font.Gotham
-                    SearchBar.TextSize = 12
-                    SearchBar.BorderColor3 = Library.Theme.Outline
-                    Instance.new("UICorner", SearchBar).CornerRadius = UDim.new(0, 4)
-                    
-                    -- Scrollable List Area
-                    local ScrollList = Instance.new("ScrollingFrame", Container)
-                    ScrollList.Size = UDim2.new(1, 0, 1, -30)
-                    ScrollList.Position = UDim2.new(0, 0, 0, 30)
-                    ScrollList.BackgroundTransparency = 1
-                    ScrollList.BorderSizePixel = 0
-                    ScrollList.ZIndex = 200
-                    ScrollList.ScrollBarThickness = 2
-                    ScrollList.AutomaticCanvasSize = Enum.AutomaticSize.Y
-                    
-                    local LL = Instance.new("UIListLayout", ScrollList)
-                    LL.SortOrder = Enum.SortOrder.LayoutOrder
-
-                    local CurrentOptions = Opt
-                    
-                    local function Set(v)
-                        B.Text="  "..v
-                        Library.Flags[Flag]=v
-                        pcall(Call,v)
-                        Container.Visible=false
-                        DropdownHolder.Visible=false
-                        CheckActivePicker()
-                    end
-                    
-                    local function Populate(options)
-                        for _,v in pairs(ScrollList:GetChildren()) do if v:IsA("TextButton") then v:Destroy() end end
-                        for _,v in pairs(options) do
-                            local bt=Instance.new("TextButton",ScrollList)
-                            bt.Size=UDim2.new(1,0,0,25)
-                            bt.BackgroundTransparency=1
-                            bt.Text=v
-                            bt.TextColor3=Color3.fromRGB(200,200,200)
-                            bt.Font=Enum.Font.Gotham
-                            bt.TextSize=12
-                            bt.MouseButton1Click:Connect(function() Set(v) end)
-                        end
-                    end
-                    
-                    -- Search Logic
-                    SearchBar:GetPropertyChangedSignal("Text"):Connect(function()
-                        local SearchText = SearchBar.Text:lower()
-                        for _, btn in pairs(ScrollList:GetChildren()) do
-                            if btn:IsA("TextButton") then
-                                if SearchText == "" or btn.Text:lower():find(SearchText) then
-                                    btn.Visible = true
-                                else
-                                    btn.Visible = false
-                                end
-                            end
-                        end
-                    end)
-
-                    Library.Items[Flag]={Set=Set, Refresh=function(New)
-                        CurrentOptions = New
-                        Populate(New)
-                    end}
-                    
-                    Populate(Opt)
-                    
-                    B.MouseButton1Click:Connect(function()
-                        if Container.Visible then 
-                            Container.Visible=false 
-                            DropdownHolder.Visible=false 
-                        else
-                            CheckActivePicker()
-                            Container.Position = UDim2.new(0, B.AbsolutePosition.X, 0, B.AbsolutePosition.Y + 25)
-                            -- Fixed size allows scrolling for large lists
-                            Container.Size = UDim2.new(0, B.AbsoluteSize.X, 0, 180) 
-                            Container.Visible = true
-                            DropdownHolder.Visible = true
-                            SearchBar.Text = "" -- Reset search on open
-                        end
-                    end)
-                    
-                    DropdownHolder.InputBegan:Connect(function(i) 
-                        if i.UserInputType==Enum.UserInputType.MouseButton1 then 
-                            Container.Visible=false 
-                            DropdownHolder.Visible=false 
-                        end 
-                    end)
-                end
-                
-                function BoxFuncs:MultiDropdown(Text,Opt,Call,Flag)
-                    Flag=Flag or Text
-                    local F=Instance.new("Frame",C)
-                    F.Size=UDim2.new(1,0,0,40)
-                    F.BackgroundTransparency=1
-                    local L=Instance.new("TextLabel",F)
-                    L.Size=UDim2.new(1,0,0,15)
-                    L.BackgroundTransparency=1
-                    L.Text=Text
-                    L.Font=Enum.Font.Gotham
-                    L.TextSize=12
-                    L.TextXAlignment=Enum.TextXAlignment.Left
-                    Library:RegisterTheme(L,"TextColor3","Text")
-                    local B=Instance.new("TextButton",F)
-                    B.Size=UDim2.new(1,0,0,22)
-                    B.Position=UDim2.new(0,0,0,18)
-                    B.BackgroundColor3=Color3.fromRGB(35,35,35)
-                    B.Text="  ..."
                     B.Font=Enum.Font.Gotham
                     B.TextSize=12
                     B.TextColor3=Color3.fromRGB(200,200,200)
@@ -963,44 +774,101 @@ function Library:Window(TitleText)
                     local LL=Instance.new("UIListLayout",List)
                     LL.SortOrder=Enum.SortOrder.LayoutOrder
 
-                    local Sel={}
-                    Library.Flags[Flag]=Sel
-                    local function Upd()
-                        local t={} for k,v in pairs(Sel) do if v then table.insert(t,k) end end
-                        B.Text=#t==0 and "  None" or (#t==1 and "  "..t[1] or "  "..#t.." Selected")
-                        pcall(Call,Sel)
-                    end
+                    if not Multi then
+                        -- SINGLE DROPDOWN LOGIC
+                        B.Text = "  " .. (Default or "Select...")
+                        local function Set(v)
+                            B.Text="  "..v
+                            Library.Flags[Flag]=v
+                            pcall(Callback,v)
+                            List.Visible=false
+                            DropdownHolder.Visible=false
+                            CheckActivePicker()
+                        end
+                        
+                        Library.Items[Flag]={Set=Set, Refresh=function(New)
+                            for _,v in pairs(List:GetChildren()) do if v:IsA("TextButton") then v:Destroy() end end
+                            for _,v in pairs(New) do
+                                local bt=Instance.new("TextButton",List)
+                                bt.Size=UDim2.new(1,0,0,25)
+                                bt.BackgroundTransparency=1
+                                bt.Text=v
+                                bt.TextColor3=Color3.fromRGB(200,200,200)
+                                bt.Font=Enum.Font.Gotham
+                                bt.TextSize=12
+                                bt.MouseButton1Click:Connect(function() Set(v) end)
+                            end
+                        end}
+                        Library.Items[Flag].Refresh(Opt)
+                        if Default then Set(Default) end
 
-                    for _,v in pairs(Opt) do
-                        local bt=Instance.new("TextButton",List)
-                        bt.Size=UDim2.new(1,0,0,25)
-                        bt.BackgroundTransparency=1
-                        bt.Text=v
-                        bt.TextColor3=Color3.fromRGB(200,200,200)
-                        bt.Font=Enum.Font.Gotham
-                        bt.TextSize=12
-                        bt.MouseButton1Click:Connect(function()
-                            Sel[v]=not Sel[v]
-                            bt.TextColor3=Sel[v] and Library.Theme.Accent or Color3.fromRGB(200,200,200)
-                            Upd()
+                        B.MouseButton1Click:Connect(function()
+                            if List.Visible then List.Visible=false DropdownHolder.Visible=false else
+                                CheckActivePicker()
+                                List.Position=UDim2.new(0,B.AbsolutePosition.X,0,B.AbsolutePosition.Y+25)
+                                local ContentH = LL.AbsoluteContentSize.Y
+                                List.Size=UDim2.new(0,B.AbsoluteSize.X,0,math.min(ContentH, 150))
+                                List.CanvasSize=UDim2.new(0,0,0,ContentH)
+                                List.Visible=true
+                                DropdownHolder.Visible=true
+                            end
+                        end)
+
+                    else
+                        -- MULTI DROPDOWN LOGIC
+                        local Sel={}
+                        if type(Default) == "table" then
+                            for _, val in pairs(Default) do Sel[val] = true end
+                        end
+                        
+                        Library.Flags[Flag]=Sel
+                        
+                        local function Upd()
+                            local t={} for k,v in pairs(Sel) do if v then table.insert(t,k) end end
+                            B.Text=#t==0 and "  None" or (#t==1 and "  "..t[1] or "  "..#t.." Selected")
+                            pcall(Callback,Sel)
+                        end
+                        Upd()
+
+                        for _,v in pairs(Opt) do
+                            local bt=Instance.new("TextButton",List)
+                            bt.Size=UDim2.new(1,0,0,25)
+                            bt.BackgroundTransparency=1
+                            bt.Text=v
+                            bt.TextColor3=Color3.fromRGB(200,200,200)
+                            bt.Font=Enum.Font.Gotham
+                            bt.TextSize=12
+                            bt.MouseButton1Click:Connect(function()
+                                Sel[v]=not Sel[v]
+                                bt.TextColor3=Sel[v] and Library.Theme.Accent or Color3.fromRGB(200,200,200)
+                                Upd()
+                            end)
+                            -- Sync initial state
+                            if Sel[v] then bt.TextColor3 = Library.Theme.Accent end
+                        end
+                        
+                        B.MouseButton1Click:Connect(function()
+                            if List.Visible then List.Visible=false DropdownHolder.Visible=false else
+                                CheckActivePicker()
+                                List.Position=UDim2.new(0,B.AbsolutePosition.X,0,B.AbsolutePosition.Y+25)
+                                local ContentH = LL.AbsoluteContentSize.Y
+                                List.Size=UDim2.new(0,B.AbsoluteSize.X,0,math.min(ContentH, 150))
+                                List.CanvasSize=UDim2.new(0,0,0,ContentH)
+                                List.Visible=true
+                                DropdownHolder.Visible=true
+                            end
                         end)
                     end
-                    B.MouseButton1Click:Connect(function()
-                        if List.Visible then List.Visible=false DropdownHolder.Visible=false else
-                            CheckActivePicker()
-                            List.Position=UDim2.new(0,B.AbsolutePosition.X,0,B.AbsolutePosition.Y+25)
-                            local ContentH = LL.AbsoluteContentSize.Y
-                            List.Size=UDim2.new(0,B.AbsoluteSize.X,0,math.min(ContentH, 150))
-                            List.CanvasSize=UDim2.new(0,0,0,ContentH)
-                            List.Visible=true
-                            DropdownHolder.Visible=true
-                        end
-                    end)
+
                     DropdownHolder.InputBegan:Connect(function(i) if i.UserInputType==Enum.UserInputType.MouseButton1 then List.Visible=false DropdownHolder.Visible=false end end)
                 end
 
-                function BoxFuncs:Keybind(Text,Def,Call,Flag)
-                    Flag=Flag or Text
+                function BoxFuncs:AddKeybind(Config)
+                    local Text = Config.Title or "Keybind"
+                    local Def = Config.Default or Enum.KeyCode.RightShift
+                    local Call = Config.Callback or function() end
+                    local Flag = Config.Flag or Text
+
                     local F=Instance.new("Frame",C)
                     F.Size=UDim2.new(1,0,0,20)
                     F.BackgroundTransparency=1
@@ -1026,8 +894,12 @@ function Library:Window(TitleText)
                     UserInputService.InputBegan:Connect(function(i) if bind and i.UserInputType==Enum.UserInputType.Keyboard then bind=false B.Text=i.KeyCode.Name pcall(Call,i.KeyCode) end end)
                 end
 
-                function BoxFuncs:TextBox(Text,Ph,Call,Flag)
-                    Flag=Flag or Text
+                function BoxFuncs:AddTextbox(Config)
+                    local Text = Config.Title or "Textbox"
+                    local Ph = Config.Placeholder or ""
+                    local Call = Config.Callback or function() end
+                    local Flag = Config.Flag or Text
+
                     local F=Instance.new("Frame",C)
                     F.Size=UDim2.new(1,0,0,40)
                     F.BackgroundTransparency=1
@@ -1052,7 +924,10 @@ function Library:Window(TitleText)
                     B.FocusLost:Connect(function() Library.Flags[Flag]=B.Text pcall(Call,B.Text) end)
                 end
 
-                function BoxFuncs:Button(Text,Call)
+                function BoxFuncs:AddButton(Config)
+                    local Text = Config.Title or "Button"
+                    local Call = Config.Callback or function() end
+
                     local F=Instance.new("Frame",C)
                     F.Size=UDim2.new(1,0,0,32)
                     F.BackgroundTransparency=1
