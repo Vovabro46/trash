@@ -1,8 +1,8 @@
 --[[
-    GILA MONSTER LIBRARY [SOURCE v9]
-    - SubTabs Added (Horizontal)
-    - MultiDropdown & Tooltips
-    - Full Config System & Mobile Support
+    GILA MONSTER LIBRARY [SOURCE v10]
+    - Fixed: ColorPicker clipping (Now floats above everything)
+    - Fixed: SubTabs recoloring & spacing
+    - Full Mobile Support & Configs
 ]]
 
 local UserInputService = game:GetService("UserInputService")
@@ -11,12 +11,12 @@ local HttpService = game:GetService("HttpService")
 local RunService = game:GetService("RunService")
 local CoreGui = game:GetService("CoreGui")
 local Players = game:GetService("Players")
-local Mouse = Players.LocalPlayer:GetMouse()
 
 local Library = { 
     Flags = {}, 
     Items = {}, 
     ThemeObjects = {},
+    Screen = nil, -- Ссылка на ScreenGui для ColorPicker
     Theme = {
         Main      = Color3.fromRGB(20, 20, 20),
         Sidebar   = Color3.fromRGB(25, 25, 28),
@@ -36,6 +36,7 @@ Library.ThemePresets = {
     ["Blood Moon"] = { Main = Color3.fromRGB(20, 15, 15), Sidebar = Color3.fromRGB(25, 20, 20), Section = Color3.fromRGB(30, 25, 25), Accent = Color3.fromRGB(230, 60, 60), Text = Color3.fromRGB(255, 255, 255) },
     ["Oceanic"] = { Main = Color3.fromRGB(15, 20, 25), Sidebar = Color3.fromRGB(20, 25, 30), Section = Color3.fromRGB(25, 30, 35), Accent = Color3.fromRGB(0, 160, 255), Text = Color3.fromRGB(255, 255, 255) },
     ["Midnight"] = { Main = Color3.fromRGB(10, 10, 15), Sidebar = Color3.fromRGB(15, 15, 20), Section = Color3.fromRGB(20, 20, 25), Accent = Color3.fromRGB(80, 80, 255), Text = Color3.fromRGB(255, 255, 255) },
+    ["Nature"] = { Main = Color3.fromRGB(20, 25, 20), Sidebar = Color3.fromRGB(25, 30, 25), Section = Color3.fromRGB(30, 35, 30), Accent = Color3.fromRGB(100, 200, 100), Text = Color3.fromRGB(255, 255, 255) }
 }
 
 local CfgFolder = "GilaConfigs"
@@ -101,17 +102,11 @@ Create("UIPadding", {Parent=TooltipFrame, PaddingTop=UDim.new(0,5), PaddingBotto
 local function AddTooltip(obj, text)
     if not text then return end
     obj.MouseEnter:Connect(function()
-        TooltipText.Text = text
-        TooltipFrame.Visible = true
-        TooltipFrame.UIStroke.Color = Library.Theme.Accent
-        local m = UserInputService:GetMouseLocation()
-        TooltipFrame.Position = UDim2.new(0, m.X + 15, 0, m.Y + 15)
+        TooltipText.Text = text; TooltipFrame.Visible = true; TooltipFrame.UIStroke.Color = Library.Theme.Accent
+        local m = UserInputService:GetMouseLocation(); TooltipFrame.Position = UDim2.new(0, m.X + 15, 0, m.Y + 15)
     end)
     obj.MouseLeave:Connect(function() TooltipFrame.Visible = false end)
-    obj.MouseMoved:Connect(function()
-        local m = UserInputService:GetMouseLocation()
-        TooltipFrame.Position = UDim2.new(0, m.X + 15, 0, m.Y + 15)
-    end)
+    obj.MouseMoved:Connect(function() local m = UserInputService:GetMouseLocation(); TooltipFrame.Position = UDim2.new(0, m.X + 15, 0, m.Y + 15) end)
 end
 
 --// CONFIGS
@@ -128,8 +123,7 @@ local NotifContainer = Create("Frame", {Parent = NotifGui, BackgroundTransparenc
 Create("UIListLayout", {Parent = NotifContainer, SortOrder = Enum.SortOrder.LayoutOrder, Padding = UDim.new(0,10), VerticalAlignment = Enum.VerticalAlignment.Bottom, HorizontalAlignment = Enum.HorizontalAlignment.Right})
 function Library:Notify(title, desc, duration)
     local Frame = Create("Frame", {Parent = NotifContainer, BackgroundColor3 = Color3.fromRGB(25,25,25), Size = UDim2.new(1,0,0,60), AutomaticSize=Enum.AutomaticSize.Y, BorderSizePixel=0})
-    Create("UICorner", {Parent=Frame, CornerRadius=UDim.new(0,6)}); 
-    local S = Create("UIStroke", {Parent=Frame, Color=Library.Theme.Accent, Thickness=1.5, Transparency=0.5}); Library:RegisterThemeObj("Accent", S, "Color")
+    Create("UICorner", {Parent=Frame, CornerRadius=UDim.new(0,6)}); local S = Create("UIStroke", {Parent=Frame, Color=Library.Theme.Accent, Thickness=1.5, Transparency=0.5}); Library:RegisterThemeObj("Accent", S, "Color")
     local T1 = Create("TextLabel", {Parent=Frame, Text=title:upper(), TextColor3=Library.Theme.Accent, Font=Enum.Font.GothamBlack, TextSize=13, BackgroundTransparency=1, Size=UDim2.new(1,-20,0,20), Position=UDim2.new(0,10,0,5), TextXAlignment=Enum.TextXAlignment.Left}); Library:RegisterThemeObj("Accent", T1, "TextColor3")
     local T2 = Create("TextLabel", {Parent=Frame, Text=desc, TextColor3=Library.Theme.Text, Font=Enum.Font.GothamMedium, TextSize=11, BackgroundTransparency=1, Size=UDim2.new(1,-20,0,0), Position=UDim2.new(0,10,0,25), TextXAlignment=Enum.TextXAlignment.Left, TextWrapped=true, AutomaticSize=Enum.AutomaticSize.Y}); Library:RegisterThemeObj("Text", T2, "TextColor3")
     Frame:TweenPosition(UDim2.new(0,0,0,0), "Out", "Back", 0.5); task.delay(duration or 4, function() if Frame then Frame:Destroy() end end)
@@ -140,13 +134,14 @@ function Library:Window(opts)
     local TargetParent = RunService:IsStudio() and Players.LocalPlayer.PlayerGui or CoreGui
     if TargetParent:FindFirstChild("GilaFixed") then TargetParent.GilaFixed:Destroy() end
     
-    local Screen = Create("ScreenGui", {Name = "GilaFixed", Parent = TargetParent, DisplayOrder=50})
-    local MobToggle = Create("ImageButton", {Parent = Screen, BackgroundColor3 = Library.Theme.Main, Position = UDim2.new(0,50,0,50), Size = UDim2.new(0,45,0,45), Image = Icons.menu, ImageColor3 = Library.Theme.Accent, Active = true, ZIndex = 200})
+    Library.Screen = Create("ScreenGui", {Name = "GilaFixed", Parent = TargetParent, DisplayOrder=50})
+    
+    local MobToggle = Create("ImageButton", {Parent = Library.Screen, BackgroundColor3 = Library.Theme.Main, Position = UDim2.new(0,50,0,50), Size = UDim2.new(0,45,0,45), Image = Icons.menu, ImageColor3 = Library.Theme.Accent, Active = true, ZIndex = 200})
     Library:RegisterThemeObj("Main", MobToggle, "BackgroundColor3"); Library:RegisterThemeObj("Accent", MobToggle, "ImageColor3")
     Create("UICorner", {Parent=MobToggle, CornerRadius=UDim.new(0,8)}); local MS = Create("UIStroke", {Parent=MobToggle, Color=Library.Theme.Accent, Thickness=2}); Library:RegisterThemeObj("Accent", MS, "Color")
     local TouchClick = Instance.new("BindableEvent", MobToggle); TouchClick.Name = "TouchClick"
     
-    local Main = Create("Frame", {Parent = Screen, BackgroundColor3 = Library.Theme.Main, Position = UDim2.new(0.5,-325,0.5,-225), Size = UDim2.new(0,650,0,450), ClipsDescendants = true, ZIndex = 1})
+    local Main = Create("Frame", {Parent = Library.Screen, BackgroundColor3 = Library.Theme.Main, Position = UDim2.new(0.5,-325,0.5,-225), Size = UDim2.new(0,650,0,450), ClipsDescendants = true, ZIndex = 1})
     Library:RegisterThemeObj("Main", Main, "BackgroundColor3"); Create("UICorner", {Parent=Main, CornerRadius=UDim.new(0,6)})
     local MainS = Create("UIStroke", {Parent=Main, Color=Library.Theme.Border, Thickness=1.5}); Library:RegisterThemeObj("Border", MainS, "Color")
     TouchClick.Event:Connect(function() Main.Visible = not Main.Visible end); MakeDraggable(MobToggle, MobToggle, true)
@@ -170,12 +165,11 @@ function Library:Window(opts)
         
         local Page = Create("Frame", {Parent=Content, Size=UDim2.new(1,0,1,0), BackgroundTransparency=1, Visible=false, ZIndex=3})
         
-        -- SUBTABS CONTAINER
-        local SubTabBox = Create("ScrollingFrame", {Parent=Page, Size=UDim2.new(1,0,0,30), BackgroundTransparency=1, CanvasSize=UDim2.new(0,0,0,0), ScrollBarThickness=0, ZIndex=5}); Create("UIListLayout", {Parent=SubTabBox, FillDirection=Enum.FillDirection.Horizontal, SortOrder=Enum.SortOrder.LayoutOrder, Padding=UDim.new(0,5)})
-        Create("UIPadding", {Parent=SubTabBox, PaddingLeft=UDim.new(0,5)})
-        local SubContent = Create("Frame", {Parent=Page, Size=UDim2.new(1,0,1,-35), Position=UDim2.new(0,0,0,35), BackgroundTransparency=1, ZIndex=4})
+        -- SUBTABS (Increased height to 36, moved content down)
+        local SubTabBox = Create("ScrollingFrame", {Parent=Page, Size=UDim2.new(1,0,0,36), BackgroundTransparency=1, CanvasSize=UDim2.new(0,0,0,0), ScrollBarThickness=0, ZIndex=5}); Create("UIListLayout", {Parent=SubTabBox, FillDirection=Enum.FillDirection.Horizontal, SortOrder=Enum.SortOrder.LayoutOrder, Padding=UDim.new(0,5)})
+        Create("UIPadding", {Parent=SubTabBox, PaddingLeft=UDim.new(0,5), PaddingTop=UDim.new(0,4)})
+        local SubContent = Create("Frame", {Parent=Page, Size=UDim2.new(1,0,1,-42), Position=UDim2.new(0,0,0,42), BackgroundTransparency=1, ZIndex=4})
         
-        -- FUNCTION TO SHOW TAB
         local function ShowTab()
             for _, v in pairs(SidebarList:GetChildren()) do if v:IsA("TextButton") then TweenService:Create(v, TweenInfo.new(0.2), {TextColor3 = Library.Theme.DimText}):Play() v.Frame.Visible=false end end
             for _, v in pairs(Content:GetChildren()) do v.Visible=false end
@@ -198,9 +192,14 @@ function Library:Window(opts)
             Create("UIListLayout", {Parent=Left, SortOrder=Enum.SortOrder.LayoutOrder, Padding=UDim.new(0,12)}); Create("UIListLayout", {Parent=Right, SortOrder=Enum.SortOrder.LayoutOrder, Padding=UDim.new(0,12)})
             
             local function ShowSub()
-                for _, v in pairs(SubTabBox:GetChildren()) do if v:IsA("TextButton") then TweenService:Create(v, TweenInfo.new(0.2), {TextColor3 = Library.Theme.DimText}):Play() end end
+                for _, v in pairs(SubTabBox:GetChildren()) do 
+                    if v:IsA("TextButton") then 
+                        TweenService:Create(v, TweenInfo.new(0.2), {TextColor3 = Library.Theme.DimText}):Play() 
+                    end 
+                end
                 for _, v in pairs(SubContent:GetChildren()) do v.Visible=false end
-                TweenService:Create(SBtn, TweenInfo.new(0.2), {TextColor3 = Library.Theme.Accent}):Play() SPage.Visible=true
+                TweenService:Create(SBtn, TweenInfo.new(0.2), {TextColor3 = Library.Theme.Accent}):Play() -- Use Accent when active
+                SPage.Visible=true
             end
             SBtn.MouseButton1Click:Connect(ShowSub)
             if firstSub then firstSub=false ShowSub() end
@@ -312,23 +311,37 @@ function Library:Window(opts)
                     local T = Create("TextLabel", {Parent=Box, Text=txt, TextColor3=Library.Theme.Text, Font=Library.Theme.FontSmall, TextSize=12, Size=UDim2.new(1,0,0,15), BackgroundTransparency=1, TextXAlignment=Enum.TextXAlignment.Left, ZIndex=8}); Library:RegisterThemeObj("Text", T, "TextColor3")
                     local Preview = Create("TextButton", {Parent=Box, BackgroundColor3=def, Text="", Size=UDim2.new(1,0,0,20), Position=UDim2.new(0,0,0,20), ZIndex=8})
                     Create("UICorner", {Parent=Preview, CornerRadius=UDim.new(0,4)}); local S = Create("UIStroke", {Parent=Preview, Color=Library.Theme.Border}); Library:RegisterThemeObj("Border", S, "Color")
-                    local PickFrame = Create("Frame", {Parent=Preview, Visible=false, BackgroundColor3=Library.Theme.Section, Size=UDim2.new(1,0,0,95), Position=UDim2.new(0,0,1,5), ZIndex=100})
+                    -- FIX: Parent to Screen so it floats above everything
+                    local PickFrame = Create("Frame", {Parent=Library.Screen, Visible=false, BackgroundColor3=Library.Theme.Section, Size=UDim2.new(0,200,0,95), Position=UDim2.new(0,0,0,0), ZIndex=1000})
                     Library:RegisterThemeObj("Section", PickFrame, "BackgroundColor3"); local S2 = Create("UIStroke", {Parent=PickFrame, Color=Library.Theme.Border}); Library:RegisterThemeObj("Border", S2, "Color"); Create("UICorner", {Parent=PickFrame, CornerRadius=UDim.new(0,4)})
+                    
                     local R,G,B = def.R*255, def.G*255, def.B*255
                     local function Update() local c=Color3.fromRGB(R,G,B) Preview.BackgroundColor3=c if flag then Library.Flags[flag]=c end if cb then cb(c) end end
+                    
                     local function MakeS(t,y,val,set)
-                        local SBox = Create("Frame", {Parent=PickFrame, BackgroundTransparency=1, Size=UDim2.new(1,-10,0,25), Position=UDim2.new(0,5,0,y), ZIndex=101})
-                        Create("TextLabel", {Parent=SBox, Text=t, TextColor3=Library.Theme.DimText, Size=UDim2.new(0,15,1,0), BackgroundTransparency=1, ZIndex=102})
-                        local Bar = Create("Frame", {Parent=SBox, BackgroundColor3=Library.Theme.Main, Size=UDim2.new(1,-20,0,5), Position=UDim2.new(0,20,0.5,-2), ZIndex=102}); Library:RegisterThemeObj("Main", Bar, "BackgroundColor3")
-                        local Fill = Create("Frame", {Parent=Bar, BackgroundColor3=Library.Theme.Accent, Size=UDim2.new(val/255,0,1,0), ZIndex=103}); Library:RegisterThemeObj("Accent", Fill, "BackgroundColor3")
-                        local Trig = Create("TextButton", {Parent=Bar, BackgroundTransparency=1, Size=UDim2.new(1,0,1,0), Text="", ZIndex=104})
+                        local SBox = Create("Frame", {Parent=PickFrame, BackgroundTransparency=1, Size=UDim2.new(1,-10,0,25), Position=UDim2.new(0,5,0,y), ZIndex=1001})
+                        Create("TextLabel", {Parent=SBox, Text=t, TextColor3=Library.Theme.DimText, Size=UDim2.new(0,15,1,0), BackgroundTransparency=1, ZIndex=1002})
+                        local Bar = Create("Frame", {Parent=SBox, BackgroundColor3=Library.Theme.Main, Size=UDim2.new(1,-20,0,5), Position=UDim2.new(0,20,0.5,-2), ZIndex=1002}); Library:RegisterThemeObj("Main", Bar, "BackgroundColor3")
+                        local Fill = Create("Frame", {Parent=Bar, BackgroundColor3=Library.Theme.Accent, Size=UDim2.new(val/255,0,1,0), ZIndex=1003}); Library:RegisterThemeObj("Accent", Fill, "BackgroundColor3")
+                        local Trig = Create("TextButton", {Parent=Bar, BackgroundTransparency=1, Size=UDim2.new(1,0,1,0), Text="", ZIndex=1004})
                         local d=false; local function In(i) local s=math.clamp((i.Position.X-Bar.AbsolutePosition.X)/Bar.AbsoluteSize.X,0,1) Fill.Size=UDim2.new(s,0,1,0) set(s*255) Update() end
                         Trig.InputBegan:Connect(function(i) if i.UserInputType==Enum.UserInputType.MouseButton1 or i.UserInputType==Enum.UserInputType.Touch then d=true In(i) end end)
                         UserInputService.InputChanged:Connect(function(i) if d and (i.UserInputType==Enum.UserInputType.MouseMovement or i.UserInputType==Enum.UserInputType.Touch) then In(i) end end)
                         UserInputService.InputEnded:Connect(function(i) if i.UserInputType==Enum.UserInputType.MouseButton1 or i.UserInputType==Enum.UserInputType.Touch then d=false end end)
                     end
                     MakeS("R", 5, R, function(v) R=v end); MakeS("G", 35, G, function(v) G=v end); MakeS("B", 65, B, function(v) B=v end)
-                    Preview.MouseButton1Click:Connect(function() PickFrame.Visible = not PickFrame.Visible end)
+                    
+                    Preview.MouseButton1Click:Connect(function() 
+                        PickFrame.Visible = not PickFrame.Visible
+                        -- Auto-update position
+                        if PickFrame.Visible then
+                            RunService:BindToRenderStep("PickerPos"..txt, 1, function()
+                                PickFrame.Position = UDim2.new(0, Preview.AbsolutePosition.X, 0, Preview.AbsolutePosition.Y + 25)
+                            end)
+                        else
+                            RunService:UnbindFromRenderStep("PickerPos"..txt)
+                        end
+                    end)
                     if tip then AddTooltip(Box, tip) end
                 end
                 return E
