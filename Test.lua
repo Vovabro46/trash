@@ -190,6 +190,21 @@ function Library:LoadConfig(Name)
     end
 end
 
+-- ВОТ ЭТА ФУНКЦИЯ БЫЛА ДОБАВЛЕНА:
+function Library:GetConfigs()
+    if not Library:InitConfig() then return {} end
+    local Configs = {}
+    if listfiles then
+        for _, File in pairs(listfiles(Library.ConfigFolder)) do
+            if File:sub(-#Library.ConfigExt) == Library.ConfigExt then
+                local Name = File:match("([^/]+)"..Library.ConfigExt.."$") or File
+                table.insert(Configs, Name)
+            end
+        end
+    end
+    return Configs
+end
+
 --// THEME & DRAGGING //--
 local ThemeObjects = {}
 function Library:RegisterTheme(Obj, Prop, Key)
