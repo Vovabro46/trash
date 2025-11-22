@@ -632,10 +632,7 @@ function Library:Window(TitleText)
                 
                 local F = Instance.new("Frame", C)
                 F.BackgroundTransparency = 1
-                -- Ставим начальный размер 0 и включаем авто-размер по Y
-                F.Size = UDim2.new(1, 0, 0, 0)
-                F.AutomaticSize = Enum.AutomaticSize.Y 
-
+                
                 local H1 = Instance.new("TextLabel", F)
                 H1.Size = UDim2.new(1, 0, 0, 15)
                 H1.BackgroundTransparency = 1
@@ -644,18 +641,34 @@ function Library:Window(TitleText)
                 H1.TextSize = 12
                 H1.TextXAlignment = Enum.TextXAlignment.Left
                 Library:RegisterTheme(H1, "TextColor3", "Text")
-
+                
                 local C1 = Instance.new("TextLabel", F)
+                C1.Position = UDim2.new(0, 0, 0, 18) -- Чуть ниже заголовка
                 C1.BackgroundTransparency = 1
                 C1.Text = Cont
                 C1.Font = Enum.Font.Gotham
                 C1.TextSize = 11
                 C1.TextXAlignment = Enum.TextXAlignment.Left
-                C1.TextWrapped = true
-                C1.Position = UDim2.new(0, 0, 0, 15) -- Сдвигаем вниз под заголовок
-                C1.Size = UDim2.new(1, 0, 0, 0) -- Высоту определит контент
-                C1.AutomaticSize = Enum.AutomaticSize.Y -- Самое важное исправление
+                C1.TextYAlignment = Enum.TextYAlignment.Top -- Текст прижат к верху
+                C1.TextWrapped = true -- Обязательно включаем перенос
                 Library:RegisterTheme(C1, "TextColor3", "TextDark")
+                
+                -- ИСПРАВЛЕНИЕ:
+                -- Если UI еще не прогрузился (размер 0), берем примерную ширину колонки (230 пикселей)
+                local WrapWidth = C.AbsoluteSize.X
+                if WrapWidth < 50 then WrapWidth = 230 end 
+                
+                -- Считаем высоту текста с учетом этой ширины
+                local TextBounds = game:GetService("TextService"):GetTextSize(
+                    Cont, 
+                    11, 
+                    Enum.Font.Gotham, 
+                    Vector2.new(WrapWidth, 9999)
+                )
+                
+                -- Применяем размеры
+                C1.Size = UDim2.new(1, 0, 0, TextBounds.Y)
+                F.Size = UDim2.new(1, 0, 0, TextBounds.Y + 25) -- Высота текста + место под заголовок
             end
 
                 function BoxFuncs:AddToggle(Config)
