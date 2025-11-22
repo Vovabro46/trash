@@ -627,40 +627,36 @@ function Library:Window(TitleText)
                 
                 --// FIXED PARAGRAPH FUNCTION //--
                 function BoxFuncs:AddParagraph(Config)
-                    local Head = Config.Title or "Paragraph"
-                    local Cont = Config.Content or ""
-                    
-                    local F = Instance.new("Frame", C)
-                    F.BackgroundTransparency = 1
-                    
-                    local H1 = Instance.new("TextLabel", F)
-                    H1.Size = UDim2.new(1, 0, 0, 15)
-                    H1.BackgroundTransparency = 1
-                    H1.Text = Head
-                    H1.Font = Enum.Font.GothamBold
-                    H1.TextSize = 12
-                    H1.TextXAlignment = Enum.TextXAlignment.Left
-                    Library:RegisterTheme(H1, "TextColor3", "Text")
-                    
-                    local C1 = Instance.new("TextLabel", F)
-                    C1.BackgroundTransparency = 1
-                    C1.Text = Cont
-                    C1.Font = Enum.Font.Gotham
-                    C1.TextSize = 11
-                    C1.TextXAlignment = Enum.TextXAlignment.Left
-                    C1.TextWrapped = true
-                    Library:RegisterTheme(C1, "TextColor3", "TextDark")
-                    
-                    -- Calculate correct size
-                    -- Assuming a groupbox width of approx 330px (for 2 columns)
-                    local ConstraintWidth = 330
-                    local TextSize = TextService:GetTextSize(Cont, 11, Enum.Font.Gotham, Vector2.new(ConstraintWidth, 9999))
-                    
-                    C1.Size = UDim2.new(1, 0, 0, TextSize.Y)
-                    C1.Position = UDim2.new(0, 0, 0, 18)
-                    
-                    F.Size = UDim2.new(1, 0, 0, TextSize.Y + 22)
-                end
+                local Head = Config.Title or "Paragraph"
+                local Cont = Config.Content or ""
+                
+                local F = Instance.new("Frame", C)
+                F.BackgroundTransparency = 1
+                -- Ставим начальный размер 0 и включаем авто-размер по Y
+                F.Size = UDim2.new(1, 0, 0, 0)
+                F.AutomaticSize = Enum.AutomaticSize.Y 
+
+                local H1 = Instance.new("TextLabel", F)
+                H1.Size = UDim2.new(1, 0, 0, 15)
+                H1.BackgroundTransparency = 1
+                H1.Text = Head
+                H1.Font = Enum.Font.GothamBold
+                H1.TextSize = 12
+                H1.TextXAlignment = Enum.TextXAlignment.Left
+                Library:RegisterTheme(H1, "TextColor3", "Text")
+
+                local C1 = Instance.new("TextLabel", F)
+                C1.BackgroundTransparency = 1
+                C1.Text = Cont
+                C1.Font = Enum.Font.Gotham
+                C1.TextSize = 11
+                C1.TextXAlignment = Enum.TextXAlignment.Left
+                C1.TextWrapped = true
+                C1.Position = UDim2.new(0, 0, 0, 15) -- Сдвигаем вниз под заголовок
+                C1.Size = UDim2.new(1, 0, 0, 0) -- Высоту определит контент
+                C1.AutomaticSize = Enum.AutomaticSize.Y -- Самое важное исправление
+                Library:RegisterTheme(C1, "TextColor3", "TextDark")
+            end
 
                 function BoxFuncs:AddToggle(Config)
                     local Text = Config.Title or "Toggle"
