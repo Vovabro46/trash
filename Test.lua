@@ -19,6 +19,10 @@ local Library = {
     Preview = nil,
     ConfigFolder = "RedOnyx_Configs",
     ConfigExt = ".json",
+    WatermarkSettings = {
+        Enabled = true,
+        Text = "RedOnyx"
+    },
     Theme = {
         Background = Color3.fromRGB(15, 15, 15),
         Sidebar    = Color3.fromRGB(20, 20, 20),
@@ -243,8 +247,11 @@ local function MakeDraggable(dragFrame, moveFrame)
     end)
 end
 
---// WATERMARK //--
+--// WATERMARK (UPDATED) //--
 function Library:Watermark(Name)
+    -- Устанавливаем начальное имя
+    Library.WatermarkSettings.Text = Name
+    
     local ScreenGui = Instance.new("ScreenGui")
     ScreenGui.Name = "Watermark"
     ScreenGui.ResetOnSpawn = false
@@ -281,11 +288,20 @@ function Library:Watermark(Name)
     Library:RegisterTheme(Text, "TextColor3", "Text")
 
     RunService.RenderStepped:Connect(function()
-        local FPS = math.floor(1 / math.max(RunService.RenderStepped:Wait(), 0.001))
-        local PingVal = Stats.Network.ServerStatsItem["Data Ping"]:GetValueString()
-        local Ping = math.floor(PingVal:split(" ")[1] or 0)
-        Text.Text = string.format("%s | FPS: %d | Ping: %d | %s", Name, FPS, Ping, os.date("%H:%M:%S"))
-        Frame.Size = UDim2.new(0, Text.TextBounds.X + 14, 0, 24)
+        -- [НОВОЕ] Управление видимостью
+        ScreenGui.Enabled = Library.WatermarkSettings.Enabled
+        
+        if ScreenGui.Enabled then
+            local FPS = math.floor(1 / math.max(RunService.RenderStepped:Wait(), 0.001))
+            local PingVal = Stats.Network.ServerStatsItem["Data Ping"]:GetValueString()
+            local Ping = math.floor(PingVal:split(" ")[1] or 0)
+            
+            -- [НОВОЕ] Берем текст из настроек
+            local CurrentName = Library.WatermarkSettings.Text
+            
+            Text.Text = string.format("%s | FPS: %d | Ping: %d | %s", CurrentName, FPS, Ping, os.date("%H:%M:%S"))
+            Frame.Size = UDim2.new(0, Text.TextBounds.X + 14, 0, 24)
+        end
     end)
     Library.WatermarkObj = ScreenGui
 end
