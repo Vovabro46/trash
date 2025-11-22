@@ -4,6 +4,7 @@ local CoreGui = game:GetService("CoreGui")
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local HttpService = game:GetService("HttpService")
+local TextService = game:GetService("TextService")
 local Stats = game:GetService("Stats")
 
 local Player = Players.LocalPlayer
@@ -18,7 +19,6 @@ local Library = {
     Preview = nil,
     ConfigFolder = "RedOnyx_Configs",
     ConfigExt = ".json",
-    
     Theme = {
         Background = Color3.fromRGB(15, 15, 15),
         Sidebar    = Color3.fromRGB(20, 20, 20),
@@ -31,6 +31,53 @@ local Library = {
     }
 }
 
+--// TOOLTIP SYSTEM //--
+local TooltipObj = nil
+local function CreateTooltipSystem(ScreenGui)
+    local Tooltip = Instance.new("TextLabel")
+    Tooltip.Name = "Tooltip"
+    Tooltip.Size = UDim2.new(0, 0, 0, 0)
+    Tooltip.AutomaticSize = Enum.AutomaticSize.XY
+    Tooltip.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+    Tooltip.TextColor3 = Color3.fromRGB(255, 255, 255)
+    Tooltip.Font = Enum.Font.Gotham
+    Tooltip.TextSize = 12
+    Tooltip.TextWrapped = false
+    Tooltip.Visible = false
+    Tooltip.ZIndex = 1000
+    Tooltip.Parent = ScreenGui
+
+    Instance.new("UICorner", Tooltip).CornerRadius = UDim.new(0, 4)
+    local TStroke = Instance.new("UIStroke", Tooltip)
+    TStroke.Color = Color3.fromRGB(60, 60, 60)
+    TStroke.Thickness = 1
+    Instance.new("UIPadding", Tooltip).PaddingLeft = UDim.new(0, 6)
+    Instance.new("UIPadding", Tooltip).PaddingRight = UDim.new(0, 6)
+    Instance.new("UIPadding", Tooltip).PaddingTop = UDim.new(0, 4)
+    Instance.new("UIPadding", Tooltip).PaddingBottom = UDim.new(0, 4)
+
+    RunService.RenderStepped:Connect(function()
+        if Tooltip.Visible then
+            local MPos = UserInputService:GetMouseLocation()
+            Tooltip.Position = UDim2.new(0, MPos.X + 15, 0, MPos.Y + 15)
+        end
+    end)
+    
+    TooltipObj = Tooltip
+end
+
+local function AddTooltip(HoverObject, Text)
+    if not Text or Text == "" or not TooltipObj then return end
+    HoverObject.MouseEnter:Connect(function()
+        TooltipObj.Text = Text
+        TooltipObj.Visible = true
+    end)
+    HoverObject.MouseLeave:Connect(function()
+        TooltipObj.Visible = false
+    end)
+end
+
+--// NOTIFICATIONS //--
 function Library:InitNotifications(ScreenGui)
     local Holder = Instance.new("Frame")
     Holder.Name = "Notifications"
@@ -39,43 +86,43 @@ function Library:InitNotifications(ScreenGui)
     Holder.AnchorPoint = Vector2.new(0, 0)
     Holder.BackgroundTransparency = 1
     Holder.Parent = ScreenGui
-    
+
     local List = Instance.new("UIListLayout", Holder)
     List.SortOrder = Enum.SortOrder.LayoutOrder
     List.VerticalAlignment = Enum.VerticalAlignment.Bottom
     List.Padding = UDim.new(0, 6)
-    
+
     Library.NotifyContainer = Holder
 end
 
 function Library:Notify(Title, Content, Duration)
     if not Library.NotifyContainer then return end
     Duration = Duration or 3
-    
+
     local Wrapper = Instance.new("Frame")
     Wrapper.Name = "NotifyWrapper"
     Wrapper.Size = UDim2.new(1, 0, 0, 0)
     Wrapper.BackgroundTransparency = 1
     Wrapper.ClipsDescendants = true
     Wrapper.Parent = Library.NotifyContainer
-    
+
     local Box = Instance.new("Frame")
     Box.Name = "Box"
     Box.Size = UDim2.new(1, 0, 1, 0)
     Box.Position = UDim2.new(1, 20, 0, 0)
     Box.BackgroundColor3 = Library.Theme.Background
     Box.Parent = Wrapper
-    
+
     Instance.new("UICorner", Box).CornerRadius = UDim.new(0, 4)
     local Stroke = Instance.new("UIStroke", Box)
     Stroke.Thickness = 1
     Stroke.Color = Library.Theme.Outline
-    
+
     local Line = Instance.new("Frame", Box)
     Line.Size = UDim2.new(0, 2, 1, 0)
     Line.BackgroundColor3 = Library.Theme.Accent
     Instance.new("UICorner", Line).CornerRadius = UDim.new(0, 4)
-    
+
     local TLab = Instance.new("TextLabel", Box)
     TLab.Size = UDim2.new(1, -15, 0, 20)
     TLab.Position = UDim2.new(0, 10, 0, 5)
@@ -85,7 +132,7 @@ function Library:Notify(Title, Content, Duration)
     TLab.TextSize = 13
     TLab.TextColor3 = Library.Theme.Text
     TLab.TextXAlignment = Enum.TextXAlignment.Left
-    
+
     local CLab = Instance.new("TextLabel", Box)
     CLab.Size = UDim2.new(1, -15, 0, 20)
     CLab.Position = UDim2.new(0, 10, 0, 25)
@@ -98,7 +145,7 @@ function Library:Notify(Title, Content, Duration)
 
     TweenService:Create(Wrapper, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Size = UDim2.new(1, 0, 0, 50)}):Play()
     TweenService:Create(Box, TweenInfo.new(0.4, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Position = UDim2.new(0, 0, 0, 0)}):Play()
-    
+
     task.delay(Duration, function()
         if not Box or not Wrapper then return end
         local OutTween = TweenService:Create(Box, TweenInfo.new(0.4, Enum.EasingStyle.Back, Enum.EasingDirection.In), {Position = UDim2.new(1, 50, 0, 0)})
@@ -111,41 +158,31 @@ function Library:Notify(Title, Content, Duration)
     end)
 end
 
+--// CONFIG SYSTEM //--
 function Library:InitConfig()
     if writefile and readfile and makefolder and listfiles then
-        if not isfolder(self.ConfigFolder) then makefolder(self.ConfigFolder) end
+        if not isfolder(Library.ConfigFolder) then makefolder(Library.ConfigFolder) end
         return true
     end
     return false
 end
 
-function Library:GetConfigs()
-    if not self:InitConfig() then return {} end
-    local Files = listfiles(self.ConfigFolder)
-    local Names = {}
-    for _, File in pairs(Files) do
-        local N = File:match("([^\\/]+)"..self.ConfigExt.."$")
-        if N then table.insert(Names, N) end
-    end
-    return Names
-end
-
 function Library:SaveConfig(Name)
-    if not self:InitConfig() or not Name or Name == "" then return end
-    local Encoded = HttpService:JSONEncode(self.Flags)
-    writefile(self.ConfigFolder.."/"..Name..self.ConfigExt, Encoded)
+    if not Library:InitConfig() or not Name or Name == "" then return end
+    local Encoded = HttpService:JSONEncode(Library.Flags)
+    writefile(Library.ConfigFolder.."/"..Name..Library.ConfigExt, Encoded)
     Library:Notify("Config Saved", "Successfully saved: " .. Name, 3)
 end
 
 function Library:LoadConfig(Name)
-    if not self:InitConfig() or not Name then return end
-    local Path = self.ConfigFolder.."/"..Name..self.ConfigExt
+    if not Library:InitConfig() or not Name then return end
+    local Path = Library.ConfigFolder.."/"..Name..Library.ConfigExt
     if isfile(Path) then
         local Data = HttpService:JSONDecode(readfile(Path))
         if Data then
             for Flag, Value in pairs(Data) do
-                if self.Items[Flag] and self.Items[Flag].Set then
-                    self.Items[Flag].Set(Value)
+                if Library.Items[Flag] and Library.Items[Flag].Set then
+                    Library.Items[Flag].Set(Value)
                 end
             end
             Library:Notify("Config Loaded", "Loaded settings: " .. Name, 3)
@@ -153,6 +190,7 @@ function Library:LoadConfig(Name)
     end
 end
 
+--// THEME & DRAGGING //--
 local ThemeObjects = {}
 function Library:RegisterTheme(Obj, Prop, Key)
     if not ThemeObjects[Key] then ThemeObjects[Key] = {} end
@@ -190,6 +228,7 @@ local function MakeDraggable(dragFrame, moveFrame)
     end)
 end
 
+--// WATERMARK //--
 function Library:Watermark(Name)
     local ScreenGui = Instance.new("ScreenGui")
     ScreenGui.Name = "Watermark"
@@ -205,11 +244,11 @@ function Library:Watermark(Name)
     Frame.Parent = ScreenGui
     Instance.new("UICorner", Frame).CornerRadius = UDim.new(0, 4)
     Library:RegisterTheme(Frame, "BackgroundColor3", "Background")
-    
+
     local Stroke = Instance.new("UIStroke", Frame)
     Stroke.Thickness = 1
     Library:RegisterTheme(Stroke, "Color", "Outline")
-    
+
     local TopLine = Instance.new("Frame")
     TopLine.Size = UDim2.new(1, 0, 0, 2)
     TopLine.BorderSizePixel = 0
@@ -225,22 +264,26 @@ function Library:Watermark(Name)
     Text.Text = Name
     Text.Parent = Frame
     Library:RegisterTheme(Text, "TextColor3", "Text")
-    
+
     RunService.RenderStepped:Connect(function()
-        local FPS = math.floor(1 / RunService.RenderStepped:Wait())
-        local Ping = math.floor(Stats.Network.ServerStatsItem["Data Ping"]:GetValueString():split(" ")[1])
+        local FPS = math.floor(1 / math.max(RunService.RenderStepped:Wait(), 0.001))
+        local PingVal = Stats.Network.ServerStatsItem["Data Ping"]:GetValueString()
+        local Ping = math.floor(PingVal:split(" ")[1] or 0)
         Text.Text = string.format("%s | FPS: %d | Ping: %d | %s", Name, FPS, Ping, os.date("%H:%M:%S"))
         Frame.Size = UDim2.new(0, Text.TextBounds.X + 14, 0, 24)
     end)
     Library.WatermarkObj = ScreenGui
 end
 
+--// MAIN WINDOW //--
 function Library:Window(TitleText)
     local ScreenGui = Instance.new("ScreenGui")
     ScreenGui.Name = "RedOnyxV17"
     ScreenGui.ResetOnSpawn = false
     ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
     if RunService:IsStudio() then ScreenGui.Parent = Player:WaitForChild("PlayerGui") else pcall(function() ScreenGui.Parent = CoreGui end) end
+
+    CreateTooltipSystem(ScreenGui)
 
     local MainFrame = Instance.new("Frame")
     MainFrame.Name = "MainFrame"
@@ -249,7 +292,7 @@ function Library:Window(TitleText)
     MainFrame.BorderSizePixel = 0
     MainFrame.Parent = ScreenGui
     Library:RegisterTheme(MainFrame, "BackgroundColor3", "Background")
-    
+
     local MainStroke = Instance.new("UIStroke", MainFrame)
     MainStroke.Thickness = 1
     Library:RegisterTheme(MainStroke, "Color", "Outline")
@@ -582,34 +625,41 @@ function Library:Window(TitleText)
                     Library:RegisterTheme(Lb,"TextColor3","Text")
                 end
                 
+                --// FIXED PARAGRAPH FUNCTION //--
                 function BoxFuncs:AddParagraph(Config)
                     local Head = Config.Title or "Paragraph"
                     local Cont = Config.Content or ""
-                    local F=Instance.new("Frame",C)
-                    F.Size=UDim2.new(1,0,0,40)
-                    F.BackgroundTransparency=1
-                    local H1=Instance.new("TextLabel",F)
-                    H1.Size=UDim2.new(1,0,0,15)
-                    H1.BackgroundTransparency=1
-                    H1.Text=Head
-                    H1.Font=Enum.Font.GothamBold
-                    H1.TextSize=12
-                    H1.TextXAlignment=Enum.TextXAlignment.Left
-                    Library:RegisterTheme(H1,"TextColor3","Text")
-                    local C1=Instance.new("TextLabel",F)
-                    C1.Size=UDim2.new(1,0,0,25)
-                    C1.Position=UDim2.new(0,0,0,15)
-                    C1.BackgroundTransparency=1
-                    C1.Text=Cont
-                    C1.Font=Enum.Font.Gotham
-                    C1.TextSize=11
-                    C1.TextXAlignment=Enum.TextXAlignment.Left
-                    C1.TextWrapped=true
-                    Library:RegisterTheme(C1,"TextColor3","TextDark")
                     
-                    local TextBounds = game:GetService("TextService"):GetTextSize(Cont, 11, Enum.Font.Gotham, Vector2.new(C.AbsoluteSize.X, 10000))
-                    C1.Size = UDim2.new(1, 0, 0, TextBounds.Y)
-                    F.Size = UDim2.new(1, 0, 0, TextBounds.Y + 15)
+                    local F = Instance.new("Frame", C)
+                    F.BackgroundTransparency = 1
+                    
+                    local H1 = Instance.new("TextLabel", F)
+                    H1.Size = UDim2.new(1, 0, 0, 15)
+                    H1.BackgroundTransparency = 1
+                    H1.Text = Head
+                    H1.Font = Enum.Font.GothamBold
+                    H1.TextSize = 12
+                    H1.TextXAlignment = Enum.TextXAlignment.Left
+                    Library:RegisterTheme(H1, "TextColor3", "Text")
+                    
+                    local C1 = Instance.new("TextLabel", F)
+                    C1.BackgroundTransparency = 1
+                    C1.Text = Cont
+                    C1.Font = Enum.Font.Gotham
+                    C1.TextSize = 11
+                    C1.TextXAlignment = Enum.TextXAlignment.Left
+                    C1.TextWrapped = true
+                    Library:RegisterTheme(C1, "TextColor3", "TextDark")
+                    
+                    -- Calculate correct size
+                    -- Assuming a groupbox width of approx 330px (for 2 columns)
+                    local ConstraintWidth = 330
+                    local TextSize = TextService:GetTextSize(Cont, 11, Enum.Font.Gotham, Vector2.new(ConstraintWidth, 9999))
+                    
+                    C1.Size = UDim2.new(1, 0, 0, TextSize.Y)
+                    C1.Position = UDim2.new(0, 0, 0, 18)
+                    
+                    F.Size = UDim2.new(1, 0, 0, TextSize.Y + 22)
                 end
 
                 function BoxFuncs:AddToggle(Config)
@@ -617,11 +667,15 @@ function Library:Window(TitleText)
                     local Default = Config.Default or false
                     local Callback = Config.Callback or function() end
                     local Flag = Config.Flag or Text
+                    local Desc = Config.Description
+                    local Risky = Config.Risky
 
                     local F=Instance.new("TextButton",C)
                     F.Size=UDim2.new(1,0,0,20)
                     F.BackgroundTransparency=1
                     F.Text=""
+                    if Desc then AddTooltip(F, Desc) end
+
                     local Lb=Instance.new("TextLabel",F)
                     Lb.Size=UDim2.new(1,-45,1,0)
                     Lb.BackgroundTransparency=1
@@ -629,7 +683,12 @@ function Library:Window(TitleText)
                     Lb.Font=Enum.Font.Gotham
                     Lb.TextSize=12
                     Lb.TextXAlignment=Enum.TextXAlignment.Left
-                    Library:RegisterTheme(Lb,"TextColor3","Text")
+                    if Risky then
+                        Lb.TextColor3 = Color3.fromRGB(255, 80, 80)
+                    else
+                        Library:RegisterTheme(Lb,"TextColor3","Text")
+                    end
+
                     local T=Instance.new("Frame",F)
                     T.Size=UDim2.new(0,34,0,18)
                     T.Position=UDim2.new(1,-34,0.5,-9)
@@ -653,7 +712,7 @@ function Library:Window(TitleText)
                 end
 
                 function BoxFuncs:AddCheckbox(Config)
-                    return BoxFuncs:AddToggle(Config) -- Алиас для удобства
+                    return BoxFuncs:AddToggle(Config) 
                 end
 
                 function BoxFuncs:AddSlider(Config)
@@ -664,10 +723,14 @@ function Library:Window(TitleText)
                     local Callback = Config.Callback or function() end
                     local Flag = Config.Flag or Text
                     local Rounding = Config.Rounding or 0
+                    local Suffix = Config.Suffix or ""
+                    local Desc = Config.Description
 
                     local F=Instance.new("Frame",C)
                     F.Size=UDim2.new(1,0,0,38)
                     F.BackgroundTransparency=1
+                    if Desc then AddTooltip(F, Desc) end
+
                     local Lb=Instance.new("TextLabel",F)
                     Lb.Size=UDim2.new(1,0,0,15)
                     Lb.BackgroundTransparency=1
@@ -677,10 +740,10 @@ function Library:Window(TitleText)
                     Lb.TextXAlignment=Enum.TextXAlignment.Left
                     Library:RegisterTheme(Lb,"TextColor3","Text")
                     local Vl=Instance.new("TextLabel",F)
-                    Vl.Size=UDim2.new(0,50,0,15)
-                    Vl.Position=UDim2.new(1,-50,0,0)
+                    Vl.Size=UDim2.new(0,80,0,15)
+                    Vl.Position=UDim2.new(1,-80,0,0)
                     Vl.BackgroundTransparency=1
-                    Vl.Text=tostring(Def)
+                    Vl.Text=tostring(Def)..Suffix
                     Vl.Font=Enum.Font.Gotham
                     Vl.TextSize=12
                     Vl.TextXAlignment=Enum.TextXAlignment.Right
@@ -709,7 +772,7 @@ function Library:Window(TitleText)
                         end
                         
                         Library.Flags[Flag]=v
-                        Vl.Text=tostring(v)
+                        Vl.Text=tostring(v)..Suffix
                         TweenService:Create(Fil,TweenInfo.new(0.1),{Size=UDim2.new((v-Min)/(Max-Min),0,1,0)}):Play()
                         pcall(Callback,v)
                     end
@@ -731,10 +794,13 @@ function Library:Window(TitleText)
                     local Def = Config.Default or Color3.new(1,1,1)
                     local Callback = Config.Callback or function() end
                     local Flag = Config.Flag or Text
+                    local Desc = Config.Description
 
                     local F=Instance.new("Frame",C)
                     F.Size=UDim2.new(1,0,0,25)
                     F.BackgroundTransparency=1
+                    if Desc then AddTooltip(F, Desc) end
+
                     local Lb=Instance.new("TextLabel",F)
                     Lb.Size=UDim2.new(0.7,0,1,0)
                     Lb.BackgroundTransparency=1
@@ -811,10 +877,13 @@ function Library:Window(TitleText)
                     local Callback = Config.Callback or function() end
                     local Multi = Config.Multi or false
                     local Flag = Config.Flag or Text
+                    local Desc = Config.Description
 
                     local F=Instance.new("Frame",C)
                     F.Size=UDim2.new(1,0,0,40)
                     F.BackgroundTransparency=1
+                    if Desc then AddTooltip(F, Desc) end
+
                     local L=Instance.new("TextLabel",F)
                     L.Size=UDim2.new(1,0,0,15)
                     L.BackgroundTransparency=1
@@ -936,10 +1005,13 @@ function Library:Window(TitleText)
                     local Def = Config.Default or Enum.KeyCode.RightShift
                     local Call = Config.Callback or function() end
                     local Flag = Config.Flag or Text
+                    local Desc = Config.Description
 
                     local F=Instance.new("Frame",C)
                     F.Size=UDim2.new(1,0,0,20)
                     F.BackgroundTransparency=1
+                    if Desc then AddTooltip(F, Desc) end
+
                     local L=Instance.new("TextLabel",F)
                     L.Size=UDim2.new(1,0,1,0)
                     L.BackgroundTransparency=1
@@ -967,10 +1039,14 @@ function Library:Window(TitleText)
                     local Ph = Config.Placeholder or ""
                     local Call = Config.Callback or function() end
                     local Flag = Config.Flag or Text
+                    local Desc = Config.Description
+                    local Clear = Config.ClearOnFocus
 
                     local F=Instance.new("Frame",C)
                     F.Size=UDim2.new(1,0,0,40)
                     F.BackgroundTransparency=1
+                    if Desc then AddTooltip(F, Desc) end
+
                     local L=Instance.new("TextLabel",F)
                     L.Size=UDim2.new(1,0,0,15)
                     L.BackgroundTransparency=1
@@ -988,6 +1064,7 @@ function Library:Window(TitleText)
                     B.TextColor3=Color3.fromRGB(230,230,230)
                     B.Font=Enum.Font.Gotham
                     B.TextSize=12
+                    B.ClearTextOnFocus = Clear or false
                     Instance.new("UICorner",B).CornerRadius=UDim.new(0,4)
                     B.FocusLost:Connect(function() Library.Flags[Flag]=B.Text pcall(Call,B.Text) end)
                 end
@@ -995,10 +1072,13 @@ function Library:Window(TitleText)
                 function BoxFuncs:AddButton(Config)
                     local Text = Config.Title or "Button"
                     local Call = Config.Callback or function() end
+                    local Desc = Config.Description
 
                     local F=Instance.new("Frame",C)
                     F.Size=UDim2.new(1,0,0,32)
                     F.BackgroundTransparency=1
+                    if Desc then AddTooltip(F, Desc) end
+                    
                     local B=Instance.new("TextButton",F)
                     B.Size=UDim2.new(1,0,1,0)
                     B.BackgroundColor3=Color3.fromRGB(35,35,35)
