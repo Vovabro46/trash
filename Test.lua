@@ -632,6 +632,8 @@ function Library:Window(TitleText)
                 
                 local F = Instance.new("Frame", C)
                 F.BackgroundTransparency = 1
+                -- Начальный размер (ширина 100%, высота пока 0)
+                F.Size = UDim2.new(1, 0, 0, 0)
                 
                 local H1 = Instance.new("TextLabel", F)
                 H1.Size = UDim2.new(1, 0, 0, 15)
@@ -643,32 +645,39 @@ function Library:Window(TitleText)
                 Library:RegisterTheme(H1, "TextColor3", "Text")
                 
                 local C1 = Instance.new("TextLabel", F)
-                C1.Position = UDim2.new(0, 0, 0, 18) -- Чуть ниже заголовка
+                C1.Position = UDim2.new(0, 0, 0, 20) -- Отступ от заголовка
                 C1.BackgroundTransparency = 1
                 C1.Text = Cont
                 C1.Font = Enum.Font.Gotham
                 C1.TextSize = 11
                 C1.TextXAlignment = Enum.TextXAlignment.Left
-                C1.TextYAlignment = Enum.TextYAlignment.Top -- Текст прижат к верху
-                C1.TextWrapped = true -- Обязательно включаем перенос
+                C1.TextYAlignment = Enum.TextYAlignment.Top -- Текст липнет к верху
+                C1.TextWrapped = true -- Включаем перенос слов
                 Library:RegisterTheme(C1, "TextColor3", "TextDark")
                 
-                -- ИСПРАВЛЕНИЕ:
-                -- Если UI еще не прогрузился (размер 0), берем примерную ширину колонки (230 пикселей)
+                -- == ГЛАВНОЕ ИСПРАВЛЕНИЕ == --
+                -- Получаем ширину контейнера. Если скрипт только запустился, она может быть 0.
+                -- В этом случае мы берем стандартную ширину колонки (примерно 230 пикселей).
                 local WrapWidth = C.AbsoluteSize.X
-                if WrapWidth < 50 then WrapWidth = 230 end 
+                if WrapWidth < 50 then 
+                    WrapWidth = 230 -- Принудительная ширина для расчета
+                end
                 
-                -- Считаем высоту текста с учетом этой ширины
+                -- Вычитаем 10 пикселей для отступов, чтобы текст не прилипал к краям
+                WrapWidth = WrapWidth - 10 
+                
+                -- Считаем, сколько места займет текст при такой ширине
                 local TextBounds = game:GetService("TextService"):GetTextSize(
                     Cont, 
                     11, 
                     Enum.Font.Gotham, 
-                    Vector2.new(WrapWidth, 9999)
+                    Vector2.new(WrapWidth, 9999) -- 9999 это лимит высоты
                 )
                 
-                -- Применяем размеры
-                C1.Size = UDim2.new(1, 0, 0, TextBounds.Y)
-                F.Size = UDim2.new(1, 0, 0, TextBounds.Y + 25) -- Высота текста + место под заголовок
+                -- Применяем полученную высоту
+                local TextHeight = TextBounds.Y
+                C1.Size = UDim2.new(1, 0, 0, TextHeight)
+                F.Size = UDim2.new(1, 0, 0, TextHeight + 25) -- Высота текста + 25 пикселей на заголовок
             end
 
                 function BoxFuncs:AddToggle(Config)
