@@ -13,7 +13,7 @@ local Mouse = Player:GetMouse()
 local Library = {
     Flags = {},
     Items = {},
-    Registry = {}, -- Таблица для поиска
+    Registry = {}, -- Реестр для поиска
     ActivePicker = nil,
     WatermarkObj = nil,
     NotifyContainer = nil,
@@ -302,9 +302,9 @@ end
 --// MAIN WINDOW //--
 function Library:Window(TitleText)
     local ScreenGui = Instance.new("ScreenGui")
-    ScreenGui.Name = "RedOnyxV17"
+    ScreenGui.Name = "RedOnyxV17_Fixed"
     ScreenGui.ResetOnSpawn = false
-    ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+    ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Global -- Используем Global для лучшего контроля слоев
     if RunService:IsStudio() then ScreenGui.Parent = Player:WaitForChild("PlayerGui") else pcall(function() ScreenGui.Parent = CoreGui end) end
 
     CreateTooltipSystem(ScreenGui)
@@ -322,13 +322,17 @@ function Library:Window(TitleText)
     Library:RegisterTheme(MainStroke, "Color", "Outline")
     Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0, 4)
 
+    --// SIDEBAR //--
     local Sidebar = Instance.new("Frame")
+    Sidebar.Name = "Sidebar"
     Sidebar.Size = UDim2.new(0, 180, 1, 0)
     Sidebar.Parent = MainFrame
+    Sidebar.ZIndex = 2
     Library:RegisterTheme(Sidebar, "BackgroundColor3", "Sidebar")
     Instance.new("UICorner", Sidebar).CornerRadius = UDim.new(0, 4)
 
     local Logo = Instance.new("TextLabel")
+    Logo.Name = "Logo"
     Logo.Size = UDim2.new(1, 0, 0, 50)
     Logo.BackgroundTransparency = 1
     Logo.Text = TitleText
@@ -340,7 +344,7 @@ function Library:Window(TitleText)
     --// SEARCH BAR //--
     local SearchBar = Instance.new("TextBox")
     SearchBar.Name = "SearchBar"
-    SearchBar.Size = UDim2.new(1, -20, 0, 25)
+    SearchBar.Size = UDim2.new(1, -20, 0, 30)
     SearchBar.Position = UDim2.new(0, 10, 0, 55)
     SearchBar.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
     SearchBar.BorderSizePixel = 0
@@ -351,37 +355,45 @@ function Library:Window(TitleText)
     SearchBar.Font = Enum.Font.Gotham
     SearchBar.TextSize = 13
     SearchBar.Parent = Sidebar
+    SearchBar.ZIndex = 5
     Instance.new("UICorner", SearchBar).CornerRadius = UDim.new(0, 4)
     local SBStroke = Instance.new("UIStroke", SearchBar)
     SBStroke.Color = Library.Theme.Outline
     SBStroke.Thickness = 1
     SBStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
 
+    --// TAB CONTAINER //--
     local TabContainer = Instance.new("ScrollingFrame")
-    TabContainer.Size = UDim2.new(1, 0, 1, -90)
-    TabContainer.Position = UDim2.new(0, 0, 0, 90)
+    TabContainer.Name = "TabContainer"
+    TabContainer.Size = UDim2.new(1, 0, 1, -95)
+    TabContainer.Position = UDim2.new(0, 0, 0, 95)
     TabContainer.BackgroundTransparency = 1
     TabContainer.ScrollBarThickness = 0
     TabContainer.Parent = Sidebar
+    TabContainer.ZIndex = 3
+    TabContainer.Visible = true -- Явно включен
     local TabLayout = Instance.new("UIListLayout", TabContainer)
     TabLayout.Padding = UDim.new(0, 2)
     TabLayout.SortOrder = Enum.SortOrder.LayoutOrder
 
-    --// SEARCH RESULTS CONTAINER //--
+    --// SEARCH RESULTS //--
     local SearchResults = Instance.new("ScrollingFrame")
     SearchResults.Name = "SearchResults"
-    SearchResults.Size = UDim2.new(1, 0, 1, -90)
-    SearchResults.Position = UDim2.new(0, 0, 0, 90)
+    SearchResults.Size = UDim2.new(1, 0, 1, -95)
+    SearchResults.Position = UDim2.new(0, 0, 0, 95)
     SearchResults.BackgroundTransparency = 1
+    SearchResults.BackgroundColor3 = Library.Theme.Sidebar -- Чтобы перекрывать вкладки
     SearchResults.ScrollBarThickness = 2
     SearchResults.ScrollBarImageColor3 = Library.Theme.Accent
-    SearchResults.Visible = false
+    SearchResults.Visible = false -- Скрыт по умолчанию
     SearchResults.Parent = Sidebar
+    SearchResults.ZIndex = 10 -- Поверх вкладок
     local SearchLayout = Instance.new("UIListLayout", SearchResults)
     SearchLayout.Padding = UDim.new(0, 2)
     SearchLayout.SortOrder = Enum.SortOrder.LayoutOrder
 
     local PagesArea = Instance.new("Frame")
+    PagesArea.Name = "PagesArea"
     PagesArea.Size = UDim2.new(1, -180, 1, 0)
     PagesArea.Position = UDim2.new(0, 180, 0, 0)
     PagesArea.BackgroundTransparency = 1
@@ -391,6 +403,7 @@ function Library:Window(TitleText)
     MakeDraggable(PagesArea, MainFrame)
 
     local ToggleBtn = Instance.new("TextButton")
+    ToggleBtn.Name = "ToggleUI"
     ToggleBtn.Size = UDim2.new(0, 50, 0, 50)
     ToggleBtn.Position = UDim2.new(0.02, 0, 0.15, 0)
     ToggleBtn.BackgroundColor3 = Color3.fromRGB(20,20,20)
@@ -411,22 +424,23 @@ function Library:Window(TitleText)
     DropdownHolder.ZIndex = 100
     DropdownHolder.Parent = ScreenGui 
 
-    --// SEARCH LOGIC //--
+    --// SEARCH LOGIC FIX //--
     SearchBar:GetPropertyChangedSignal("Text"):Connect(function()
         local Input = SearchBar.Text:lower()
-        if #Input > 0 then
+        if #Input == 0 then
+            TabContainer.Visible = true
+            SearchResults.Visible = false
+        else
             TabContainer.Visible = false
             SearchResults.Visible = true
             
             -- Очистка старых результатов
             for _, v in pairs(SearchResults:GetChildren()) do
-                if v:IsA("TextButton") or v:IsA("TextLabel") then v:Destroy() end
+                if v:IsA("TextButton") then v:Destroy() end
             end
 
-            local FoundCount = 0
             for _, ItemData in pairs(Library.Registry) do
                 if string.find(ItemData.Name:lower(), Input, 1, true) then
-                    FoundCount = FoundCount + 1
                     local ResBtn = Instance.new("TextButton")
                     ResBtn.Size = UDim2.new(1, 0, 0, 25)
                     ResBtn.BackgroundTransparency = 1
@@ -436,36 +450,37 @@ function Library:Window(TitleText)
                     ResBtn.TextColor3 = Library.Theme.TextDark
                     ResBtn.TextXAlignment = Enum.TextXAlignment.Left
                     ResBtn.Parent = SearchResults
+                    ResBtn.ZIndex = 11 -- Выше фона результатов
                     
                     local P = Instance.new("UIPadding", ResBtn)
                     P.PaddingLeft = UDim.new(0, 15)
 
                     ResBtn.MouseButton1Click:Connect(function()
-                        -- 1. Сброс поиска
-                        -- SearchBar.Text = "" -- Раскомментируйте, если хотите очищать поиск при клике
-                        
-                        -- 2. Переключение вкладки
+                        -- Переключение на вкладку
                         if ItemData.TabBtn then
                             for _, v in pairs(TabContainer:GetChildren()) do
                                 if v:IsA("TextButton") then
                                     TweenService:Create(v, TweenInfo.new(0.2), {TextColor3 = Library.Theme.TextDark}):Play()
-                                    if v.Frame then v.Frame.Visible = false end
+                                    if v:FindFirstChild("Frame") then v.Frame.Visible = false end
                                 end
                             end
                             for _, v in pairs(PagesArea:GetChildren()) do v.Visible = false end
                             
                             TweenService:Create(ItemData.TabBtn, TweenInfo.new(0.2), {TextColor3 = Library.Theme.Text}):Play()
-                            if ItemData.TabBtn:FindFirstChild("Frame") then ItemData.TabBtn.Frame.Visible = true end -- Индикатор
-                            if ItemData.TabBtn.PageFrame then ItemData.TabBtn.PageFrame.Visible = true end
+                            if ItemData.TabBtn:FindFirstChild("Frame") then ItemData.TabBtn.Frame.Visible = true end
+                            
+                            -- Показываем страницу
+                            local PageFrame = ItemData.TabBtn:FindFirstChild("PageRef") and ItemData.TabBtn.PageRef.Value
+                            if PageFrame then PageFrame.Visible = true end
                         end
 
-                        -- 3. Переключение под-вкладки (если есть)
+                        -- Переключение на под-вкладку
                         if ItemData.SubTabBtn and ItemData.SubPage then
-                             -- Скрываем все страницы в этой вкладке
+                            -- Скрываем все подстраницы
                             for _, v in pairs(ItemData.SubPage.Parent:GetChildren()) do 
                                 if v:IsA("Frame") then v.Visible = false end 
                             end
-                            -- Сбрасываем цвета кнопок под-вкладок
+                            -- Сбрасываем кнопки под-вкладок
                             for _, v in pairs(ItemData.SubTabBtn.Parent:GetChildren()) do 
                                 if v:IsA("TextButton") then 
                                     TweenService:Create(v, TweenInfo.new(0.2), {TextColor3 = Library.Theme.TextDark}):Play() 
@@ -476,12 +491,11 @@ function Library:Window(TitleText)
                             TweenService:Create(ItemData.SubTabBtn, TweenInfo.new(0.2), {TextColor3 = Library.Theme.Accent}):Play()
                         end
 
-                        -- 4. Подсветка элемента
+                        -- Подсветка
                         if ItemData.Object then
-                            local OriginalColor = ItemData.Object.BackgroundColor3 -- Запоминаем (обычно прозрачный)
-                            local HighlightTween = TweenService:Create(ItemData.Object, TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {BackgroundColor3 = Library.Theme.Accent})
-                            local RestoreTween = TweenService:Create(ItemData.Object, TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {BackgroundColor3 = OriginalColor})
-                            
+                            local OriginalColor = ItemData.Object.BackgroundColor3
+                            local HighlightTween = TweenService:Create(ItemData.Object, TweenInfo.new(0.5), {BackgroundColor3 = Library.Theme.Accent})
+                            local RestoreTween = TweenService:Create(ItemData.Object, TweenInfo.new(0.5), {BackgroundColor3 = OriginalColor})
                             HighlightTween:Play()
                             HighlightTween.Completed:Wait()
                             RestoreTween:Play()
@@ -490,9 +504,6 @@ function Library:Window(TitleText)
                 end
             end
             SearchResults.CanvasSize = UDim2.new(0, 0, 0, SearchLayout.AbsoluteContentSize.Y)
-        else
-            TabContainer.Visible = true
-            SearchResults.Visible = false
         end
     end)
 
@@ -517,6 +528,7 @@ function Library:Window(TitleText)
 
     function WindowFuncs:Tab(Name)
         local Btn = Instance.new("TextButton")
+        Btn.Name = Name
         Btn.Size = UDim2.new(1,0,0,30)
         Btn.BackgroundTransparency=1
         Btn.Text=Name
@@ -524,6 +536,7 @@ function Library:Window(TitleText)
         Btn.TextSize=14
         Btn.TextXAlignment=Enum.TextXAlignment.Left
         Btn.Parent=TabContainer
+        Btn.ZIndex = 4
         Library:RegisterTheme(Btn,"TextColor3","TextDark")
         local P=Instance.new("UIPadding",Btn)
         P.PaddingLeft=UDim.new(0,25)
@@ -535,15 +548,16 @@ function Library:Window(TitleText)
         Library:RegisterTheme(Ind,"BackgroundColor3","Accent")
 
         local Page=Instance.new("Frame")
+        Page.Name = Name.."_Page"
         Page.Size=UDim2.new(1,0,1,0)
         Page.BackgroundTransparency=1
         Page.Visible=false
         Page.Parent=PagesArea
         
-        -- Храним ссылку на Page внутри кнопки для поиска
-        Btn.Name = Name -- Устанавливаем имя для удобства
-        getmetatable(Btn).__index = Btn
-        rawset(Btn, "PageFrame", Page)
+        -- Ссылка на страницу через ObjectValue для надежности
+        local PageRef = Instance.new("ObjectValue", Btn)
+        PageRef.Name = "PageRef"
+        PageRef.Value = Page
 
         local SubTabArea = Instance.new("Frame")
         SubTabArea.Size = UDim2.new(1, -20, 0, 30)
@@ -571,7 +585,7 @@ function Library:Window(TitleText)
             for _,v in pairs(TabContainer:GetChildren()) do
                 if v:IsA("TextButton") then
                     TweenService:Create(v,TweenInfo.new(0.2),{TextColor3=Library.Theme.TextDark}):Play()
-                    v.Frame.Visible=false
+                    if v:FindFirstChild("Frame") then v.Frame.Visible=false end
                 end
             end
             for _,v in pairs(PagesArea:GetChildren()) do v.Visible=false end
@@ -595,6 +609,7 @@ function Library:Window(TitleText)
             Library:RegisterTheme(SBtn, "TextColor3", "TextDark")
             
             local SubPage = Instance.new("Frame")
+            SubPage.Name = SubName.."_SubPage"
             SubPage.Size = UDim2.new(1,0,1,0)
             SubPage.BackgroundTransparency = 1
             SubPage.Visible = false
@@ -683,8 +698,9 @@ function Library:Window(TitleText)
                     Box.Size=UDim2.new(1,0,0,L.AbsoluteContentSize.Y+45)
                 end)
 
-                --// REGISTRY HELPER //--
+                --// REGISTRY HELPER (SAFE VERSION) //--
                 local function RegisterItem(ItemName, ItemObj)
+                    if not Btn or not SBtn or not SubPage then return end -- Защита от ошибок
                     table.insert(Library.Registry, {
                         Name = ItemName,
                         Object = ItemObj,
@@ -783,7 +799,6 @@ function Library:Window(TitleText)
                     Lb.TextSize=12
                     Lb.TextXAlignment=Enum.TextXAlignment.Left
                     Library:RegisterTheme(Lb,"TextColor3","Text")
-                    -- Не регистрируем лейблы в поиске, но можно если надо
                 end
                 
                 function BoxFuncs:AddParagraph(Config)
@@ -823,7 +838,7 @@ function Library:Window(TitleText)
                     C1.Size = UDim2.new(1, 0, 0, TextHeight)
                     F.Size = UDim2.new(1, 0, 0, TextHeight + 25)
                     
-                    RegisterItem(Head, F) -- Можно регистрировать параграфы
+                    RegisterItem(Head, F)
                 end
 
                 function BoxFuncs:AddToggle(Config)
