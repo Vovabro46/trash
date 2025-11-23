@@ -90,6 +90,7 @@ function Library:InitNotifications(ScreenGui)
     Holder.Position = UDim2.new(1, -310, 0, 10)
     Holder.AnchorPoint = Vector2.new(0, 0)
     Holder.BackgroundTransparency = 1
+    Holder.ZIndex = 1000 -- Поверх всего
     Holder.Parent = ScreenGui
 
     local List = Instance.new("UIListLayout", Holder)
@@ -302,9 +303,10 @@ end
 --// MAIN WINDOW //--
 function Library:Window(TitleText)
     local ScreenGui = Instance.new("ScreenGui")
-    ScreenGui.Name = "RedOnyxV17_Fixed"
+    ScreenGui.Name = "RedOnyxV17_Final"
     ScreenGui.ResetOnSpawn = false
-    ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Global -- Используем Global для лучшего контроля слоев
+    -- ВАЖНО: Global ZIndex для правильной работы поиска
+    ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Global 
     if RunService:IsStudio() then ScreenGui.Parent = Player:WaitForChild("PlayerGui") else pcall(function() ScreenGui.Parent = CoreGui end) end
 
     CreateTooltipSystem(ScreenGui)
@@ -327,7 +329,7 @@ function Library:Window(TitleText)
     Sidebar.Name = "Sidebar"
     Sidebar.Size = UDim2.new(0, 180, 1, 0)
     Sidebar.Parent = MainFrame
-    Sidebar.ZIndex = 2
+    Sidebar.ZIndex = 2 -- Слой фона
     Library:RegisterTheme(Sidebar, "BackgroundColor3", "Sidebar")
     Instance.new("UICorner", Sidebar).CornerRadius = UDim.new(0, 4)
 
@@ -339,6 +341,7 @@ function Library:Window(TitleText)
     Logo.Font = Enum.Font.GothamBlack
     Logo.TextSize = 22
     Logo.Parent = Sidebar
+    Logo.ZIndex = 5 -- Поверх фона
     Library:RegisterTheme(Logo, "TextColor3", "Accent")
 
     --// SEARCH BAR //--
@@ -355,7 +358,7 @@ function Library:Window(TitleText)
     SearchBar.Font = Enum.Font.Gotham
     SearchBar.TextSize = 13
     SearchBar.Parent = Sidebar
-    SearchBar.ZIndex = 5
+    SearchBar.ZIndex = 5 -- Поверх фона
     Instance.new("UICorner", SearchBar).CornerRadius = UDim.new(0, 4)
     local SBStroke = Instance.new("UIStroke", SearchBar)
     SBStroke.Color = Library.Theme.Outline
@@ -370,8 +373,8 @@ function Library:Window(TitleText)
     TabContainer.BackgroundTransparency = 1
     TabContainer.ScrollBarThickness = 0
     TabContainer.Parent = Sidebar
-    TabContainer.ZIndex = 3
-    TabContainer.Visible = true -- Явно включен
+    TabContainer.ZIndex = 3 -- Слой вкладок
+    TabContainer.Visible = true 
     local TabLayout = Instance.new("UIListLayout", TabContainer)
     TabLayout.Padding = UDim.new(0, 2)
     TabLayout.SortOrder = Enum.SortOrder.LayoutOrder
@@ -382,10 +385,10 @@ function Library:Window(TitleText)
     SearchResults.Size = UDim2.new(1, 0, 1, -95)
     SearchResults.Position = UDim2.new(0, 0, 0, 95)
     SearchResults.BackgroundTransparency = 1
-    SearchResults.BackgroundColor3 = Library.Theme.Sidebar -- Чтобы перекрывать вкладки
+    SearchResults.BackgroundColor3 = Library.Theme.Sidebar 
     SearchResults.ScrollBarThickness = 2
     SearchResults.ScrollBarImageColor3 = Library.Theme.Accent
-    SearchResults.Visible = false -- Скрыт по умолчанию
+    SearchResults.Visible = false 
     SearchResults.Parent = Sidebar
     SearchResults.ZIndex = 10 -- Поверх вкладок
     local SearchLayout = Instance.new("UIListLayout", SearchResults)
@@ -424,7 +427,7 @@ function Library:Window(TitleText)
     DropdownHolder.ZIndex = 100
     DropdownHolder.Parent = ScreenGui 
 
-    --// SEARCH LOGIC FIX //--
+    --// SEARCH LOGIC //--
     SearchBar:GetPropertyChangedSignal("Text"):Connect(function()
         local Input = SearchBar.Text:lower()
         if #Input == 0 then
@@ -434,7 +437,6 @@ function Library:Window(TitleText)
             TabContainer.Visible = false
             SearchResults.Visible = true
             
-            -- Очистка старых результатов
             for _, v in pairs(SearchResults:GetChildren()) do
                 if v:IsA("TextButton") then v:Destroy() end
             end
@@ -450,37 +452,32 @@ function Library:Window(TitleText)
                     ResBtn.TextColor3 = Library.Theme.TextDark
                     ResBtn.TextXAlignment = Enum.TextXAlignment.Left
                     ResBtn.Parent = SearchResults
-                    ResBtn.ZIndex = 11 -- Выше фона результатов
+                    ResBtn.ZIndex = 11
                     
                     local P = Instance.new("UIPadding", ResBtn)
                     P.PaddingLeft = UDim.new(0, 15)
 
                     ResBtn.MouseButton1Click:Connect(function()
-                        -- Переключение на вкладку
                         if ItemData.TabBtn then
                             for _, v in pairs(TabContainer:GetChildren()) do
                                 if v:IsA("TextButton") then
                                     TweenService:Create(v, TweenInfo.new(0.2), {TextColor3 = Library.Theme.TextDark}):Play()
-                                    if v:FindFirstChild("Frame") then v.Frame.Visible = false end
+                                    if v:FindFirstChild("ActiveIndicator") then v.ActiveIndicator.Visible = false end
                                 end
                             end
                             for _, v in pairs(PagesArea:GetChildren()) do v.Visible = false end
                             
                             TweenService:Create(ItemData.TabBtn, TweenInfo.new(0.2), {TextColor3 = Library.Theme.Text}):Play()
-                            if ItemData.TabBtn:FindFirstChild("Frame") then ItemData.TabBtn.Frame.Visible = true end
+                            if ItemData.TabBtn:FindFirstChild("ActiveIndicator") then ItemData.TabBtn.ActiveIndicator.Visible = true end
                             
-                            -- Показываем страницу
                             local PageFrame = ItemData.TabBtn:FindFirstChild("PageRef") and ItemData.TabBtn.PageRef.Value
                             if PageFrame then PageFrame.Visible = true end
                         end
 
-                        -- Переключение на под-вкладку
                         if ItemData.SubTabBtn and ItemData.SubPage then
-                            -- Скрываем все подстраницы
                             for _, v in pairs(ItemData.SubPage.Parent:GetChildren()) do 
                                 if v:IsA("Frame") then v.Visible = false end 
                             end
-                            -- Сбрасываем кнопки под-вкладок
                             for _, v in pairs(ItemData.SubTabBtn.Parent:GetChildren()) do 
                                 if v:IsA("TextButton") then 
                                     TweenService:Create(v, TweenInfo.new(0.2), {TextColor3 = Library.Theme.TextDark}):Play() 
@@ -490,7 +487,7 @@ function Library:Window(TitleText)
                             ItemData.SubPage.Visible = true
                             TweenService:Create(ItemData.SubTabBtn, TweenInfo.new(0.2), {TextColor3 = Library.Theme.Accent}):Play()
                         end
-
+                        
                         -- Подсветка
                         if ItemData.Object then
                             local OriginalColor = ItemData.Object.BackgroundColor3
@@ -520,6 +517,7 @@ function Library:Window(TitleText)
         L.TextSize=11
         L.TextXAlignment=Enum.TextXAlignment.Left
         L.Parent=TabContainer
+        L.ZIndex = 5 -- [FIX] Повышен ZIndex чтобы было видно над фоном
         Library:RegisterTheme(L, "TextColor3", "Header")
         local P=Instance.new("UIPadding",L)
         P.PaddingTop=UDim.new(0,10)
@@ -540,11 +538,14 @@ function Library:Window(TitleText)
         Library:RegisterTheme(Btn,"TextColor3","TextDark")
         local P=Instance.new("UIPadding",Btn)
         P.PaddingLeft=UDim.new(0,25)
+        
         local Ind=Instance.new("Frame")
+        Ind.Name = "ActiveIndicator" -- [FIX] Имя для поиска
         Ind.Size=UDim2.new(0,3,0.6,0)
         Ind.Position=UDim2.new(0,-25,0.2,0)
         Ind.Visible=false
         Ind.Parent=Btn
+        Ind.ZIndex = 5 -- [FIX] Повышен ZIndex для видимости
         Library:RegisterTheme(Ind,"BackgroundColor3","Accent")
 
         local Page=Instance.new("Frame")
@@ -554,7 +555,6 @@ function Library:Window(TitleText)
         Page.Visible=false
         Page.Parent=PagesArea
         
-        -- Ссылка на страницу через ObjectValue для надежности
         local PageRef = Instance.new("ObjectValue", Btn)
         PageRef.Name = "PageRef"
         PageRef.Value = Page
@@ -585,7 +585,7 @@ function Library:Window(TitleText)
             for _,v in pairs(TabContainer:GetChildren()) do
                 if v:IsA("TextButton") then
                     TweenService:Create(v,TweenInfo.new(0.2),{TextColor3=Library.Theme.TextDark}):Play()
-                    if v:FindFirstChild("Frame") then v.Frame.Visible=false end
+                    if v:FindFirstChild("ActiveIndicator") then v.ActiveIndicator.Visible=false end
                 end
             end
             for _,v in pairs(PagesArea:GetChildren()) do v.Visible=false end
@@ -698,9 +698,8 @@ function Library:Window(TitleText)
                     Box.Size=UDim2.new(1,0,0,L.AbsoluteContentSize.Y+45)
                 end)
 
-                --// REGISTRY HELPER (SAFE VERSION) //--
                 local function RegisterItem(ItemName, ItemObj)
-                    if not Btn or not SBtn or not SubPage then return end -- Защита от ошибок
+                    if not Btn or not SBtn or not SubPage then return end 
                     table.insert(Library.Registry, {
                         Name = ItemName,
                         Object = ItemObj,
