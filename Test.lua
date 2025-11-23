@@ -13,6 +13,7 @@ local Mouse = Player:GetMouse()
 local Library = {
     Flags = {},
     Items = {},
+    Registry = {}, -- Таблица для поиска
     ActivePicker = nil,
     WatermarkObj = nil,
     NotifyContainer = nil,
@@ -66,7 +67,7 @@ local function CreateTooltipSystem(ScreenGui)
             Tooltip.Position = UDim2.new(0, MPos.X + 15, 0, MPos.Y + 15)
         end
     end)
-    
+
     TooltipObj = Tooltip
 end
 
@@ -194,7 +195,6 @@ function Library:LoadConfig(Name)
     end
 end
 
--- ВОТ ЭТА ФУНКЦИЯ БЫЛА ДОБАВЛЕНА:
 function Library:GetConfigs()
     if not Library:InitConfig() then return {} end
     local Configs = {}
@@ -247,11 +247,9 @@ local function MakeDraggable(dragFrame, moveFrame)
     end)
 end
 
---// WATERMARK (UPDATED) //--
+--// WATERMARK //--
 function Library:Watermark(Name)
-    -- Устанавливаем начальное имя
     Library.WatermarkSettings.Text = Name
-    
     local ScreenGui = Instance.new("ScreenGui")
     ScreenGui.Name = "Watermark"
     ScreenGui.ResetOnSpawn = false
@@ -288,17 +286,12 @@ function Library:Watermark(Name)
     Library:RegisterTheme(Text, "TextColor3", "Text")
 
     RunService.RenderStepped:Connect(function()
-        -- [НОВОЕ] Управление видимостью
         ScreenGui.Enabled = Library.WatermarkSettings.Enabled
-        
         if ScreenGui.Enabled then
             local FPS = math.floor(1 / math.max(RunService.RenderStepped:Wait(), 0.001))
             local PingVal = Stats.Network.ServerStatsItem["Data Ping"]:GetValueString()
             local Ping = math.floor(PingVal:split(" ")[1] or 0)
-            
-            -- [НОВОЕ] Берем текст из настроек
             local CurrentName = Library.WatermarkSettings.Text
-            
             Text.Text = string.format("%s | FPS: %d | Ping: %d | %s", CurrentName, FPS, Ping, os.date("%H:%M:%S"))
             Frame.Size = UDim2.new(0, Text.TextBounds.X + 14, 0, 24)
         end
@@ -336,7 +329,7 @@ function Library:Window(TitleText)
     Instance.new("UICorner", Sidebar).CornerRadius = UDim.new(0, 4)
 
     local Logo = Instance.new("TextLabel")
-    Logo.Size = UDim2.new(1, 0, 0, 60)
+    Logo.Size = UDim2.new(1, 0, 0, 50)
     Logo.BackgroundTransparency = 1
     Logo.Text = TitleText
     Logo.Font = Enum.Font.GothamBlack
@@ -344,15 +337,49 @@ function Library:Window(TitleText)
     Logo.Parent = Sidebar
     Library:RegisterTheme(Logo, "TextColor3", "Accent")
 
+    --// SEARCH BAR //--
+    local SearchBar = Instance.new("TextBox")
+    SearchBar.Name = "SearchBar"
+    SearchBar.Size = UDim2.new(1, -20, 0, 25)
+    SearchBar.Position = UDim2.new(0, 10, 0, 55)
+    SearchBar.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+    SearchBar.BorderSizePixel = 0
+    SearchBar.PlaceholderText = "Search..."
+    SearchBar.Text = ""
+    SearchBar.TextColor3 = Library.Theme.Text
+    SearchBar.PlaceholderColor3 = Color3.fromRGB(100, 100, 100)
+    SearchBar.Font = Enum.Font.Gotham
+    SearchBar.TextSize = 13
+    SearchBar.Parent = Sidebar
+    Instance.new("UICorner", SearchBar).CornerRadius = UDim.new(0, 4)
+    local SBStroke = Instance.new("UIStroke", SearchBar)
+    SBStroke.Color = Library.Theme.Outline
+    SBStroke.Thickness = 1
+    SBStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+
     local TabContainer = Instance.new("ScrollingFrame")
-    TabContainer.Size = UDim2.new(1, 0, 1, -70)
-    TabContainer.Position = UDim2.new(0, 0, 0, 70)
+    TabContainer.Size = UDim2.new(1, 0, 1, -90)
+    TabContainer.Position = UDim2.new(0, 0, 0, 90)
     TabContainer.BackgroundTransparency = 1
     TabContainer.ScrollBarThickness = 0
     TabContainer.Parent = Sidebar
     local TabLayout = Instance.new("UIListLayout", TabContainer)
     TabLayout.Padding = UDim.new(0, 2)
     TabLayout.SortOrder = Enum.SortOrder.LayoutOrder
+
+    --// SEARCH RESULTS CONTAINER //--
+    local SearchResults = Instance.new("ScrollingFrame")
+    SearchResults.Name = "SearchResults"
+    SearchResults.Size = UDim2.new(1, 0, 1, -90)
+    SearchResults.Position = UDim2.new(0, 0, 0, 90)
+    SearchResults.BackgroundTransparency = 1
+    SearchResults.ScrollBarThickness = 2
+    SearchResults.ScrollBarImageColor3 = Library.Theme.Accent
+    SearchResults.Visible = false
+    SearchResults.Parent = Sidebar
+    local SearchLayout = Instance.new("UIListLayout", SearchResults)
+    SearchLayout.Padding = UDim.new(0, 2)
+    SearchLayout.SortOrder = Enum.SortOrder.LayoutOrder
 
     local PagesArea = Instance.new("Frame")
     PagesArea.Size = UDim2.new(1, -180, 1, 0)
@@ -383,6 +410,92 @@ function Library:Window(TitleText)
     DropdownHolder.Visible = false
     DropdownHolder.ZIndex = 100
     DropdownHolder.Parent = ScreenGui 
+
+    --// SEARCH LOGIC //--
+    SearchBar:GetPropertyChangedSignal("Text"):Connect(function()
+        local Input = SearchBar.Text:lower()
+        if #Input > 0 then
+            TabContainer.Visible = false
+            SearchResults.Visible = true
+            
+            -- Очистка старых результатов
+            for _, v in pairs(SearchResults:GetChildren()) do
+                if v:IsA("TextButton") or v:IsA("TextLabel") then v:Destroy() end
+            end
+
+            local FoundCount = 0
+            for _, ItemData in pairs(Library.Registry) do
+                if string.find(ItemData.Name:lower(), Input, 1, true) then
+                    FoundCount = FoundCount + 1
+                    local ResBtn = Instance.new("TextButton")
+                    ResBtn.Size = UDim2.new(1, 0, 0, 25)
+                    ResBtn.BackgroundTransparency = 1
+                    ResBtn.Text = "  " .. ItemData.Name
+                    ResBtn.Font = Enum.Font.Gotham
+                    ResBtn.TextSize = 12
+                    ResBtn.TextColor3 = Library.Theme.TextDark
+                    ResBtn.TextXAlignment = Enum.TextXAlignment.Left
+                    ResBtn.Parent = SearchResults
+                    
+                    local P = Instance.new("UIPadding", ResBtn)
+                    P.PaddingLeft = UDim.new(0, 15)
+
+                    ResBtn.MouseButton1Click:Connect(function()
+                        -- 1. Сброс поиска
+                        -- SearchBar.Text = "" -- Раскомментируйте, если хотите очищать поиск при клике
+                        
+                        -- 2. Переключение вкладки
+                        if ItemData.TabBtn then
+                            for _, v in pairs(TabContainer:GetChildren()) do
+                                if v:IsA("TextButton") then
+                                    TweenService:Create(v, TweenInfo.new(0.2), {TextColor3 = Library.Theme.TextDark}):Play()
+                                    if v.Frame then v.Frame.Visible = false end
+                                end
+                            end
+                            for _, v in pairs(PagesArea:GetChildren()) do v.Visible = false end
+                            
+                            TweenService:Create(ItemData.TabBtn, TweenInfo.new(0.2), {TextColor3 = Library.Theme.Text}):Play()
+                            if ItemData.TabBtn:FindFirstChild("Frame") then ItemData.TabBtn.Frame.Visible = true end -- Индикатор
+                            if ItemData.TabBtn.PageFrame then ItemData.TabBtn.PageFrame.Visible = true end
+                        end
+
+                        -- 3. Переключение под-вкладки (если есть)
+                        if ItemData.SubTabBtn and ItemData.SubPage then
+                             -- Скрываем все страницы в этой вкладке
+                            for _, v in pairs(ItemData.SubPage.Parent:GetChildren()) do 
+                                if v:IsA("Frame") then v.Visible = false end 
+                            end
+                            -- Сбрасываем цвета кнопок под-вкладок
+                            for _, v in pairs(ItemData.SubTabBtn.Parent:GetChildren()) do 
+                                if v:IsA("TextButton") then 
+                                    TweenService:Create(v, TweenInfo.new(0.2), {TextColor3 = Library.Theme.TextDark}):Play() 
+                                end 
+                            end
+                            
+                            ItemData.SubPage.Visible = true
+                            TweenService:Create(ItemData.SubTabBtn, TweenInfo.new(0.2), {TextColor3 = Library.Theme.Accent}):Play()
+                        end
+
+                        -- 4. Подсветка элемента
+                        if ItemData.Object then
+                            local OriginalColor = ItemData.Object.BackgroundColor3 -- Запоминаем (обычно прозрачный)
+                            local HighlightTween = TweenService:Create(ItemData.Object, TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {BackgroundColor3 = Library.Theme.Accent})
+                            local RestoreTween = TweenService:Create(ItemData.Object, TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {BackgroundColor3 = OriginalColor})
+                            
+                            HighlightTween:Play()
+                            HighlightTween.Completed:Wait()
+                            RestoreTween:Play()
+                        end
+                    end)
+                end
+            end
+            SearchResults.CanvasSize = UDim2.new(0, 0, 0, SearchLayout.AbsoluteContentSize.Y)
+        else
+            TabContainer.Visible = true
+            SearchResults.Visible = false
+        end
+    end)
+
 
     local WindowFuncs = {}
     local FirstTab = true
@@ -427,6 +540,11 @@ function Library:Window(TitleText)
         Page.Visible=false
         Page.Parent=PagesArea
         
+        -- Храним ссылку на Page внутри кнопки для поиска
+        Btn.Name = Name -- Устанавливаем имя для удобства
+        getmetatable(Btn).__index = Btn
+        rawset(Btn, "PageFrame", Page)
+
         local SubTabArea = Instance.new("Frame")
         SubTabArea.Size = UDim2.new(1, -20, 0, 30)
         SubTabArea.Position = UDim2.new(0, 10, 0, 10)
@@ -565,6 +683,17 @@ function Library:Window(TitleText)
                     Box.Size=UDim2.new(1,0,0,L.AbsoluteContentSize.Y+45)
                 end)
 
+                --// REGISTRY HELPER //--
+                local function RegisterItem(ItemName, ItemObj)
+                    table.insert(Library.Registry, {
+                        Name = ItemName,
+                        Object = ItemObj,
+                        TabBtn = Btn,
+                        SubTabBtn = SBtn,
+                        SubPage = SubPage
+                    })
+                end
+
                 local BoxFuncs = {}
                 
                 local function CheckActivePicker()
@@ -654,62 +783,48 @@ function Library:Window(TitleText)
                     Lb.TextSize=12
                     Lb.TextXAlignment=Enum.TextXAlignment.Left
                     Library:RegisterTheme(Lb,"TextColor3","Text")
+                    -- Не регистрируем лейблы в поиске, но можно если надо
                 end
                 
-                --// FIXED PARAGRAPH FUNCTION //--
                 function BoxFuncs:AddParagraph(Config)
-                local Head = Config.Title or "Paragraph"
-                local Cont = Config.Content or ""
-                
-                local F = Instance.new("Frame", C)
-                F.BackgroundTransparency = 1
-                -- Начальный размер (ширина 100%, высота пока 0)
-                F.Size = UDim2.new(1, 0, 0, 0)
-                
-                local H1 = Instance.new("TextLabel", F)
-                H1.Size = UDim2.new(1, 0, 0, 15)
-                H1.BackgroundTransparency = 1
-                H1.Text = Head
-                H1.Font = Enum.Font.GothamBold
-                H1.TextSize = 12
-                H1.TextXAlignment = Enum.TextXAlignment.Left
-                Library:RegisterTheme(H1, "TextColor3", "Text")
-                
-                local C1 = Instance.new("TextLabel", F)
-                C1.Position = UDim2.new(0, 0, 0, 20) -- Отступ от заголовка
-                C1.BackgroundTransparency = 1
-                C1.Text = Cont
-                C1.Font = Enum.Font.Gotham
-                C1.TextSize = 11
-                C1.TextXAlignment = Enum.TextXAlignment.Left
-                C1.TextYAlignment = Enum.TextYAlignment.Top -- Текст липнет к верху
-                C1.TextWrapped = true -- Включаем перенос слов
-                Library:RegisterTheme(C1, "TextColor3", "TextDark")
-                
-                -- == ГЛАВНОЕ ИСПРАВЛЕНИЕ == --
-                -- Получаем ширину контейнера. Если скрипт только запустился, она может быть 0.
-                -- В этом случае мы берем стандартную ширину колонки (примерно 230 пикселей).
-                local WrapWidth = C.AbsoluteSize.X
-                if WrapWidth < 50 then 
-                    WrapWidth = 230 -- Принудительная ширина для расчета
+                    local Head = Config.Title or "Paragraph"
+                    local Cont = Config.Content or ""
+                    
+                    local F = Instance.new("Frame", C)
+                    F.BackgroundTransparency = 1
+                    F.Size = UDim2.new(1, 0, 0, 0)
+                    
+                    local H1 = Instance.new("TextLabel", F)
+                    H1.Size = UDim2.new(1, 0, 0, 15)
+                    H1.BackgroundTransparency = 1
+                    H1.Text = Head
+                    H1.Font = Enum.Font.GothamBold
+                    H1.TextSize = 12
+                    H1.TextXAlignment = Enum.TextXAlignment.Left
+                    Library:RegisterTheme(H1, "TextColor3", "Text")
+                    
+                    local C1 = Instance.new("TextLabel", F)
+                    C1.Position = UDim2.new(0, 0, 0, 20)
+                    C1.BackgroundTransparency = 1
+                    C1.Text = Cont
+                    C1.Font = Enum.Font.Gotham
+                    C1.TextSize = 11
+                    C1.TextXAlignment = Enum.TextXAlignment.Left
+                    C1.TextYAlignment = Enum.TextYAlignment.Top
+                    C1.TextWrapped = true
+                    Library:RegisterTheme(C1, "TextColor3", "TextDark")
+                    
+                    local WrapWidth = C.AbsoluteSize.X
+                    if WrapWidth < 50 then WrapWidth = 230 end
+                    WrapWidth = WrapWidth - 10 
+                    
+                    local TextBounds = game:GetService("TextService"):GetTextSize(Cont, 11, Enum.Font.Gotham, Vector2.new(WrapWidth, 9999))
+                    local TextHeight = TextBounds.Y
+                    C1.Size = UDim2.new(1, 0, 0, TextHeight)
+                    F.Size = UDim2.new(1, 0, 0, TextHeight + 25)
+                    
+                    RegisterItem(Head, F) -- Можно регистрировать параграфы
                 end
-                
-                -- Вычитаем 10 пикселей для отступов, чтобы текст не прилипал к краям
-                WrapWidth = WrapWidth - 10 
-                
-                -- Считаем, сколько места займет текст при такой ширине
-                local TextBounds = game:GetService("TextService"):GetTextSize(
-                    Cont, 
-                    11, 
-                    Enum.Font.Gotham, 
-                    Vector2.new(WrapWidth, 9999) -- 9999 это лимит высоты
-                )
-                
-                -- Применяем полученную высоту
-                local TextHeight = TextBounds.Y
-                C1.Size = UDim2.new(1, 0, 0, TextHeight)
-                F.Size = UDim2.new(1, 0, 0, TextHeight + 25) -- Высота текста + 25 пикселей на заголовок
-            end
 
                 function BoxFuncs:AddToggle(Config)
                     local Text = Config.Title or "Toggle"
@@ -758,6 +873,8 @@ function Library:Window(TitleText)
                     Library.Items[Flag]={Set=Set}
                     F.MouseButton1Click:Connect(function() Set(not Library.Flags[Flag]) end)
                     Library.Flags[Flag]=Default
+
+                    RegisterItem(Text, F)
                 end
 
                 function BoxFuncs:AddCheckbox(Config)
@@ -836,6 +953,8 @@ function Library:Window(TitleText)
                     Btn.InputBegan:Connect(function(i) if i.UserInputType==Enum.UserInputType.MouseButton1 or i.UserInputType==Enum.UserInputType.Touch then drag=true Upd(i) end end)
                     UserInputService.InputEnded:Connect(function(i) if i.UserInputType==Enum.UserInputType.MouseButton1 or i.UserInputType==Enum.UserInputType.Touch then drag=false end end)
                     UserInputService.InputChanged:Connect(function(i) if drag and (i.UserInputType==Enum.UserInputType.MouseMovement or i.UserInputType==Enum.UserInputType.Touch) then Upd(i) end end)
+
+                    RegisterItem(Text, F)
                 end
                 
                 function BoxFuncs:AddColorPicker(Config)
@@ -917,6 +1036,8 @@ function Library:Window(TitleText)
                         end
                     end)
                     DropdownHolder.InputBegan:Connect(function(i) if i.UserInputType==Enum.UserInputType.MouseButton1 then Win.Visible=false if Library.ActivePicker==Win then Library.ActivePicker=nil end end end)
+                
+                    RegisterItem(Text, F)
                 end
 
                 function BoxFuncs:AddDropdown(Config)
@@ -1047,6 +1168,8 @@ function Library:Window(TitleText)
                     end
 
                     DropdownHolder.InputBegan:Connect(function(i) if i.UserInputType==Enum.UserInputType.MouseButton1 then List.Visible=false DropdownHolder.Visible=false end end)
+                    
+                    RegisterItem(Text, F)
                 end
 
                 function BoxFuncs:AddKeybind(Config)
@@ -1081,6 +1204,8 @@ function Library:Window(TitleText)
                     local bind=false
                     B.MouseButton1Click:Connect(function() bind=true B.Text="..." end)
                     UserInputService.InputBegan:Connect(function(i) if bind and i.UserInputType==Enum.UserInputType.Keyboard then bind=false B.Text=i.KeyCode.Name pcall(Call,i.KeyCode) end end)
+                
+                    RegisterItem(Text, F)
                 end
 
                 function BoxFuncs:AddTextbox(Config)
@@ -1116,6 +1241,8 @@ function Library:Window(TitleText)
                     B.ClearTextOnFocus = Clear or false
                     Instance.new("UICorner",B).CornerRadius=UDim.new(0,4)
                     B.FocusLost:Connect(function() Library.Flags[Flag]=B.Text pcall(Call,B.Text) end)
+                
+                    RegisterItem(Text, F)
                 end
 
                 function BoxFuncs:AddButton(Config)
@@ -1142,6 +1269,8 @@ function Library:Window(TitleText)
                         TweenService:Create(B,TweenInfo.new(0.1),{BackgroundColor3=Color3.fromRGB(35,35,35)}):Play()
                         pcall(Call)
                     end)
+                
+                    RegisterItem(Text, F)
                 end
 
                 return BoxFuncs
