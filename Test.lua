@@ -717,6 +717,9 @@ function Library:Window(TitleText)
                     end
                 end
         
+                -- //////////////////////////////////////////////////////////
+                -- >> ESP PREVIEW (ЧИСТАЯ ВЕРСИЯ - ВОЗВРАЩАЕТ VIEWPORT) <<
+                -- //////////////////////////////////////////////////////////
                 function BoxFuncs:ESPPreview()
                     local F = Instance.new("Frame", C)
                     F.Size = UDim2.new(1, 0, 0, 200)
@@ -733,55 +736,45 @@ function Library:Window(TitleText)
                     local Cam = Instance.new("Camera", VP)
                     VP.CurrentCamera = Cam
                     
+                    -- Создаем манекен, но НЕ добавляем боксы и текст
                     task.spawn(function()
-                        local Char = Player.Character or Player.CharacterAdded:Wait()
-                        if not Char then return end
-                        local CharClone = Char:Clone()
-                        CharClone.Parent = VP
+                        local Dummy = nil
+                        pcall(function()
+                            local Char = Players.LocalPlayer.Character or Players.LocalPlayer.CharacterAdded:Wait()
+                            Char.Archivable = true
+                            Dummy = Char:Clone()
+                            Char.Archivable = false
+                        end)
                         
-                        local HRP = CharClone:FindFirstChild("HumanoidRootPart")
-                        if HRP then
-                            Cam.CFrame = CFrame.new(HRP.Position + (HRP.CFrame.LookVector * 6) + Vector3.new(0, 1, 0), HRP.Position)
+                        if not Dummy then
+                            Dummy = Instance.new("Model")
+                            local Part = Instance.new("Part", Dummy)
+                            Part.Name = "HumanoidRootPart"
+                            Part.Size = Vector3.new(2, 5, 1)
+                            Part.Transparency = 0.5
+                            Part.Anchored = true
                         end
-                    
-                        local BoxESP = Instance.new("Frame", VP)
-                        BoxESP.Size = UDim2.new(0.5, 0, 0.8, 0)
-                        BoxESP.Position = UDim2.new(0.25, 0, 0.1, 0)
-                        BoxESP.BackgroundTransparency = 1
-                        BoxESP.BorderColor3 = Color3.new(1, 0, 0)
-                        BoxESP.BorderSizePixel = 2
-                        BoxESP.Visible = false
-                        
-                        local NameESP = Instance.new("TextLabel", VP)
-                        NameESP.Text = Player.Name
-                        NameESP.Size = UDim2.new(1, 0, 0, 20)
-                        NameESP.Position = UDim2.new(0, 0, 0, 5)
-                        NameESP.BackgroundTransparency = 1
-                        NameESP.TextColor3 = Color3.new(1, 1, 1)
-                        NameESP.Font = Enum.Font.GothamBold
-                        NameESP.TextSize = 12
-                        NameESP.Visible = false
-                        
-                        local HealthBar = Instance.new("Frame", VP)
-                        HealthBar.Size = UDim2.new(0, 3, 0.8, 0)
-                        HealthBar.Position = UDim2.new(0.23, 0, 0.1, 0)
-                        HealthBar.BackgroundColor3 = Color3.new(0, 1, 0)
-                        HealthBar.BorderSizePixel = 0
-                        HealthBar.Visible = false
-                        
-                        local Highlight = Instance.new("Highlight", CharClone)
-                        Highlight.FillColor = Color3.new(1, 0, 0)
-                        Highlight.FillTransparency = 0.5
-                        Highlight.OutlineTransparency = 0
-                        Highlight.Enabled = false
-                        
-                        Library.Preview = {
-                            Box = BoxESP,
-                            Name = NameESP,
-                            Health = HealthBar,
-                            Chams = Highlight
-                        }
+
+                        Dummy.Parent = VP
+                        local HRP = Dummy:FindFirstChild("HumanoidRootPart")
+                        if HRP then
+                            HRP.Anchored = true
+                            HRP.CFrame = CFrame.new(0,0,0)
+                        end
+
+                        -- Анимация камеры вокруг манекена
+                        local Angle = 0
+                        RunService.RenderStepped:Connect(function(dt)
+                            if VP.Visible and HRP then
+                                Angle = Angle + dt * 0.5
+                                local Offset = Vector3.new(math.sin(Angle)*7, 1, math.cos(Angle)*7)
+                                Cam.CFrame = CFrame.new(Offset, Vector3.new(0,0,0))
+                            end
+                        end)
                     end)
+                    
+                    RegisterItem("ESP Preview", F)
+                    return VP -- Возвращаем ViewportFrame, чтобы скрипт мог в него рисовать
                 end
 
                 function BoxFuncs:AddLabel(Config)
@@ -802,11 +795,9 @@ function Library:Window(TitleText)
                 function BoxFuncs:AddParagraph(Config)
                     local Head = Config.Title or "Paragraph"
                     local Cont = Config.Content or ""
-                    
                     local F = Instance.new("Frame", C)
                     F.BackgroundTransparency = 1
                     F.Size = UDim2.new(1, 0, 0, 0)
-                    
                     local H1 = Instance.new("TextLabel", F)
                     H1.Size = UDim2.new(1, 0, 0, 15)
                     H1.BackgroundTransparency = 1
@@ -815,7 +806,6 @@ function Library:Window(TitleText)
                     H1.TextSize = 12
                     H1.TextXAlignment = Enum.TextXAlignment.Left
                     Library:RegisterTheme(H1, "TextColor3", "Text")
-                    
                     local C1 = Instance.new("TextLabel", F)
                     C1.Position = UDim2.new(0, 0, 0, 20)
                     C1.BackgroundTransparency = 1
@@ -826,16 +816,13 @@ function Library:Window(TitleText)
                     C1.TextYAlignment = Enum.TextYAlignment.Top
                     C1.TextWrapped = true
                     Library:RegisterTheme(C1, "TextColor3", "TextDark")
-                    
                     local WrapWidth = C.AbsoluteSize.X
                     if WrapWidth < 50 then WrapWidth = 230 end
                     WrapWidth = WrapWidth - 10 
-                    
                     local TextBounds = game:GetService("TextService"):GetTextSize(Cont, 11, Enum.Font.Gotham, Vector2.new(WrapWidth, 9999))
                     local TextHeight = TextBounds.Y
                     C1.Size = UDim2.new(1, 0, 0, TextHeight)
                     F.Size = UDim2.new(1, 0, 0, TextHeight + 25)
-                    
                     RegisterItem(Head, F)
                 end
 
@@ -846,13 +833,11 @@ function Library:Window(TitleText)
                     local Flag = Config.Flag or Text
                     local Desc = Config.Description
                     local Risky = Config.Risky
-
                     local F=Instance.new("TextButton",C)
                     F.Size=UDim2.new(1,0,0,20)
                     F.BackgroundTransparency=1
                     F.Text=""
                     if Desc then AddTooltip(F, Desc) end
-
                     local Lb=Instance.new("TextLabel",F)
                     Lb.Size=UDim2.new(1,-45,1,0)
                     Lb.BackgroundTransparency=1
@@ -860,12 +845,7 @@ function Library:Window(TitleText)
                     Lb.Font=Enum.Font.Gotham
                     Lb.TextSize=12
                     Lb.TextXAlignment=Enum.TextXAlignment.Left
-                    if Risky then
-                        Lb.TextColor3 = Color3.fromRGB(255, 80, 80)
-                    else
-                        Library:RegisterTheme(Lb,"TextColor3","Text")
-                    end
-
+                    if Risky then Lb.TextColor3 = Color3.fromRGB(255, 80, 80) else Library:RegisterTheme(Lb,"TextColor3","Text") end
                     local T=Instance.new("Frame",F)
                     T.Size=UDim2.new(0,34,0,18)
                     T.Position=UDim2.new(1,-34,0.5,-9)
@@ -876,7 +856,6 @@ function Library:Window(TitleText)
                     Cir.Position=Default and UDim2.new(1,-16,0.5,-7) or UDim2.new(0,2,0.5,-7)
                     Cir.BackgroundColor3=Library.Theme.Text
                     Instance.new("UICorner",Cir).CornerRadius=UDim.new(1,0)
-
                     local function Set(v)
                         Library.Flags[Flag]=v
                         TweenService:Create(Cir,TweenInfo.new(0.15),{Position=v and UDim2.new(1,-16,0.5,-7) or UDim2.new(0,2,0.5,-7)}):Play()
@@ -886,7 +865,6 @@ function Library:Window(TitleText)
                     Library.Items[Flag]={Set=Set}
                     F.MouseButton1Click:Connect(function() Set(not Library.Flags[Flag]) end)
                     Library.Flags[Flag]=Default
-
                     RegisterItem(Text, F)
                 end
 
@@ -897,13 +875,11 @@ function Library:Window(TitleText)
                     local Flag = Config.Flag or Text
                     local Desc = Config.Description
                     local Risky = Config.Risky
-
                     local F=Instance.new("TextButton",C)
                     F.Size=UDim2.new(1,0,0,20)
                     F.BackgroundTransparency=1
                     F.Text=""
                     if Desc then AddTooltip(F, Desc) end
-
                     local Lb=Instance.new("TextLabel",F)
                     Lb.Size=UDim2.new(1,-30,1,0)
                     Lb.BackgroundTransparency=1
@@ -911,13 +887,7 @@ function Library:Window(TitleText)
                     Lb.Font=Enum.Font.Gotham
                     Lb.TextSize=12
                     Lb.TextXAlignment=Enum.TextXAlignment.Left
-                    if Risky then
-                        Lb.TextColor3 = Color3.fromRGB(255, 80, 80)
-                    else
-                        Library:RegisterTheme(Lb,"TextColor3","Text")
-                    end
-
-                    -- Внешний квадрат
+                    if Risky then Lb.TextColor3 = Color3.fromRGB(255, 80, 80) else Library:RegisterTheme(Lb,"TextColor3","Text") end
                     local Outer=Instance.new("Frame",F)
                     Outer.Size=UDim2.new(0,18,0,18)
                     Outer.Position=UDim2.new(1,-20,0.5,-9)
@@ -926,15 +896,12 @@ function Library:Window(TitleText)
                     local S=Instance.new("UIStroke",Outer)
                     S.Color=Library.Theme.Outline
                     S.Thickness=1
-
-                    -- Внутренний квадрат (индикатор)
                     local Inner=Instance.new("Frame",Outer)
                     Inner.Size=UDim2.new(1,-6,1,-6)
                     Inner.Position=UDim2.new(0,3,0,3)
                     Inner.BackgroundColor3=Library.Theme.Accent
-                    Inner.BackgroundTransparency=1 -- Скрыт по умолчанию
+                    Inner.BackgroundTransparency=1
                     Instance.new("UICorner",Inner).CornerRadius=UDim.new(0,2)
-
                     local function Set(v)
                         Library.Flags[Flag]=v
                         if v then
@@ -946,18 +913,13 @@ function Library:Window(TitleText)
                         end
                         pcall(Callback,v)
                     end
-
                     Library.Items[Flag]={Set=Set}
                     Library.Flags[Flag]=Default
-                    
-                    -- Применяем начальное состояние без анимации
                     if Default then
                         Inner.BackgroundTransparency=0
                         Outer.BackgroundColor3=Color3.fromRGB(50,50,50)
                     end
-
                     F.MouseButton1Click:Connect(function() Set(not Library.Flags[Flag]) end)
-
                     RegisterItem(Text, F)
                 end
 
@@ -971,12 +933,10 @@ function Library:Window(TitleText)
                     local Rounding = Config.Rounding or 0
                     local Suffix = Config.Suffix or ""
                     local Desc = Config.Description
-
                     local F=Instance.new("Frame",C)
                     F.Size=UDim2.new(1,0,0,38)
                     F.BackgroundTransparency=1
                     if Desc then AddTooltip(F, Desc) end
-
                     local Lb=Instance.new("TextLabel",F)
                     Lb.Size=UDim2.new(1,0,0,15)
                     Lb.BackgroundTransparency=1
@@ -1008,15 +968,9 @@ function Library:Window(TitleText)
                     Btn.Position=UDim2.new(0,0,0,15)
                     Btn.BackgroundTransparency=1
                     Btn.Text=""
-                    
                     local function Set(v)
                         v=math.clamp(v,Min,Max)
-                        if Rounding > 0 then
-                            v = math.floor(v * (10^Rounding)) / (10^Rounding)
-                        else
-                            v = math.floor(v)
-                        end
-                        
+                        if Rounding > 0 then v = math.floor(v * (10^Rounding)) / (10^Rounding) else v = math.floor(v) end
                         Library.Flags[Flag]=v
                         Vl.Text=tostring(v)..Suffix
                         TweenService:Create(Fil,TweenInfo.new(0.1),{Size=UDim2.new((v-Min)/(Max-Min),0,1,0)}):Play()
@@ -1033,7 +987,6 @@ function Library:Window(TitleText)
                     Btn.InputBegan:Connect(function(i) if i.UserInputType==Enum.UserInputType.MouseButton1 or i.UserInputType==Enum.UserInputType.Touch then drag=true Upd(i) end end)
                     UserInputService.InputEnded:Connect(function(i) if i.UserInputType==Enum.UserInputType.MouseButton1 or i.UserInputType==Enum.UserInputType.Touch then drag=false end end)
                     UserInputService.InputChanged:Connect(function(i) if drag and (i.UserInputType==Enum.UserInputType.MouseMovement or i.UserInputType==Enum.UserInputType.Touch) then Upd(i) end end)
-
                     RegisterItem(Text, F)
                 end
                 
@@ -1043,12 +996,10 @@ function Library:Window(TitleText)
                     local Callback = Config.Callback or function() end
                     local Flag = Config.Flag or Text
                     local Desc = Config.Description
-
                     local F=Instance.new("Frame",C)
                     F.Size=UDim2.new(1,0,0,25)
                     F.BackgroundTransparency=1
                     if Desc then AddTooltip(F, Desc) end
-
                     local Lb=Instance.new("TextLabel",F)
                     Lb.Size=UDim2.new(0.7,0,1,0)
                     Lb.BackgroundTransparency=1
@@ -1063,7 +1014,6 @@ function Library:Window(TitleText)
                     P.BackgroundColor3=Def
                     P.Text=""
                     Instance.new("UICorner",P).CornerRadius=UDim.new(0,4)
-                    
                     local Win=Instance.new("Frame",ScreenGui)
                     Win.Size=UDim2.new(0,200,0,190)
                     Win.BackgroundColor3=Color3.fromRGB(25,25,25)
@@ -1085,7 +1035,6 @@ function Library:Window(TitleText)
                     H.ZIndex=201
                     local Gr=Instance.new("UIGradient",H)
                     Gr.Color=ColorSequence.new{ColorSequenceKeypoint.new(0,Color3.new(1,0,0)),ColorSequenceKeypoint.new(0.17,Color3.new(1,1,0)),ColorSequenceKeypoint.new(0.33,Color3.new(0,1,0)),ColorSequenceKeypoint.new(0.5,Color3.new(0,1,1)),ColorSequenceKeypoint.new(0.67,Color3.new(0,0,1)),ColorSequenceKeypoint.new(0.83,Color3.new(1,0,1)),ColorSequenceKeypoint.new(1,Color3.new(1,0,0))}
-                    
                     local h,s,v = Def:ToHSV()
                     local function Upd()
                         local c=Color3.fromHSV(h,s,v)
@@ -1096,7 +1045,6 @@ function Library:Window(TitleText)
                     end
                     Library.Items[Flag]={Set=function(t) if type(t)=="table" then local c=Color3.new(t.R,t.G,t.B) h,s,v=c:ToHSV() Upd() end end}
                     Library.Flags[Flag]={R=Def.R,G=Def.G,B=Def.B}
-
                     local d1,d2=false,false
                     local function Hand(i,mode)
                         if mode=="H" then h=math.clamp((i.Position.X-H.AbsolutePosition.X)/H.AbsoluteSize.X,0,1)
@@ -1116,7 +1064,6 @@ function Library:Window(TitleText)
                         end
                     end)
                     DropdownHolder.InputBegan:Connect(function(i) if i.UserInputType==Enum.UserInputType.MouseButton1 then Win.Visible=false if Library.ActivePicker==Win then Library.ActivePicker=nil end end end)
-                
                     RegisterItem(Text, F)
                 end
 
@@ -1128,12 +1075,10 @@ function Library:Window(TitleText)
                     local Multi = Config.Multi or false
                     local Flag = Config.Flag or Text
                     local Desc = Config.Description
-
                     local F=Instance.new("Frame",C)
                     F.Size=UDim2.new(1,0,0,40)
                     F.BackgroundTransparency=1
                     if Desc then AddTooltip(F, Desc) end
-
                     local L=Instance.new("TextLabel",F)
                     L.Size=UDim2.new(1,0,0,15)
                     L.BackgroundTransparency=1
@@ -1151,19 +1096,16 @@ function Library:Window(TitleText)
                     B.TextColor3=Color3.fromRGB(200,200,200)
                     B.TextXAlignment=Enum.TextXAlignment.Left
                     Instance.new("UICorner",B).CornerRadius=UDim.new(0,4)
-                    
                     local List=Instance.new("ScrollingFrame",ScreenGui)
                     List.Visible=false
                     List.BackgroundColor3=Color3.fromRGB(35,35,35)
                     List.BorderSizePixel=0
-                    List.ZIndex=200 -- Список поверх всего
+                    List.ZIndex=200
                     List.AutomaticCanvasSize = Enum.AutomaticSize.Y
                     Instance.new("UIStroke",List).Color=Library.Theme.Outline
                     local LL=Instance.new("UIListLayout",List)
                     LL.SortOrder=Enum.SortOrder.LayoutOrder
-
                     if not Multi then
-                        -- SINGLE DROPDOWN
                         B.Text = "  " .. (Default or "Select...")
                         local function Set(v)
                             B.Text="  "..v
@@ -1173,7 +1115,6 @@ function Library:Window(TitleText)
                             DropdownHolder.Visible=false
                             CheckActivePicker()
                         end
-                        
                         Library.Items[Flag]={Set=Set, Refresh=function(New)
                             for _,v in pairs(List:GetChildren()) do if v:IsA("TextButton") then v:Destroy() end end
                             for _,v in pairs(New) do
@@ -1184,13 +1125,12 @@ function Library:Window(TitleText)
                                 bt.TextColor3=Color3.fromRGB(200,200,200)
                                 bt.Font=Enum.Font.Gotham
                                 bt.TextSize=12
-                                bt.ZIndex = 205 -- [FIX] Кнопки выше фона списка
+                                bt.ZIndex = 205 
                                 bt.MouseButton1Click:Connect(function() Set(v) end)
                             end
                         end}
                         Library.Items[Flag].Refresh(Opt)
                         if Default then Set(Default) end
-
                         B.MouseButton1Click:Connect(function()
                             if List.Visible then List.Visible=false DropdownHolder.Visible=false else
                                 CheckActivePicker()
@@ -1202,23 +1142,16 @@ function Library:Window(TitleText)
                                 DropdownHolder.Visible=true
                             end
                         end)
-
                     else
-                        -- MULTI DROPDOWN
                         local Sel={}
-                        if type(Default) == "table" then
-                            for _, val in pairs(Default) do Sel[val] = true end
-                        end
-                        
+                        if type(Default) == "table" then for _, val in pairs(Default) do Sel[val] = true end end
                         Library.Flags[Flag]=Sel
-                        
                         local function Upd()
                             local t={} for k,v in pairs(Sel) do if v then table.insert(t,k) end end
                             B.Text=#t==0 and "  None" or (#t==1 and "  "..t[1] or "  "..#t.." Selected")
                             pcall(Callback,Sel)
                         end
                         Upd()
-
                         for _,v in pairs(Opt) do
                             local bt=Instance.new("TextButton",List)
                             bt.Size=UDim2.new(1,0,0,25)
@@ -1227,7 +1160,7 @@ function Library:Window(TitleText)
                             bt.TextColor3=Color3.fromRGB(200,200,200)
                             bt.Font=Enum.Font.Gotham
                             bt.TextSize=12
-                            bt.ZIndex = 205 -- [FIX] Кнопки выше фона списка
+                            bt.ZIndex = 205
                             bt.MouseButton1Click:Connect(function()
                                 Sel[v]=not Sel[v]
                                 bt.TextColor3=Sel[v] and Library.Theme.Accent or Color3.fromRGB(200,200,200)
@@ -1235,7 +1168,6 @@ function Library:Window(TitleText)
                             end)
                             if Sel[v] then bt.TextColor3 = Library.Theme.Accent end
                         end
-                        
                         B.MouseButton1Click:Connect(function()
                             if List.Visible then List.Visible=false DropdownHolder.Visible=false else
                                 CheckActivePicker()
@@ -1248,9 +1180,7 @@ function Library:Window(TitleText)
                             end
                         end)
                     end
-
                     DropdownHolder.InputBegan:Connect(function(i) if i.UserInputType==Enum.UserInputType.MouseButton1 then List.Visible=false DropdownHolder.Visible=false end end)
-                    
                     RegisterItem(Text, F)
                 end
 
@@ -1260,12 +1190,10 @@ function Library:Window(TitleText)
                     local Call = Config.Callback or function() end
                     local Flag = Config.Flag or Text
                     local Desc = Config.Description
-
                     local F=Instance.new("Frame",C)
                     F.Size=UDim2.new(1,0,0,20)
                     F.BackgroundTransparency=1
                     if Desc then AddTooltip(F, Desc) end
-
                     local L=Instance.new("TextLabel",F)
                     L.Size=UDim2.new(1,0,1,0)
                     L.BackgroundTransparency=1
@@ -1286,7 +1214,6 @@ function Library:Window(TitleText)
                     local bind=false
                     B.MouseButton1Click:Connect(function() bind=true B.Text="..." end)
                     UserInputService.InputBegan:Connect(function(i) if bind and i.UserInputType==Enum.UserInputType.Keyboard then bind=false B.Text=i.KeyCode.Name pcall(Call,i.KeyCode) end end)
-                
                     RegisterItem(Text, F)
                 end
 
@@ -1297,12 +1224,10 @@ function Library:Window(TitleText)
                     local Flag = Config.Flag or Text
                     local Desc = Config.Description
                     local Clear = Config.ClearOnFocus
-
                     local F=Instance.new("Frame",C)
                     F.Size=UDim2.new(1,0,0,40)
                     F.BackgroundTransparency=1
                     if Desc then AddTooltip(F, Desc) end
-
                     local L=Instance.new("TextLabel",F)
                     L.Size=UDim2.new(1,0,0,15)
                     L.BackgroundTransparency=1
@@ -1323,7 +1248,6 @@ function Library:Window(TitleText)
                     B.ClearTextOnFocus = Clear or false
                     Instance.new("UICorner",B).CornerRadius=UDim.new(0,4)
                     B.FocusLost:Connect(function() Library.Flags[Flag]=B.Text pcall(Call,B.Text) end)
-                
                     RegisterItem(Text, F)
                 end
 
@@ -1331,12 +1255,10 @@ function Library:Window(TitleText)
                     local Text = Config.Title or "Button"
                     local Call = Config.Callback or function() end
                     local Desc = Config.Description
-
                     local F=Instance.new("Frame",C)
                     F.Size=UDim2.new(1,0,0,32)
                     F.BackgroundTransparency=1
                     if Desc then AddTooltip(F, Desc) end
-                    
                     local B=Instance.new("TextButton",F)
                     B.Size=UDim2.new(1,0,1,0)
                     B.BackgroundColor3=Color3.fromRGB(35,35,35)
@@ -1351,7 +1273,6 @@ function Library:Window(TitleText)
                         TweenService:Create(B,TweenInfo.new(0.1),{BackgroundColor3=Color3.fromRGB(35,35,35)}):Play()
                         pcall(Call)
                     end)
-                
                     RegisterItem(Text, F)
                 end
 
