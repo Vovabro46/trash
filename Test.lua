@@ -90,7 +90,7 @@ function Library:InitNotifications(ScreenGui)
     Holder.Position = UDim2.new(1, -310, 0, 10)
     Holder.AnchorPoint = Vector2.new(0, 0)
     Holder.BackgroundTransparency = 1
-    Holder.ZIndex = 1000 -- Поверх всего
+    Holder.ZIndex = 1000 
     Holder.Parent = ScreenGui
 
     local List = Instance.new("UIListLayout", Holder)
@@ -303,9 +303,8 @@ end
 --// MAIN WINDOW //--
 function Library:Window(TitleText)
     local ScreenGui = Instance.new("ScreenGui")
-    ScreenGui.Name = "RedOnyxV17_Final"
+    ScreenGui.Name = "RedOnyxV17_CheckBox"
     ScreenGui.ResetOnSpawn = false
-    -- ВАЖНО: Global ZIndex для правильной работы поиска
     ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Global 
     if RunService:IsStudio() then ScreenGui.Parent = Player:WaitForChild("PlayerGui") else pcall(function() ScreenGui.Parent = CoreGui end) end
 
@@ -329,7 +328,7 @@ function Library:Window(TitleText)
     Sidebar.Name = "Sidebar"
     Sidebar.Size = UDim2.new(0, 180, 1, 0)
     Sidebar.Parent = MainFrame
-    Sidebar.ZIndex = 2 -- Слой фона
+    Sidebar.ZIndex = 2 
     Library:RegisterTheme(Sidebar, "BackgroundColor3", "Sidebar")
     Instance.new("UICorner", Sidebar).CornerRadius = UDim.new(0, 4)
 
@@ -341,7 +340,7 @@ function Library:Window(TitleText)
     Logo.Font = Enum.Font.GothamBlack
     Logo.TextSize = 22
     Logo.Parent = Sidebar
-    Logo.ZIndex = 5 -- Поверх фона
+    Logo.ZIndex = 5 
     Library:RegisterTheme(Logo, "TextColor3", "Accent")
 
     --// SEARCH BAR //--
@@ -358,7 +357,7 @@ function Library:Window(TitleText)
     SearchBar.Font = Enum.Font.Gotham
     SearchBar.TextSize = 13
     SearchBar.Parent = Sidebar
-    SearchBar.ZIndex = 5 -- Поверх фона
+    SearchBar.ZIndex = 5 
     Instance.new("UICorner", SearchBar).CornerRadius = UDim.new(0, 4)
     local SBStroke = Instance.new("UIStroke", SearchBar)
     SBStroke.Color = Library.Theme.Outline
@@ -373,7 +372,7 @@ function Library:Window(TitleText)
     TabContainer.BackgroundTransparency = 1
     TabContainer.ScrollBarThickness = 0
     TabContainer.Parent = Sidebar
-    TabContainer.ZIndex = 3 -- Слой вкладок
+    TabContainer.ZIndex = 3 
     TabContainer.Visible = true 
     local TabLayout = Instance.new("UIListLayout", TabContainer)
     TabLayout.Padding = UDim.new(0, 2)
@@ -390,7 +389,7 @@ function Library:Window(TitleText)
     SearchResults.ScrollBarImageColor3 = Library.Theme.Accent
     SearchResults.Visible = false 
     SearchResults.Parent = Sidebar
-    SearchResults.ZIndex = 10 -- Поверх вкладок
+    SearchResults.ZIndex = 10 
     local SearchLayout = Instance.new("UIListLayout", SearchResults)
     SearchLayout.Padding = UDim.new(0, 2)
     SearchLayout.SortOrder = Enum.SortOrder.LayoutOrder
@@ -517,7 +516,7 @@ function Library:Window(TitleText)
         L.TextSize=11
         L.TextXAlignment=Enum.TextXAlignment.Left
         L.Parent=TabContainer
-        L.ZIndex = 5 -- [FIX] Повышен ZIndex чтобы было видно над фоном
+        L.ZIndex = 5 
         Library:RegisterTheme(L, "TextColor3", "Header")
         local P=Instance.new("UIPadding",L)
         P.PaddingTop=UDim.new(0,10)
@@ -540,12 +539,12 @@ function Library:Window(TitleText)
         P.PaddingLeft=UDim.new(0,25)
         
         local Ind=Instance.new("Frame")
-        Ind.Name = "ActiveIndicator" -- [FIX] Имя для поиска
+        Ind.Name = "ActiveIndicator" 
         Ind.Size=UDim2.new(0,3,0.6,0)
         Ind.Position=UDim2.new(0,-25,0.2,0)
         Ind.Visible=false
         Ind.Parent=Btn
-        Ind.ZIndex = 5 -- [FIX] Повышен ZIndex для видимости
+        Ind.ZIndex = 5 
         Library:RegisterTheme(Ind,"BackgroundColor3","Accent")
 
         local Page=Instance.new("Frame")
@@ -892,7 +891,74 @@ function Library:Window(TitleText)
                 end
 
                 function BoxFuncs:AddCheckbox(Config)
-                    return BoxFuncs:AddToggle(Config) 
+                    local Text = Config.Title or "Checkbox"
+                    local Default = Config.Default or false
+                    local Callback = Config.Callback or function() end
+                    local Flag = Config.Flag or Text
+                    local Desc = Config.Description
+                    local Risky = Config.Risky
+
+                    local F=Instance.new("TextButton",C)
+                    F.Size=UDim2.new(1,0,0,20)
+                    F.BackgroundTransparency=1
+                    F.Text=""
+                    if Desc then AddTooltip(F, Desc) end
+
+                    local Lb=Instance.new("TextLabel",F)
+                    Lb.Size=UDim2.new(1,-30,1,0)
+                    Lb.BackgroundTransparency=1
+                    Lb.Text=Text
+                    Lb.Font=Enum.Font.Gotham
+                    Lb.TextSize=12
+                    Lb.TextXAlignment=Enum.TextXAlignment.Left
+                    if Risky then
+                        Lb.TextColor3 = Color3.fromRGB(255, 80, 80)
+                    else
+                        Library:RegisterTheme(Lb,"TextColor3","Text")
+                    end
+
+                    -- Внешний квадрат
+                    local Outer=Instance.new("Frame",F)
+                    Outer.Size=UDim2.new(0,18,0,18)
+                    Outer.Position=UDim2.new(1,-20,0.5,-9)
+                    Outer.BackgroundColor3=Color3.fromRGB(35,35,35)
+                    Instance.new("UICorner",Outer).CornerRadius=UDim.new(0,4)
+                    local S=Instance.new("UIStroke",Outer)
+                    S.Color=Library.Theme.Outline
+                    S.Thickness=1
+
+                    -- Внутренний квадрат (индикатор)
+                    local Inner=Instance.new("Frame",Outer)
+                    Inner.Size=UDim2.new(1,-6,1,-6)
+                    Inner.Position=UDim2.new(0,3,0,3)
+                    Inner.BackgroundColor3=Library.Theme.Accent
+                    Inner.BackgroundTransparency=1 -- Скрыт по умолчанию
+                    Instance.new("UICorner",Inner).CornerRadius=UDim.new(0,2)
+
+                    local function Set(v)
+                        Library.Flags[Flag]=v
+                        if v then
+                            TweenService:Create(Inner,TweenInfo.new(0.15),{BackgroundTransparency=0}):Play()
+                            TweenService:Create(Outer,TweenInfo.new(0.15),{BackgroundColor3=Color3.fromRGB(50,50,50)}):Play()
+                        else
+                            TweenService:Create(Inner,TweenInfo.new(0.15),{BackgroundTransparency=1}):Play()
+                            TweenService:Create(Outer,TweenInfo.new(0.15),{BackgroundColor3=Color3.fromRGB(35,35,35)}):Play()
+                        end
+                        pcall(Callback,v)
+                    end
+
+                    Library.Items[Flag]={Set=Set}
+                    Library.Flags[Flag]=Default
+                    
+                    -- Применяем начальное состояние без анимации
+                    if Default then
+                        Inner.BackgroundTransparency=0
+                        Outer.BackgroundColor3=Color3.fromRGB(50,50,50)
+                    end
+
+                    F.MouseButton1Click:Connect(function() Set(not Library.Flags[Flag]) end)
+
+                    RegisterItem(Text, F)
                 end
 
                 function BoxFuncs:AddSlider(Config)
