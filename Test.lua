@@ -717,9 +717,6 @@ function Library:Window(TitleText)
                     end
                 end
         
-                -- //////////////////////////////////////////////////////////
-                -- >> ESP PREVIEW (ИСПРАВЛЕННАЯ ВЕРСИЯ) <<
-                -- //////////////////////////////////////////////////////////
                 function BoxFuncs:ESPPreview()
                     local F = Instance.new("Frame", C)
                     F.Size = UDim2.new(1, 0, 0, 200)
@@ -733,74 +730,58 @@ function Library:Window(TitleText)
                     Instance.new("UICorner", VP).CornerRadius = UDim.new(0, 4)
                     Instance.new("UIStroke", VP).Color = Library.Theme.Outline
                     
-                    -- Добавляем WorldModel для корректной физики/рендера
-                    local WorldModel = Instance.new("WorldModel", VP)
-                    
                     local Cam = Instance.new("Camera", VP)
                     VP.CurrentCamera = Cam
                     
                     task.spawn(function()
-                        local Dummy = nil
+                        local Char = Player.Character or Player.CharacterAdded:Wait()
+                        if not Char then return end
+                        local CharClone = Char:Clone()
+                        CharClone.Parent = VP
                         
-                        -- Попытка 1: Клонируем игрока
-                        pcall(function()
-                            local RealChar = Players.LocalPlayer.Character
-                            if RealChar then
-                                RealChar.Archivable = true -- ВАЖНО! Разрешаем клонирование
-                                Dummy = RealChar:Clone()
-                                RealChar.Archivable = false -- Возвращаем как было
-                            end
-                        end)
-                        
-                        -- Попытка 2: Если не вышло, создаем "серый кубик"
-                        if not Dummy then
-                            Dummy = Instance.new("Model")
-                            local HRP = Instance.new("Part", Dummy)
-                            HRP.Name = "HumanoidRootPart"
-                            HRP.Size = Vector3.new(2, 5, 1)
-                            HRP.Transparency = 0.5
-                            HRP.Color = Color3.new(0.5, 0.5, 0.5)
-                            local Hum = Instance.new("Humanoid", Dummy)
-                            Dummy.PrimaryPart = HRP
+                        local HRP = CharClone:FindFirstChild("HumanoidRootPart")
+                        if HRP then
+                            Cam.CFrame = CFrame.new(HRP.Position + (HRP.CFrame.LookVector * 6) + Vector3.new(0, 1, 0), HRP.Position)
                         end
-
-                        Dummy.Parent = WorldModel
-                        
-                        -- == ВАЖНОЕ ИСПРАВЛЕНИЕ ==
-                        -- Перемещаем манекен в центр (0,0,0), куда смотрит камера
-                        if Dummy.PrimaryPart then
-                            Dummy.PrimaryPart.Anchored = true
-                            Dummy:PivotTo(CFrame.new(0, 0, 0))
-                        else
-                            -- Если нет PrimaryPart, ищем HRP или Torso
-                            local Root = Dummy:FindFirstChild("HumanoidRootPart") or Dummy:FindFirstChild("Torso")
-                            if Root then
-                                Root.Anchored = true
-                                Root.CFrame = CFrame.new(0, 0, 0)
-                            end
-                        end
-                        
-                        -- Удаляем лишние скрипты из манекена, чтобы он не дергался
-                        for _, v in pairs(Dummy:GetDescendants()) do
-                            if v:IsA("Script") or v:IsA("LocalScript") or v:IsA("Sound") then
-                                v:Destroy()
-                            end
-                        end
-
-                        -- Вращение камеры вокруг центра (0,0,0)
-                        local Angle = 0
-                        RunService.RenderStepped:Connect(function(dt)
-                            if VP.Visible then
-                                Angle = Angle + dt * 0.5
-                                -- Камера летает по кругу на расстоянии 7 студов, высота 2
-                                local Offset = Vector3.new(math.sin(Angle)*7, 2, math.cos(Angle)*7)
-                                Cam.CFrame = CFrame.new(Offset, Vector3.new(0, 1, 0)) -- Смотрим чуть выше (на грудь)
-                            end
-                        end)
-                    end)
                     
-                    RegisterItem("ESP Preview", F)
-                    return VP 
+                        local BoxESP = Instance.new("Frame", VP)
+                        BoxESP.Size = UDim2.new(0.5, 0, 0.8, 0)
+                        BoxESP.Position = UDim2.new(0.25, 0, 0.1, 0)
+                        BoxESP.BackgroundTransparency = 1
+                        BoxESP.BorderColor3 = Color3.new(1, 0, 0)
+                        BoxESP.BorderSizePixel = 2
+                        BoxESP.Visible = false
+                        
+                        local NameESP = Instance.new("TextLabel", VP)
+                        NameESP.Text = Player.Name
+                        NameESP.Size = UDim2.new(1, 0, 0, 20)
+                        NameESP.Position = UDim2.new(0, 0, 0, 5)
+                        NameESP.BackgroundTransparency = 1
+                        NameESP.TextColor3 = Color3.new(1, 1, 1)
+                        NameESP.Font = Enum.Font.GothamBold
+                        NameESP.TextSize = 12
+                        NameESP.Visible = false
+                        
+                        local HealthBar = Instance.new("Frame", VP)
+                        HealthBar.Size = UDim2.new(0, 3, 0.8, 0)
+                        HealthBar.Position = UDim2.new(0.23, 0, 0.1, 0)
+                        HealthBar.BackgroundColor3 = Color3.new(0, 1, 0)
+                        HealthBar.BorderSizePixel = 0
+                        HealthBar.Visible = false
+                        
+                        local Highlight = Instance.new("Highlight", CharClone)
+                        Highlight.FillColor = Color3.new(1, 0, 0)
+                        Highlight.FillTransparency = 0.5
+                        Highlight.OutlineTransparency = 0
+                        Highlight.Enabled = false
+                        
+                        Library.Preview = {
+                            Box = BoxESP,
+                            Name = NameESP,
+                            Health = HealthBar,
+                            Chams = Highlight
+                        }
+                    end)
                 end
 
                 function BoxFuncs:AddLabel(Config)
