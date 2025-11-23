@@ -303,7 +303,7 @@ end
 --// MAIN WINDOW //--
 function Library:Window(TitleText)
     local ScreenGui = Instance.new("ScreenGui")
-    ScreenGui.Name = "RedOnyxV17_CheckBox"
+    ScreenGui.Name = "RedOnyxV17_FixedDropdown"
     ScreenGui.ResetOnSpawn = false
     ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Global 
     if RunService:IsStudio() then ScreenGui.Parent = Player:WaitForChild("PlayerGui") else pcall(function() ScreenGui.Parent = CoreGui end) end
@@ -1156,7 +1156,7 @@ function Library:Window(TitleText)
                     List.Visible=false
                     List.BackgroundColor3=Color3.fromRGB(35,35,35)
                     List.BorderSizePixel=0
-                    List.ZIndex=200
+                    List.ZIndex=200 -- Список поверх всего
                     List.AutomaticCanvasSize = Enum.AutomaticSize.Y
                     Instance.new("UIStroke",List).Color=Library.Theme.Outline
                     local LL=Instance.new("UIListLayout",List)
@@ -1184,6 +1184,7 @@ function Library:Window(TitleText)
                                 bt.TextColor3=Color3.fromRGB(200,200,200)
                                 bt.Font=Enum.Font.Gotham
                                 bt.TextSize=12
+                                bt.ZIndex = 205 -- [FIX] Кнопки выше фона списка
                                 bt.MouseButton1Click:Connect(function() Set(v) end)
                             end
                         end}
@@ -1226,6 +1227,7 @@ function Library:Window(TitleText)
                             bt.TextColor3=Color3.fromRGB(200,200,200)
                             bt.Font=Enum.Font.Gotham
                             bt.TextSize=12
+                            bt.ZIndex = 205 -- [FIX] Кнопки выше фона списка
                             bt.MouseButton1Click:Connect(function()
                                 Sel[v]=not Sel[v]
                                 bt.TextColor3=Sel[v] and Library.Theme.Accent or Color3.fromRGB(200,200,200)
