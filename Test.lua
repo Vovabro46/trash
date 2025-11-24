@@ -736,12 +736,22 @@ function Library:Window(TitleText)
                     task.spawn(function()
                         local Char = Player.Character or Player.CharacterAdded:Wait()
                         if not Char then return end
+                        
+                        Char.Archivable = true
                         local CharClone = Char:Clone()
-                        CharClone.Parent = VP
+                        Char.Archivable = false
+                        
+                        if not CharClone then return end
+
+                        local WorldModel = Instance.new("WorldModel")
+                        WorldModel.Parent = VP
+                        CharClone.Parent = WorldModel
+                        
+                        CharClone:PivotTo(CFrame.new(0, 0, 0))
                         
                         local HRP = CharClone:FindFirstChild("HumanoidRootPart")
                         if HRP then
-                            Cam.CFrame = CFrame.new(HRP.Position + (HRP.CFrame.LookVector * 6) + Vector3.new(0, 1, 0), HRP.Position)
+                            Cam.CFrame = CFrame.new(Vector3.new(3, 2, -6), Vector3.new(0, 0, 0))
                         end
                     
                         local BoxESP = Instance.new("Frame", VP)
@@ -798,10 +808,125 @@ function Library:Window(TitleText)
                     Lb.TextXAlignment=Enum.TextXAlignment.Left
                     Library:RegisterTheme(Lb,"TextColor3","Text")
                 end
+
+                -- NEW FUNCTIONS START
+                function BoxFuncs:AddText(Text)
+                    BoxFuncs:AddLabel(Text)
+                end
+
+                function BoxFuncs:AddTextUnformatted(Text)
+                    local F = Instance.new("Frame", C)
+                    F.Size = UDim2.new(1, 0, 0, 15)
+                    F.BackgroundTransparency = 1
+                    local Lb = Instance.new("TextLabel", F)
+                    Lb.Size = UDim2.new(1, 0, 1, 0)
+                    Lb.BackgroundTransparency = 1
+                    Lb.Text = Text
+                    Lb.Font = Enum.Font.Code -- Monospace Style
+                    Lb.TextSize = 12
+                    Lb.TextColor3 = Color3.new(1,1,1) 
+                    Lb.TextXAlignment = Enum.TextXAlignment.Left
+                end
+
+                function BoxFuncs:AddTextWrapped(Text)
+                    local F = Instance.new("Frame", C)
+                    F.BackgroundTransparency = 1
+                    local Lb = Instance.new("TextLabel", F)
+                    Lb.Size = UDim2.new(1, 0, 1, 0)
+                    Lb.BackgroundTransparency = 1
+                    Lb.Text = Text
+                    Lb.Font = Enum.Font.Gotham
+                    Lb.TextSize = 12
+                    Lb.TextColor3 = Library.Theme.Text
+                    Lb.TextXAlignment = Enum.TextXAlignment.Left
+                    Lb.TextWrapped = true
+                    Library:RegisterTheme(Lb, "TextColor3", "Text")
+
+                    local TextBounds = game:GetService("TextService"):GetTextSize(Text, 12, Enum.Font.Gotham, Vector2.new(C.AbsoluteSize.X - 20, 9999))
+                    F.Size = UDim2.new(1, 0, 0, TextBounds.Y + 5)
+                end
+
+                function BoxFuncs:AddLabelText(Label, Value)
+                    local F = Instance.new("Frame", C)
+                    F.Size = UDim2.new(1, 0, 0, 15)
+                    F.BackgroundTransparency = 1
+                    
+                    local L1 = Instance.new("TextLabel", F)
+                    L1.Size = UDim2.new(0.5, 0, 1, 0)
+                    L1.BackgroundTransparency = 1
+                    L1.Text = Label
+                    L1.Font = Enum.Font.GothamBold
+                    L1.TextSize = 12
+                    L1.TextXAlignment = Enum.TextXAlignment.Left
+                    L1.TextColor3 = Library.Theme.Text
+                    Library:RegisterTheme(L1, "TextColor3", "Text")
+                    
+                    local L2 = Instance.new("TextLabel", F)
+                    L2.Size = UDim2.new(0.5, 0, 1, 0)
+                    L2.Position = UDim2.new(0.5, 0, 0, 0)
+                    L2.BackgroundTransparency = 1
+                    L2.Text = tostring(Value)
+                    L2.Font = Enum.Font.Gotham
+                    L2.TextSize = 12
+                    L2.TextXAlignment = Enum.TextXAlignment.Right
+                    L2.TextColor3 = Library.Theme.Accent
+                    Library:RegisterTheme(L2, "TextColor3", "Accent")
+                end
+
+                function BoxFuncs:AddBulletText(Text)
+                    BoxFuncs:AddLabel(" • " .. Text)
+                end
+
+                function BoxFuncs:AddSeparator()
+                    local F = Instance.new("Frame", C)
+                    F.Size = UDim2.new(1, 0, 0, 8) 
+                    F.BackgroundTransparency = 1
+                    
+                    local Line = Instance.new("Frame", F)
+                    Line.Size = UDim2.new(1, 0, 0, 1)
+                    Line.Position = UDim2.new(0, 0, 0.5, 0)
+                    Line.BackgroundColor3 = Library.Theme.Outline
+                    Line.BorderSizePixel = 0
+                    Library:RegisterTheme(Line, "BackgroundColor3", "Outline")
+                end
+
+                function BoxFuncs:AddSpacing(Amount)
+                    local F = Instance.new("Frame", C)
+                    F.Size = UDim2.new(1, 0, 0, Amount or 10)
+                    F.BackgroundTransparency = 1
+                end
+
+                function BoxFuncs:AddDummy(Height)
+                    BoxFuncs:AddSpacing(Height)
+                end
+
+                function BoxFuncs:AddNewLine()
+                    BoxFuncs:AddSpacing(5)
+                end
+
+                function BoxFuncs:AlignTextToFramePadding(Text)
+                    local F = Instance.new("Frame", C)
+                    F.Size = UDim2.new(1, 0, 0, 15)
+                    F.BackgroundTransparency = 1
+                    
+                    local Lb = Instance.new("TextLabel", F)
+                    Lb.Size = UDim2.new(1, 0, 1, 0)
+                    Lb.BackgroundTransparency = 1
+                    Lb.Text = Text
+                    Lb.Font = Enum.Font.Gotham
+                    Lb.TextSize = 12
+                    Lb.TextXAlignment = Enum.TextXAlignment.Left
+                    Library:RegisterTheme(Lb, "TextColor3", "Text")
+                    
+                    local P = Instance.new("UIPadding", F)
+                    P.PaddingLeft = UDim.new(0, 5) 
+                end
+                -- NEW FUNCTIONS END
                 
                 function BoxFuncs:AddParagraph(Config)
                     local Head = Config.Title or "Paragraph"
                     local Cont = Config.Content or ""
+                    local Wrapped = Config.TextWrapped ~= false -- Default true
                     
                     local F = Instance.new("Frame", C)
                     F.BackgroundTransparency = 1
@@ -824,15 +949,18 @@ function Library:Window(TitleText)
                     C1.TextSize = 11
                     C1.TextXAlignment = Enum.TextXAlignment.Left
                     C1.TextYAlignment = Enum.TextYAlignment.Top
-                    C1.TextWrapped = true
+                    C1.TextWrapped = Wrapped
                     Library:RegisterTheme(C1, "TextColor3", "TextDark")
                     
-                    local WrapWidth = C.AbsoluteSize.X
+                    local WrapWidth = C.AbsoluteSize.X - 20
                     if WrapWidth < 50 then WrapWidth = 230 end
-                    WrapWidth = WrapWidth - 10 
                     
-                    local TextBounds = game:GetService("TextService"):GetTextSize(Cont, 11, Enum.Font.Gotham, Vector2.new(WrapWidth, 9999))
-                    local TextHeight = TextBounds.Y
+                    local TextHeight = 15
+                    if Wrapped then
+                        local TextBounds = game:GetService("TextService"):GetTextSize(Cont, 11, Enum.Font.Gotham, Vector2.new(WrapWidth, 9999))
+                        TextHeight = TextBounds.Y
+                    end
+
                     C1.Size = UDim2.new(1, 0, 0, TextHeight)
                     F.Size = UDim2.new(1, 0, 0, TextHeight + 25)
                     
