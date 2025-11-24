@@ -679,20 +679,26 @@ function Library:Window(TitleText)
                 H.Parent=Box
                 Library:RegisterTheme(H,"TextColor3","Accent")
 
+                -- Главный контейнер (Root)
                 local C=Instance.new("Frame")
+                C.Name = "MainContent"
                 C.Size=UDim2.new(1,0,0,0)
                 C.Position=UDim2.new(0,0,0,30)
                 C.BackgroundTransparency=1
                 C.Parent=Box
+                
                 local L=Instance.new("UIListLayout",C)
                 L.SortOrder=Enum.SortOrder.LayoutOrder
                 L.Padding=UDim.new(0,12)
+                
                 local Pa=Instance.new("UIPadding",C)
                 Pa.PaddingLeft=UDim.new(0,10)
                 Pa.PaddingRight=UDim.new(0,10)
                 Pa.PaddingBottom=UDim.new(0,10)
                 Pa.PaddingTop=UDim.new(0,5)
                 
+                -- Авто-ресайз самого Groupbox
+                -- Мы будем слушать изменение размера корневого контента
                 L:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
                     Box.Size=UDim2.new(1,0,0,L.AbsoluteContentSize.Y+45)
                 end)
@@ -708,6 +714,15 @@ function Library:Window(TitleText)
                     })
                 end
 
+                --// TREE NODE SYSTEM VARIABLES //--
+                local ContainerStack = {C} -- Стек начинается с главного контента
+                local NextItemOpenVal = nil -- Для SetNextItemOpen
+
+                -- Функция для получения текущего родителя (куда добавлять элементы)
+                local function GetContainer()
+                    return ContainerStack[#ContainerStack]
+                end
+
                 local BoxFuncs = {}
                 
                 local function CheckActivePicker()
@@ -716,9 +731,164 @@ function Library:Window(TitleText)
                         Library.ActivePicker = nil
                     end
                 end
+
+                --// TREENODE IMPLEMENTATION //--
+
+                function BoxFuncs:SetNextItemOpen(isOpen)
+                    NextItemOpenVal = isOpen
+                end
+            
+                function BoxFuncs:GetTreeNodeToLabelSpacing()
+                    return 20
+                end
+            
+                -- Internal Behavior
+                local function TreeNodeBehavior(Label, Flags)
+                    local Parent = GetContainer()
+                    local IsFramed = (Flags and Flags.Framed)
+                    
+                    -- Обертка всего узла
+                    local NodeFrame = Instance.new("Frame")
+                    NodeFrame.Name = "TreeNode_" .. Label
+                    NodeFrame.Size = UDim2.new(1, 0, 0, 0)
+                    NodeFrame.AutomaticSize = Enum.AutomaticSize.Y
+                    NodeFrame.BackgroundTransparency = IsFramed and 0 or 1
+                    NodeFrame.BackgroundColor3 = IsFramed and Color3.fromRGB(35, 35, 35) or Color3.new(0,0,0)
+                    NodeFrame.Parent = Parent
+
+                    if IsFramed then
+                        Instance.new("UICorner", NodeFrame).CornerRadius = UDim.new(0, 4)
+                    end
+            
+                    local NodeLayout = Instance.new("UIListLayout", NodeFrame)
+                    NodeLayout.SortOrder = Enum.SortOrder.LayoutOrder
+                    NodeLayout.Padding = UDim.new(0, 0)
+            
+                    -- Кнопка заголовка
+                    local HeaderBtn = Instance.new("TextButton", NodeFrame)
+                    HeaderBtn.Size = UDim2.new(1, 0, 0, IsFramed and 25 or 20)
+                    HeaderBtn.BackgroundTransparency = 1
+                    HeaderBtn.Text = ""
+                    
+                    -- Стрелочка
+                    local Arrow = Instance.new("TextLabel", HeaderBtn)
+                    Arrow.Size = UDim2.new(0, 15, 1, 0)
+                    Arrow.BackgroundTransparency = 1
+                    Arrow.Text = ">"
+                    Arrow.Font = Enum.Font.Code
+                    Arrow.TextSize = 14
+                    Arrow.TextColor3 = Library.Theme.TextDark
+                    Arrow.Position = UDim2.new(0, IsFramed and 5 or 0, 0, 0)
+                    
+                    -- Текст заголовка
+                    local Lb = Instance.new("TextLabel", HeaderBtn)
+                    Lb.Size = UDim2.new(1, -20, 1, 0)
+                    Lb.Position = UDim2.new(0, 20, 0, 0)
+                    Lb.BackgroundTransparency = 1
+                    Lb.Text = Label
+                    Lb.Font = Enum.Font.GothamBold
+                    Lb.TextSize = 12
+                    Lb.TextColor3 = Library.Theme.Text
+                    Lb.TextXAlignment = Enum.TextXAlignment.Left
+            
+                    -- Контейнер для детей (скрыт/раскрыт)
+                    local ChildContent = Instance.new("Frame", NodeFrame)
+                    ChildContent.Name = "Content"
+                    ChildContent.Size = UDim2.new(1, 0, 0, 0)
+                    ChildContent.BackgroundTransparency = 1
+                    ChildContent.Visible = false -- По умолчанию закрыто
+                    
+                    local ChildLayout = Instance.new("UIListLayout", ChildContent)
+                    ChildLayout.SortOrder = Enum.SortOrder.LayoutOrder
+                    ChildLayout.Padding = UDim.new(0, 10)
+                    
+                    local ChildPadding = Instance.new("UIPadding", ChildContent)
+                    ChildPadding.PaddingLeft = UDim.new(0, IsFramed and 10 or 15) -- Лесенка
+                    ChildPadding.PaddingTop = UDim.new(0, 5)
+                    ChildPadding.PaddingBottom = UDim.new(0, 5)
+            
+                    -- Авторазмер внутреннего контейнера
+                    ChildLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+                        ChildContent.Size = UDim2.new(1, 0, 0, ChildLayout.AbsoluteContentSize.Y + 10)
+                    end)
+            
+                    -- Логика открытия
+                    local IsOpen = false
+                    if NextItemOpenVal ~= nil then
+                        IsOpen = NextItemOpenVal
+                        NextItemOpenVal = nil
+                    end
+            
+                    local function Toggle(v)
+                        IsOpen = v
+                        ChildContent.Visible = IsOpen
+                        if IsOpen then
+                            TweenService:Create(Arrow, TweenInfo.new(0.2), {Rotation = 90, TextColor3 = Library.Theme.Accent}):Play()
+                        else
+                            TweenService:Create(Arrow, TweenInfo.new(0.2), {Rotation = 0, TextColor3 = Library.Theme.TextDark}):Play()
+                        end
+                    end
+            
+                    HeaderBtn.MouseButton1Click:Connect(function()
+                        Toggle(not IsOpen)
+                    end)
+            
+                    Toggle(IsOpen) -- Применить начальное состояние
+            
+                    -- ВАЖНО: Добавляем внутренний контейнер в стек
+                    -- Чтобы следующие виджеты создавались внутри него
+                    table.insert(ContainerStack, ChildContent)
+                    
+                    -- Возвращаем true, чтобы синтаксис `if TreeNode() then` работал (в Roblox UI создание идет один раз)
+                    return true 
+                end
+            
+                function BoxFuncs:TreePush()
+                    -- Просто создаем невидимый отступ без заголовка
+                    local Parent = GetContainer()
+                    local Indent = Instance.new("Frame", Parent)
+                    Indent.Size = UDim2.new(1,0,0,0)
+                    Indent.AutomaticSize = Enum.AutomaticSize.Y
+                    Indent.BackgroundTransparency = 1
+                    
+                    local IL = Instance.new("UIListLayout", Indent)
+                    IL.SortOrder = Enum.SortOrder.LayoutOrder
+                    IL.Padding = UDim.new(0, 10)
+                    
+                    local IP = Instance.new("UIPadding", Indent)
+                    IP.PaddingLeft = UDim.new(0, 20) 
+                    
+                    IL:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+                         Indent.Size = UDim2.new(1, 0, 0, IL.AbsoluteContentSize.Y)
+                    end)
+            
+                    table.insert(ContainerStack, Indent)
+                end
+            
+                function BoxFuncs:TreePop()
+                    if #ContainerStack > 1 then
+                        table.remove(ContainerStack)
+                    end
+                end
+            
+                function BoxFuncs:TreeNode(Label)
+                    return TreeNodeBehavior(Label, {Framed = false})
+                end
+            
+                function BoxFuncs:TreeNodeEx(Label, Flags)
+                    return TreeNodeBehavior(Label, Flags or {})
+                end
+                
+                -- Алиасы
+                function BoxFuncs:TreeNodeV(Label) return BoxFuncs:TreeNode(Label) end
+                function BoxFuncs:TreeNodeExV(Label, Flags) return BoxFuncs:TreeNodeEx(Label, Flags) end
+            
+                function BoxFuncs:CollapsingHeader(Label)
+                    return TreeNodeBehavior(Label, {Framed = true})
+                end
         
                 function BoxFuncs:ESPPreview()
-                    local F = Instance.new("Frame", C)
+                    local F = Instance.new("Frame", GetContainer()) -- Changed
                     F.Size = UDim2.new(1, 0, 0, 200)
                     F.BackgroundTransparency = 1
                     
@@ -736,23 +906,16 @@ function Library:Window(TitleText)
                     task.spawn(function()
                         local Char = Player.Character or Player.CharacterAdded:Wait()
                         if not Char then return end
-                        
                         Char.Archivable = true
                         local CharClone = Char:Clone()
                         Char.Archivable = false
-                        
                         if not CharClone then return end
-
                         local WorldModel = Instance.new("WorldModel")
                         WorldModel.Parent = VP
                         CharClone.Parent = WorldModel
-                        
                         CharClone:PivotTo(CFrame.new(0, 0, 0))
-                        
                         local HRP = CharClone:FindFirstChild("HumanoidRootPart")
-                        if HRP then
-                            Cam.CFrame = CFrame.new(Vector3.new(3, 2, -6), Vector3.new(0, 0, 0))
-                        end
+                        if HRP then Cam.CFrame = CFrame.new(Vector3.new(3, 2, -6), Vector3.new(0, 0, 0)) end
                     
                         local BoxESP = Instance.new("Frame", VP)
                         BoxESP.Size = UDim2.new(0.5, 0, 0.8, 0)
@@ -785,18 +948,13 @@ function Library:Window(TitleText)
                         Highlight.OutlineTransparency = 0
                         Highlight.Enabled = false
                         
-                        Library.Preview = {
-                            Box = BoxESP,
-                            Name = NameESP,
-                            Health = HealthBar,
-                            Chams = Highlight
-                        }
+                        Library.Preview = { Box = BoxESP, Name = NameESP, Health = HealthBar, Chams = Highlight }
                     end)
                 end
 
                 function BoxFuncs:AddLabel(Config)
                     local Text = type(Config) == "table" and Config.Title or Config
-                    local F=Instance.new("Frame",C)
+                    local F=Instance.new("Frame", GetContainer()) -- Changed
                     F.Size=UDim2.new(1,0,0,15)
                     F.BackgroundTransparency=1
                     local Lb=Instance.new("TextLabel",F)
@@ -810,7 +968,7 @@ function Library:Window(TitleText)
                 end
 
                 function BoxFuncs:AddTextUnformatted(Text)
-                    local F = Instance.new("Frame", C)
+                    local F = Instance.new("Frame", GetContainer()) -- Changed
                     F.Size = UDim2.new(1, 0, 0, 15)
                     F.BackgroundTransparency = 1
                     local Lb = Instance.new("TextLabel", F)
@@ -824,7 +982,8 @@ function Library:Window(TitleText)
                 end
 
                 function BoxFuncs:AddTextWrapped(Text)
-                    local F = Instance.new("Frame", C)
+                    local P = GetContainer() -- Changed
+                    local F = Instance.new("Frame", P)
                     F.BackgroundTransparency = 1
                     local Lb = Instance.new("TextLabel", F)
                     Lb.Size = UDim2.new(1, 0, 1, 0)
@@ -837,15 +996,14 @@ function Library:Window(TitleText)
                     Lb.TextWrapped = true
                     Library:RegisterTheme(Lb, "TextColor3", "Text")
 
-                    local TextBounds = game:GetService("TextService"):GetTextSize(Text, 12, Enum.Font.Gotham, Vector2.new(C.AbsoluteSize.X - 20, 9999))
+                    local TextBounds = game:GetService("TextService"):GetTextSize(Text, 12, Enum.Font.Gotham, Vector2.new(P.AbsoluteSize.X - 20, 9999))
                     F.Size = UDim2.new(1, 0, 0, TextBounds.Y + 5)
                 end
 
                 function BoxFuncs:AddLabelText(Label, Value)
-                    local F = Instance.new("Frame", C)
+                    local F = Instance.new("Frame", GetContainer()) -- Changed
                     F.Size = UDim2.new(1, 0, 0, 15)
                     F.BackgroundTransparency = 1
-                    
                     local L1 = Instance.new("TextLabel", F)
                     L1.Size = UDim2.new(0.5, 0, 1, 0)
                     L1.BackgroundTransparency = 1
@@ -855,7 +1013,6 @@ function Library:Window(TitleText)
                     L1.TextXAlignment = Enum.TextXAlignment.Left
                     L1.TextColor3 = Library.Theme.Text
                     Library:RegisterTheme(L1, "TextColor3", "Text")
-                    
                     local L2 = Instance.new("TextLabel", F)
                     L2.Size = UDim2.new(0.5, 0, 1, 0)
                     L2.Position = UDim2.new(0.5, 0, 0, 0)
@@ -873,10 +1030,9 @@ function Library:Window(TitleText)
                 end
 
                 function BoxFuncs:AddSeparator()
-                    local F = Instance.new("Frame", C)
+                    local F = Instance.new("Frame", GetContainer()) -- Changed
                     F.Size = UDim2.new(1, 0, 0, 8) 
                     F.BackgroundTransparency = 1
-                    
                     local Line = Instance.new("Frame", F)
                     Line.Size = UDim2.new(1, 0, 0, 1)
                     Line.Position = UDim2.new(0, 0, 0.5, 0)
@@ -886,7 +1042,7 @@ function Library:Window(TitleText)
                 end
 
                 function BoxFuncs:AddSpacing(Amount)
-                    local F = Instance.new("Frame", C)
+                    local F = Instance.new("Frame", GetContainer()) -- Changed
                     F.Size = UDim2.new(1, 0, 0, Amount or 10)
                     F.BackgroundTransparency = 1
                 end
@@ -900,10 +1056,9 @@ function Library:Window(TitleText)
                 end
 
                 function BoxFuncs:AlignTextToFramePadding(Text)
-                    local F = Instance.new("Frame", C)
+                    local F = Instance.new("Frame", GetContainer()) -- Changed
                     F.Size = UDim2.new(1, 0, 0, 15)
                     F.BackgroundTransparency = 1
-                    
                     local Lb = Instance.new("TextLabel", F)
                     Lb.Size = UDim2.new(1, 0, 1, 0)
                     Lb.BackgroundTransparency = 1
@@ -912,7 +1067,6 @@ function Library:Window(TitleText)
                     Lb.TextSize = 12
                     Lb.TextXAlignment = Enum.TextXAlignment.Left
                     Library:RegisterTheme(Lb, "TextColor3", "Text")
-                    
                     local P = Instance.new("UIPadding", F)
                     P.PaddingLeft = UDim.new(0, 5) 
                 end
@@ -920,9 +1074,10 @@ function Library:Window(TitleText)
                 function BoxFuncs:AddParagraph(Config)
                     local Head = Config.Title or "Paragraph"
                     local Cont = Config.Content or ""
-                    local Wrapped = Config.TextWrapped ~= false -- Default true
+                    local Wrapped = Config.TextWrapped ~= false 
+                    local P = GetContainer() -- Changed
                     
-                    local F = Instance.new("Frame", C)
+                    local F = Instance.new("Frame", P)
                     F.BackgroundTransparency = 1
                     F.Size = UDim2.new(1, 0, 0, 0)
                     
@@ -946,7 +1101,7 @@ function Library:Window(TitleText)
                     C1.TextWrapped = Wrapped
                     Library:RegisterTheme(C1, "TextColor3", "TextDark")
                     
-                    local WrapWidth = C.AbsoluteSize.X - 20
+                    local WrapWidth = P.AbsoluteSize.X - 20
                     if WrapWidth < 50 then WrapWidth = 230 end
                     
                     local TextHeight = 15
@@ -969,7 +1124,7 @@ function Library:Window(TitleText)
                     local Desc = Config.Description
                     local Risky = Config.Risky
 
-                    local F=Instance.new("TextButton",C)
+                    local F=Instance.new("TextButton", GetContainer()) -- Changed
                     F.Size=UDim2.new(1,0,0,20)
                     F.BackgroundTransparency=1
                     F.Text=""
@@ -1020,7 +1175,7 @@ function Library:Window(TitleText)
                     local Desc = Config.Description
                     local Risky = Config.Risky
 
-                    local F=Instance.new("TextButton",C)
+                    local F=Instance.new("TextButton", GetContainer()) -- Changed
                     F.Size=UDim2.new(1,0,0,20)
                     F.BackgroundTransparency=1
                     F.Text=""
@@ -1039,7 +1194,6 @@ function Library:Window(TitleText)
                         Library:RegisterTheme(Lb,"TextColor3","Text")
                     end
 
-                    -- Внешний квадрат
                     local Outer=Instance.new("Frame",F)
                     Outer.Size=UDim2.new(0,18,0,18)
                     Outer.Position=UDim2.new(1,-20,0.5,-9)
@@ -1049,12 +1203,11 @@ function Library:Window(TitleText)
                     S.Color=Library.Theme.Outline
                     S.Thickness=1
 
-                    -- Внутренний квадрат (индикатор)
                     local Inner=Instance.new("Frame",Outer)
                     Inner.Size=UDim2.new(1,-6,1,-6)
                     Inner.Position=UDim2.new(0,3,0,3)
                     Inner.BackgroundColor3=Library.Theme.Accent
-                    Inner.BackgroundTransparency=1 -- Скрыт по умолчанию
+                    Inner.BackgroundTransparency=1 
                     Instance.new("UICorner",Inner).CornerRadius=UDim.new(0,2)
 
                     local function Set(v)
@@ -1072,7 +1225,6 @@ function Library:Window(TitleText)
                     Library.Items[Flag]={Set=Set}
                     Library.Flags[Flag]=Default
                     
-                    -- Применяем начальное состояние без анимации
                     if Default then
                         Inner.BackgroundTransparency=0
                         Outer.BackgroundColor3=Color3.fromRGB(50,50,50)
@@ -1094,7 +1246,7 @@ function Library:Window(TitleText)
                     local Suffix = Config.Suffix or ""
                     local Desc = Config.Description
 
-                    local F=Instance.new("Frame",C)
+                    local F=Instance.new("Frame", GetContainer()) -- Changed
                     F.Size=UDim2.new(1,0,0,38)
                     F.BackgroundTransparency=1
                     if Desc then AddTooltip(F, Desc) end
@@ -1166,7 +1318,7 @@ function Library:Window(TitleText)
                     local Flag = Config.Flag or Text
                     local Desc = Config.Description
 
-                    local F=Instance.new("Frame",C)
+                    local F=Instance.new("Frame", GetContainer()) -- Changed
                     F.Size=UDim2.new(1,0,0,25)
                     F.BackgroundTransparency=1
                     if Desc then AddTooltip(F, Desc) end
@@ -1251,7 +1403,7 @@ function Library:Window(TitleText)
                     local Flag = Config.Flag or Text
                     local Desc = Config.Description
 
-                    local F=Instance.new("Frame",C)
+                    local F=Instance.new("Frame", GetContainer()) -- Changed
                     F.Size=UDim2.new(1,0,0,40)
                     F.BackgroundTransparency=1
                     if Desc then AddTooltip(F, Desc) end
@@ -1278,14 +1430,13 @@ function Library:Window(TitleText)
                     List.Visible=false
                     List.BackgroundColor3=Color3.fromRGB(35,35,35)
                     List.BorderSizePixel=0
-                    List.ZIndex=200 -- Список поверх всего
+                    List.ZIndex=200 
                     List.AutomaticCanvasSize = Enum.AutomaticSize.Y
                     Instance.new("UIStroke",List).Color=Library.Theme.Outline
                     local LL=Instance.new("UIListLayout",List)
                     LL.SortOrder=Enum.SortOrder.LayoutOrder
 
                     if not Multi then
-                        -- SINGLE DROPDOWN
                         B.Text = "  " .. (Default or "Select...")
                         local function Set(v)
                             B.Text="  "..v
@@ -1306,7 +1457,7 @@ function Library:Window(TitleText)
                                 bt.TextColor3=Color3.fromRGB(200,200,200)
                                 bt.Font=Enum.Font.Gotham
                                 bt.TextSize=12
-                                bt.ZIndex = 205 -- [FIX] Кнопки выше фона списка
+                                bt.ZIndex = 205
                                 bt.MouseButton1Click:Connect(function() Set(v) end)
                             end
                         end}
@@ -1326,7 +1477,6 @@ function Library:Window(TitleText)
                         end)
 
                     else
-                        -- MULTI DROPDOWN
                         local Sel={}
                         if type(Default) == "table" then
                             for _, val in pairs(Default) do Sel[val] = true end
@@ -1349,7 +1499,7 @@ function Library:Window(TitleText)
                             bt.TextColor3=Color3.fromRGB(200,200,200)
                             bt.Font=Enum.Font.Gotham
                             bt.TextSize=12
-                            bt.ZIndex = 205 -- [FIX] Кнопки выше фона списка
+                            bt.ZIndex = 205 
                             bt.MouseButton1Click:Connect(function()
                                 Sel[v]=not Sel[v]
                                 bt.TextColor3=Sel[v] and Library.Theme.Accent or Color3.fromRGB(200,200,200)
@@ -1383,7 +1533,7 @@ function Library:Window(TitleText)
                     local Flag = Config.Flag or Text
                     local Desc = Config.Description
 
-                    local F=Instance.new("Frame",C)
+                    local F=Instance.new("Frame", GetContainer()) -- Changed
                     F.Size=UDim2.new(1,0,0,20)
                     F.BackgroundTransparency=1
                     if Desc then AddTooltip(F, Desc) end
@@ -1420,7 +1570,7 @@ function Library:Window(TitleText)
                     local Desc = Config.Description
                     local Clear = Config.ClearOnFocus
 
-                    local F=Instance.new("Frame",C)
+                    local F=Instance.new("Frame", GetContainer()) -- Changed
                     F.Size=UDim2.new(1,0,0,40)
                     F.BackgroundTransparency=1
                     if Desc then AddTooltip(F, Desc) end
@@ -1454,7 +1604,7 @@ function Library:Window(TitleText)
                     local Call = Config.Callback or function() end
                     local Desc = Config.Description
 
-                    local F=Instance.new("Frame",C)
+                    local F=Instance.new("Frame", GetContainer()) -- Changed
                     F.Size=UDim2.new(1,0,0,32)
                     F.BackgroundTransparency=1
                     if Desc then AddTooltip(F, Desc) end
