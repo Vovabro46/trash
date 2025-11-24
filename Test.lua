@@ -13,7 +13,7 @@ local Mouse = Player:GetMouse()
 local Library = {
     Flags = {},
     Items = {},
-    Registry = {}, -- Реестр для поиска
+    Registry = {}, 
     ActivePicker = nil,
     WatermarkObj = nil,
     NotifyContainer = nil,
@@ -303,7 +303,7 @@ end
 --// MAIN WINDOW //--
 function Library:Window(TitleText)
     local ScreenGui = Instance.new("ScreenGui")
-    ScreenGui.Name = "RedOnyxV17_FixedDropdown"
+    ScreenGui.Name = "RedOnyxV18_Extended"
     ScreenGui.ResetOnSpawn = false
     ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Global 
     if RunService:IsStudio() then ScreenGui.Parent = Player:WaitForChild("PlayerGui") else pcall(function() ScreenGui.Parent = CoreGui end) end
@@ -487,7 +487,6 @@ function Library:Window(TitleText)
                             TweenService:Create(ItemData.SubTabBtn, TweenInfo.new(0.2), {TextColor3 = Library.Theme.Accent}):Play()
                         end
                         
-                        -- Подсветка
                         if ItemData.Object then
                             local OriginalColor = ItemData.Object.BackgroundColor3
                             local HighlightTween = TweenService:Create(ItemData.Object, TweenInfo.new(0.5), {BackgroundColor3 = Library.Theme.Accent})
@@ -717,6 +716,260 @@ function Library:Window(TitleText)
                     end
                 end
         
+                --// IMGUI STYLE FUNCTIONS //--
+
+                -- 1. INPUTS --
+                function BoxFuncs:AddInputText(Config)
+                    -- Alias for AddTextbox to match request
+                    BoxFuncs:AddTextbox(Config)
+                end
+
+                function BoxFuncs:AddInputTextMultiline(Config)
+                    local Text = Config.Title or "Multiline Input"
+                    local Ph = Config.Placeholder or ""
+                    local Call = Config.Callback or function() end
+                    local Flag = Config.Flag or Text
+                    local Desc = Config.Description
+
+                    local F = Instance.new("Frame", C)
+                    F.Size = UDim2.new(1, 0, 0, 80) -- Higher height
+                    F.BackgroundTransparency = 1
+                    if Desc then AddTooltip(F, Desc) end
+
+                    local L = Instance.new("TextLabel", F)
+                    L.Size = UDim2.new(1, 0, 0, 15)
+                    L.BackgroundTransparency = 1
+                    L.Text = Text
+                    L.Font = Enum.Font.Gotham
+                    L.TextSize = 12
+                    L.TextXAlignment = Enum.TextXAlignment.Left
+                    Library:RegisterTheme(L, "TextColor3", "Text")
+
+                    local B = Instance.new("TextBox", F)
+                    B.Size = UDim2.new(1, 0, 1, -20)
+                    B.Position = UDim2.new(0, 0, 0, 18)
+                    B.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+                    B.Text = ""
+                    B.PlaceholderText = Ph
+                    B.TextColor3 = Color3.fromRGB(230, 230, 230)
+                    B.Font = Enum.Font.Gotham
+                    B.TextSize = 12
+                    B.TextXAlignment = Enum.TextXAlignment.Left
+                    B.TextYAlignment = Enum.TextYAlignment.Top
+                    B.TextWrapped = true
+                    B.MultiLine = true
+                    B.ClearTextOnFocus = false
+                    
+                    Instance.new("UICorner", B).CornerRadius = UDim.new(0, 4)
+                    
+                    local P = Instance.new("UIPadding", B)
+                    P.PaddingTop = UDim.new(0, 5)
+                    P.PaddingLeft = UDim.new(0, 5)
+
+                    B.FocusLost:Connect(function()
+                        Library.Flags[Flag] = B.Text
+                        pcall(Call, B.Text)
+                    end)
+
+                    RegisterItem(Text, F)
+                end
+
+                function BoxFuncs:AddInputNumber(Config, Type)
+                    -- Internal helper for all numeric inputs
+                    local Text = Config.Title or "Input Number"
+                    local Ph = Config.Placeholder or "0"
+                    local Def = Config.Default
+                    local Call = Config.Callback or function() end
+                    local Flag = Config.Flag or Text
+                    local Desc = Config.Description
+
+                    local F = Instance.new("Frame", C)
+                    F.Size = UDim2.new(1, 0, 0, 40)
+                    F.BackgroundTransparency = 1
+                    if Desc then AddTooltip(F, Desc) end
+
+                    local L = Instance.new("TextLabel", F)
+                    L.Size = UDim2.new(1, 0, 0, 15)
+                    L.BackgroundTransparency = 1
+                    L.Text = Text
+                    L.Font = Enum.Font.Gotham
+                    L.TextSize = 12
+                    L.TextXAlignment = Enum.TextXAlignment.Left
+                    Library:RegisterTheme(L, "TextColor3", "Text")
+
+                    local B = Instance.new("TextBox", F)
+                    B.Size = UDim2.new(1, 0, 0, 20)
+                    B.Position = UDim2.new(0, 0, 0, 18)
+                    B.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+                    B.Text = Def and tostring(Def) or ""
+                    B.PlaceholderText = Ph
+                    B.TextColor3 = Color3.fromRGB(230, 230, 230)
+                    B.Font = Enum.Font.Gotham
+                    B.TextSize = 12
+                    Instance.new("UICorner", B).CornerRadius = UDim.new(0, 4)
+
+                    B.FocusLost:Connect(function()
+                        local Num = tonumber(B.Text)
+                        if Num then
+                            if Type == "int" then Num = math.floor(Num) end
+                            Library.Flags[Flag] = Num
+                            B.Text = tostring(Num) -- Format text
+                            pcall(Call, Num)
+                        else
+                            B.Text = Def and tostring(Def) or ""
+                        end
+                    end)
+
+                    RegisterItem(Text, F)
+                end
+
+                function BoxFuncs:AddInputFloat(Config) BoxFuncs:AddInputNumber(Config, "float") end
+                function BoxFuncs:AddInputInt(Config) BoxFuncs:AddInputNumber(Config, "int") end
+                function BoxFuncs:AddInputDouble(Config) BoxFuncs:AddInputNumber(Config, "float") end -- Lua numbers are doubles
+                function BoxFuncs:AddInputScalar(Config) BoxFuncs:AddInputNumber(Config, "float") end
+
+                -- 2. SLIDERS --
+                function BoxFuncs:AddSliderFloat(Config)
+                    -- Alias for existing Slider
+                    BoxFuncs:AddSlider(Config)
+                end
+
+                function BoxFuncs:AddSliderInt(Config)
+                    -- Force rounding to 0
+                    Config.Rounding = 0
+                    BoxFuncs:AddSlider(Config)
+                end
+
+                function BoxFuncs:AddSliderAngle(Config)
+                    Config.Min = Config.Min or 0
+                    Config.Max = 360
+                    Config.Suffix = "°"
+                    Config.Rounding = Config.Rounding or 0
+                    BoxFuncs:AddSlider(Config)
+                end
+
+                function BoxFuncs:AddVSlider(Config)
+                    local Text = Config.Title or "VSlider"
+                    local Min = Config.Min or 0
+                    local Max = Config.Max or 100
+                    local Def = Config.Default or Min
+                    local Callback = Config.Callback or function() end
+                    local Flag = Config.Flag or Text
+                    local Rounding = Config.Rounding or 0
+                    local Desc = Config.Description
+                    local IsInt = Config.IsInt or false
+
+                    local Height = Config.Height or 100
+
+                    local F = Instance.new("Frame", C)
+                    F.Size = UDim2.new(1, 0, 0, Height + 25)
+                    F.BackgroundTransparency = 1
+                    if Desc then AddTooltip(F, Desc) end
+
+                    local L = Instance.new("TextLabel", F)
+                    L.Size = UDim2.new(1, 0, 0, 15)
+                    L.BackgroundTransparency = 1
+                    L.Text = Text
+                    L.Font = Enum.Font.Gotham
+                    L.TextSize = 12
+                    L.TextXAlignment = Enum.TextXAlignment.Left
+                    Library:RegisterTheme(L, "TextColor3", "Text")
+
+                    local ValL = Instance.new("TextLabel", F)
+                    ValL.Size = UDim2.new(1, 0, 0, 15)
+                    ValL.Position = UDim2.new(0, 0, 1, -15)
+                    ValL.BackgroundTransparency = 1
+                    ValL.Text = tostring(Def)
+                    ValL.Font = Enum.Font.Gotham
+                    ValL.TextSize = 12
+                    ValL.TextXAlignment = Enum.TextXAlignment.Center
+                    Library:RegisterTheme(ValL, "TextColor3", "Accent")
+
+                    -- Vertical Bar Container (Center it)
+                    local Bar = Instance.new("Frame", F)
+                    Bar.Size = UDim2.new(0, 10, 0, Height - 20)
+                    Bar.Position = UDim2.new(0.5, -5, 0, 20)
+                    Bar.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+                    Instance.new("UICorner", Bar).CornerRadius = UDim.new(0, 4)
+
+                    -- Fill (Grows from Bottom)
+                    local Fill = Instance.new("Frame", Bar)
+                    Fill.Size = UDim2.new(1, 0, (Def - Min) / (Max - Min), 0)
+                    Fill.Position = UDim2.new(0, 0, 1, 0)
+                    Fill.AnchorPoint = Vector2.new(0, 1)
+                    Library:RegisterTheme(Fill, "BackgroundColor3", "Accent")
+                    Instance.new("UICorner", Fill).CornerRadius = UDim.new(0, 4)
+
+                    local Interact = Instance.new("TextButton", Bar)
+                    Interact.Size = UDim2.new(1, 0, 1, 0)
+                    Interact.BackgroundTransparency = 1
+                    Interact.Text = ""
+
+                    local function Set(v)
+                        v = math.clamp(v, Min, Max)
+                        if IsInt or Rounding == 0 then
+                            v = math.floor(v)
+                        else
+                            v = math.floor(v * (10^Rounding)) / (10^Rounding)
+                        end
+                        
+                        Library.Flags[Flag] = v
+                        ValL.Text = tostring(v)
+                        
+                        local Pct = (v - Min) / (Max - Min)
+                        TweenService:Create(Fill, TweenInfo.new(0.1), {Size = UDim2.new(1, 0, Pct, 0)}):Play()
+                        pcall(Callback, v)
+                    end
+                    
+                    Library.Items[Flag] = {Set = Set}
+                    Set(Def)
+
+                    local Dragging = false
+                    local function Update(Input)
+                        local RelY = Input.Position.Y - Bar.AbsolutePosition.Y
+                        local SizeY = Bar.AbsoluteSize.Y
+                        local Pct = 1 - math.clamp(RelY / SizeY, 0, 1) -- Invert because Y goes down
+                        local NewVal = Min + (Max - Min) * Pct
+                        Set(NewVal)
+                    end
+
+                    Interact.InputBegan:Connect(function(Input)
+                        if Input.UserInputType == Enum.UserInputType.MouseButton1 or Input.UserInputType == Enum.UserInputType.Touch then
+                            Dragging = true
+                            Update(Input)
+                        end
+                    end)
+                    
+                    UserInputService.InputEnded:Connect(function(Input)
+                        if Input.UserInputType == Enum.UserInputType.MouseButton1 or Input.UserInputType == Enum.UserInputType.Touch then
+                            Dragging = false
+                        end
+                    end)
+
+                    UserInputService.InputChanged:Connect(function(Input)
+                        if Dragging and (Input.UserInputType == Enum.UserInputType.MouseMovement or Input.UserInputType == Enum.UserInputType.Touch) then
+                            Update(Input)
+                        end
+                    end)
+
+                    RegisterItem(Text, F)
+                end
+
+                function BoxFuncs:AddVSliderInt(Config)
+                    Config.IsInt = true
+                    Config.Rounding = 0
+                    BoxFuncs:AddVSlider(Config)
+                end
+
+                function BoxFuncs:AddVSliderFloat(Config)
+                    Config.IsInt = false
+                    BoxFuncs:AddVSlider(Config)
+                end
+                
+                --// END IMGUI STYLE FUNCTIONS //--
+
+                -- OLD FUNCTIONS --
+                
                 function BoxFuncs:ESPPreview()
                     local F = Instance.new("Frame", C)
                     F.Size = UDim2.new(1, 0, 0, 200)
@@ -809,7 +1062,6 @@ function Library:Window(TitleText)
                     Library:RegisterTheme(Lb,"TextColor3","Text")
                 end
 
-                -- NEW FUNCTIONS START
                 function BoxFuncs:AddText(Text)
                     BoxFuncs:AddLabel(Text)
                 end
@@ -921,7 +1173,6 @@ function Library:Window(TitleText)
                     local P = Instance.new("UIPadding", F)
                     P.PaddingLeft = UDim.new(0, 5) 
                 end
-                -- NEW FUNCTIONS END
                 
                 function BoxFuncs:AddParagraph(Config)
                     local Head = Config.Title or "Paragraph"
