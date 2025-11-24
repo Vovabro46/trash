@@ -303,7 +303,7 @@ end
 --// MAIN WINDOW //--
 function Library:Window(TitleText)
     local ScreenGui = Instance.new("ScreenGui")
-    ScreenGui.Name = "RedOnyxV17_FixedDropdown"
+    ScreenGui.Name = "RedOnyx"
     ScreenGui.ResetOnSpawn = false
     ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Global 
     if RunService:IsStudio() then ScreenGui.Parent = Player:WaitForChild("PlayerGui") else pcall(function() ScreenGui.Parent = CoreGui end) end
@@ -809,11 +809,6 @@ function Library:Window(TitleText)
                     Library:RegisterTheme(Lb,"TextColor3","Text")
                 end
 
-                -- NEW FUNCTIONS START
-                function BoxFuncs:AddText(Text)
-                    BoxFuncs:AddLabel(Text)
-                end
-
                 function BoxFuncs:AddTextUnformatted(Text)
                     local F = Instance.new("Frame", C)
                     F.Size = UDim2.new(1, 0, 0, 15)
@@ -822,7 +817,7 @@ function Library:Window(TitleText)
                     Lb.Size = UDim2.new(1, 0, 1, 0)
                     Lb.BackgroundTransparency = 1
                     Lb.Text = Text
-                    Lb.Font = Enum.Font.Code -- Monospace Style
+                    Lb.Font = Enum.Font.Code
                     Lb.TextSize = 12
                     Lb.TextColor3 = Color3.new(1,1,1) 
                     Lb.TextXAlignment = Enum.TextXAlignment.Left
@@ -921,7 +916,6 @@ function Library:Window(TitleText)
                     local P = Instance.new("UIPadding", F)
                     P.PaddingLeft = UDim.new(0, 5) 
                 end
-                -- NEW FUNCTIONS END
                 
                 function BoxFuncs:AddParagraph(Config)
                     local Head = Config.Title or "Paragraph"
