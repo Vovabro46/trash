@@ -523,7 +523,7 @@ function Library:Window(TitleText)
         P.PaddingLeft=UDim.new(0,15)
     end
 
-    function WindowFuncs:Tab(Name, IconId) -- Добавлен аргумент IconId
+    function WindowFuncs:Tab(Name, IconId)
         local Btn = Instance.new("TextButton")
         Btn.Name = Name
         Btn.Size = UDim2.new(1,0,0,30)
@@ -536,8 +536,9 @@ function Library:Window(TitleText)
         Btn.ZIndex = 4
         Library:RegisterTheme(Btn,"TextColor3","TextDark")
         
-        local P=Instance.new("UIPadding",Btn)
-        P.PaddingLeft=UDim.new(0, 45) -- Увеличили отступ для текста, чтобы влезла иконка
+        -- Создаем отступ для текста, чтобы он не наезжал на иконку
+        local P = Instance.new("UIPadding", Btn)
+        P.PaddingLeft = UDim.new(0, 45) 
         
         -- // ЛОГИКА ИКОНКИ ВКЛАДКИ // --
         local TabIcon
@@ -545,28 +546,29 @@ function Library:Window(TitleText)
             TabIcon = Instance.new("ImageLabel", Btn)
             TabIcon.Name = "Icon"
             TabIcon.Size = UDim2.new(0, 18, 0, 18)
-            TabIcon.Position = UDim2.new(0, -25, 0.5, -9) -- Позиция относительно Padding
+            -- ИСПРАВЛЕНИЕ: Ставим положительную координату (15 пикселей от левого края)
+            TabIcon.Position = UDim2.new(0, 12, 0.5, -9) 
             TabIcon.BackgroundTransparency = 1
             TabIcon.Image = "rbxassetid://" .. tostring(IconId)
             Library:RegisterTheme(TabIcon, "ImageColor3", "TextDark")
         end
         -- // --------------------- // --
 
-        local Ind=Instance.new("Frame")
+        local Ind = Instance.new("Frame")
         Ind.Name = "ActiveIndicator" 
-        Ind.Size=UDim2.new(0,3,0.6,0)
-        Ind.Position=UDim2.new(0,-45,0.2,0) -- Подвинули индикатор левее
-        Ind.Visible=false
-        Ind.Parent=Btn
+        Ind.Size = UDim2.new(0, 3, 0.6, 0)
+        Ind.Position = UDim2.new(0, -45, 0.2, 0) -- Индикатор у самого края (учитывая Padding)
+        Ind.Visible = false
+        Ind.Parent = Btn
         Ind.ZIndex = 5 
         Library:RegisterTheme(Ind,"BackgroundColor3","Accent")
 
-        local Page=Instance.new("Frame")
+        local Page = Instance.new("Frame")
         Page.Name = Name.."_Page"
-        Page.Size=UDim2.new(1,0,1,0)
-        Page.BackgroundTransparency=1
-        Page.Visible=false
-        Page.Parent=PagesArea
+        Page.Size = UDim2.new(1, 0, 1, 0)
+        Page.BackgroundTransparency = 1
+        Page.Visible = false
+        Page.Parent = PagesArea
         
         local PageRef = Instance.new("ObjectValue", Btn)
         PageRef.Name = "PageRef"
@@ -588,31 +590,33 @@ function Library:Window(TitleText)
         ContentArea.Parent = Page
 
         if FirstTab then
-            FirstTab=false
-            Btn.TextColor3=Library.Theme.Text
-            if TabIcon then TabIcon.ImageColor3 = Library.Theme.Text end -- Подсветка иконки
-            Ind.Visible=true
-            Page.Visible=true
+            FirstTab = false
+            Btn.TextColor3 = Library.Theme.Text
+            if TabIcon then TabIcon.ImageColor3 = Library.Theme.Text end
+            Ind.Visible = true
+            Page.Visible = true
         end
 
         Btn.MouseButton1Click:Connect(function()
             for _,v in pairs(TabContainer:GetChildren()) do
                 if v:IsA("TextButton") then
-                    TweenService:Create(v,TweenInfo.new(0.2),{TextColor3=Library.Theme.TextDark}):Play()
-                    -- Затемнение иконки у неактивных
+                    TweenService:Create(v, TweenInfo.new(0.2), {TextColor3 = Library.Theme.TextDark}):Play()
                     local ico = v:FindFirstChild("Icon")
-                    if ico then TweenService:Create(ico, TweenInfo.new(0.2), {ImageColor3=Library.Theme.TextDark}):Play() end
-                    if v:FindFirstChild("ActiveIndicator") then v.ActiveIndicator.Visible=false end
+                    if ico then 
+                        TweenService:Create(ico, TweenInfo.new(0.2), {ImageColor3 = Library.Theme.TextDark}):Play() 
+                    end
+                    if v:FindFirstChild("ActiveIndicator") then v.ActiveIndicator.Visible = false end
                 end
             end
-            for _,v in pairs(PagesArea:GetChildren()) do v.Visible=false end
+            for _,v in pairs(PagesArea:GetChildren()) do v.Visible = false end
             
-            TweenService:Create(Btn,TweenInfo.new(0.2),{TextColor3=Library.Theme.Text}):Play()
-            -- Подсветка иконки активной
-            if TabIcon then TweenService:Create(TabIcon, TweenInfo.new(0.2), {ImageColor3=Library.Theme.Text}):Play() end
+            TweenService:Create(Btn, TweenInfo.new(0.2), {TextColor3 = Library.Theme.Text}):Play()
+            if TabIcon then 
+                TweenService:Create(TabIcon, TweenInfo.new(0.2), {ImageColor3 = Library.Theme.Text}):Play() 
+            end
             
-            Ind.Visible=true
-            Page.Visible=true
+            Ind.Visible = true
+            Page.Visible = true
         end)
         
         local TabFuncs = {}
