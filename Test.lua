@@ -528,34 +528,39 @@ function Library:Window(TitleText)
         Btn.Name = Name
         Btn.Size = UDim2.new(1,0,0,32)
         Btn.BackgroundTransparency = 1
-        
-        -- // ИСПРАВЛЕНИЕ СЛИПАНИЯ // --
-        -- Используем пробелы для отступа. Это самый надежный способ.
-        if IconId then
-            Btn.Text = "           " .. Name -- 8 пробелов отступа под иконку
-        else
-            Btn.Text = "   " .. Name -- Небольшой отступ для обычных вкладок
-        end
-        -- // --------------------- // --
-        
-        Btn.Font = Enum.Font.GothamBold
-        Btn.TextSize = 14
-        Btn.TextXAlignment = Enum.TextXAlignment.Left
+        Btn.Text = "" -- УБИРАЕМ текст из кнопки, чтобы не мешал
         Btn.Parent = TabContainer
         Btn.ZIndex = 4
-        Library:RegisterTheme(Btn, "TextColor3", "TextDark")
         
+        -- Вычисляем отступ: если есть иконка - 45 пикселей, если нет - 20
+        local TextOffset = IconId and 45 or 20
+
+        -- // ОТДЕЛЬНАЯ НАДПИСЬ ДЛЯ ТЕКСТА // --
+        local Title = Instance.new("TextLabel", Btn)
+        Title.Name = "Title"
+        Title.Size = UDim2.new(1, -TextOffset, 1, 0)
+        Title.Position = UDim2.new(0, TextOffset, 0, 0) -- Жесткий сдвиг вправо
+        Title.BackgroundTransparency = 1
+        Title.Text = Name
+        Title.Font = Enum.Font.GothamBold
+        Title.TextSize = 14
+        Title.TextXAlignment = Enum.TextXAlignment.Left
+        Title.ZIndex = 5
+        -- Используем тему для текста
+        Library:RegisterTheme(Title, "TextColor3", "TextDark")
+        -- // --------------------------- // --
+
         -- // ЛОГИКА ИКОНКИ // --
         local TabIcon
         if IconId then
             TabIcon = Instance.new("ImageLabel", Btn)
             TabIcon.Name = "Icon"
             TabIcon.Size = UDim2.new(0, 20, 0, 20)
-            -- Позиция иконки: 10 пикселей от левого края
-            TabIcon.Position = UDim2.new(0, 10, 0.5, -10) 
+            -- Иконка стоит на 12px. Текст начинается на 45px.
+            -- Разрыв = 13 пикселей. Слипание невозможно.
+            TabIcon.Position = UDim2.new(0, 12, 0.5, -10) 
             TabIcon.BackgroundTransparency = 1
             TabIcon.Image = "rbxassetid://" .. tostring(IconId)
-            -- ZIndex выше чем у текста, чтобы она была видна поверх кнопки
             TabIcon.ZIndex = 5 
             Library:RegisterTheme(TabIcon, "ImageColor3", "TextDark")
         end
@@ -564,7 +569,7 @@ function Library:Window(TitleText)
         local Ind = Instance.new("Frame")
         Ind.Name = "ActiveIndicator" 
         Ind.Size = UDim2.new(0, 4, 0.6, 0)
-        Ind.Position = UDim2.new(0, 0, 0.2, 0) -- Индикатор у самого края
+        Ind.Position = UDim2.new(0, 0, 0.2, 0) 
         Ind.Visible = false
         Ind.Parent = Btn
         Ind.ZIndex = 5 
@@ -598,7 +603,8 @@ function Library:Window(TitleText)
 
         if FirstTab then
             FirstTab = false
-            Btn.TextColor3 = Library.Theme.Text
+            -- Меняем цвет текста в Title, а не в Btn
+            Title.TextColor3 = Library.Theme.Text
             if TabIcon then TabIcon.ImageColor3 = Library.Theme.Text end
             Ind.Visible = true
             Page.Visible = true
@@ -607,17 +613,20 @@ function Library:Window(TitleText)
         Btn.MouseButton1Click:Connect(function()
             for _,v in pairs(TabContainer:GetChildren()) do
                 if v:IsA("TextButton") then
-                    TweenService:Create(v, TweenInfo.new(0.2), {TextColor3 = Library.Theme.TextDark}):Play()
+                    -- Возвращаем темный цвет всем неактивным вкладкам
+                    local t = v:FindFirstChild("Title")
+                    if t then TweenService:Create(t, TweenInfo.new(0.2), {TextColor3 = Library.Theme.TextDark}):Play() end
+                    
                     local ico = v:FindFirstChild("Icon")
-                    if ico then 
-                        TweenService:Create(ico, TweenInfo.new(0.2), {ImageColor3 = Library.Theme.TextDark}):Play() 
-                    end
+                    if ico then TweenService:Create(ico, TweenInfo.new(0.2), {ImageColor3 = Library.Theme.TextDark}):Play() end
+                    
                     if v:FindFirstChild("ActiveIndicator") then v.ActiveIndicator.Visible = false end
                 end
             end
             for _,v in pairs(PagesArea:GetChildren()) do v.Visible = false end
             
-            TweenService:Create(Btn, TweenInfo.new(0.2), {TextColor3 = Library.Theme.Text}):Play()
+            -- Подсвечиваем активную вкладку
+            TweenService:Create(Title, TweenInfo.new(0.2), {TextColor3 = Library.Theme.Text}):Play()
             if TabIcon then 
                 TweenService:Create(TabIcon, TweenInfo.new(0.2), {ImageColor3 = Library.Theme.Text}):Play() 
             end
