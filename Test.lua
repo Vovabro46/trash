@@ -526,34 +526,40 @@ function Library:Window(TitleText)
     function WindowFuncs:Tab(Name, IconId)
         local Btn = Instance.new("TextButton")
         Btn.Name = Name
-        Btn.Size = UDim2.new(1,0,0,32) -- Высота 32px для удобства
+        Btn.Size = UDim2.new(1,0,0,32)
         Btn.BackgroundTransparency = 1
-        
-        -- Используем пробелы для отступа текста, это самый надежный способ избежать багов с UIPadding
-        if IconId then
-            Btn.Text = "       " .. Name -- Отступ под иконку
-        else
-            Btn.Text = "   " .. Name
-        end
-        
+        Btn.Text = Name -- Текст без пробелов, чистый
         Btn.Font = Enum.Font.GothamBold
         Btn.TextSize = 14
         Btn.TextXAlignment = Enum.TextXAlignment.Left
         Btn.Parent = TabContainer
-        Btn.ZIndex = 10 -- Высокий приоритет слоя
+        Btn.ZIndex = 4
         Library:RegisterTheme(Btn, "TextColor3", "TextDark")
         
+        -- // НАСТРОЙКА ОТСТУПА (Padding) // --
+        -- Это свойство сдвигает ТЕКСТ внутри кнопки, но не трогает вложенные картинки
+        local P = Instance.new("UIPadding", Btn)
+        
+        if IconId then
+            P.PaddingLeft = UDim.new(0, 48) -- Если есть иконка, сдвигаем текст на 48 пикселей
+        else
+            P.PaddingLeft = UDim.new(0, 20) -- Если нет, обычный отступ
+        end
+        -- // --------------------------- // --
+
         -- // ЛОГИКА ИКОНКИ // --
         local TabIcon
         if IconId then
             TabIcon = Instance.new("ImageLabel", Btn)
             TabIcon.Name = "Icon"
             TabIcon.Size = UDim2.new(0, 20, 0, 20)
-            -- Точная позиция слева (12px от края)
+            -- Иконка стоит на 12 пикселе.
+            -- Текст начинается на 48 пикселе (из-за PaddingLeft).
+            -- 12 (позиция) + 20 (ширина) = 32. 
+            -- 48 (текст) - 32 (конец иконки) = 16 пикселей чистого пространства между ними.
             TabIcon.Position = UDim2.new(0, 12, 0.5, -10) 
             TabIcon.BackgroundTransparency = 1
             TabIcon.Image = "rbxassetid://" .. tostring(IconId)
-            TabIcon.ZIndex = 11 -- Поверх кнопки
             Library:RegisterTheme(TabIcon, "ImageColor3", "TextDark")
         end
         -- // ---------------- // --
@@ -561,10 +567,11 @@ function Library:Window(TitleText)
         local Ind = Instance.new("Frame")
         Ind.Name = "ActiveIndicator" 
         Ind.Size = UDim2.new(0, 3, 0.6, 0)
-        Ind.Position = UDim2.new(0, 0, 0.2, 0)
+        -- Индикатор ставим в 0, так как он не зависит от Padding (он Frame)
+        Ind.Position = UDim2.new(0, 0, 0.2, 0) 
         Ind.Visible = false
         Ind.Parent = Btn
-        Ind.ZIndex = 12 
+        Ind.ZIndex = 5 
         Library:RegisterTheme(Ind, "BackgroundColor3", "Accent")
 
         local Page = Instance.new("Frame")
