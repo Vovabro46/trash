@@ -13,7 +13,7 @@ local Mouse = Player:GetMouse()
 local Library = {
     Flags = {},
     Items = {},
-    Registry = {}, -- Реестр для поиска
+    Registry = {},
     ActivePicker = nil,
     WatermarkObj = nil,
     NotifyContainer = nil,
@@ -36,7 +36,7 @@ local Library = {
     }
 }
 
---// TOOLTIP SYSTEM //--
+--// TOOLTIP SYSTEM //
 local TooltipObj = nil
 local function CreateTooltipSystem(ScreenGui)
     local Tooltip = Instance.new("TextLabel")
@@ -487,7 +487,6 @@ function Library:Window(TitleText)
                             TweenService:Create(ItemData.SubTabBtn, TweenInfo.new(0.2), {TextColor3 = Library.Theme.Accent}):Play()
                         end
                         
-                        -- Подсветка
                         if ItemData.Object then
                             local OriginalColor = ItemData.Object.BackgroundColor3
                             local HighlightTween = TweenService:Create(ItemData.Object, TweenInfo.new(0.5), {BackgroundColor3 = Library.Theme.Accent})
@@ -528,43 +527,35 @@ function Library:Window(TitleText)
         Btn.Name = Name
         Btn.Size = UDim2.new(1,0,0,32)
         Btn.BackgroundTransparency = 1
-        Btn.Text = "" -- УБИРАЕМ текст из кнопки, чтобы не мешал
+        Btn.Text = ""
         Btn.Parent = TabContainer
         Btn.ZIndex = 4
         
-        -- Вычисляем отступ: если есть иконка - 45 пикселей, если нет - 20
         local TextOffset = IconId and 45 or 20
 
-        -- // ОТДЕЛЬНАЯ НАДПИСЬ ДЛЯ ТЕКСТА // --
         local Title = Instance.new("TextLabel", Btn)
         Title.Name = "Title"
         Title.Size = UDim2.new(1, -TextOffset, 1, 0)
-        Title.Position = UDim2.new(0, TextOffset, 0, 0) -- Жесткий сдвиг вправо
+        Title.Position = UDim2.new(0, TextOffset, 0, 0)
         Title.BackgroundTransparency = 1
         Title.Text = Name
         Title.Font = Enum.Font.GothamBold
         Title.TextSize = 14
         Title.TextXAlignment = Enum.TextXAlignment.Left
         Title.ZIndex = 5
-        -- Используем тему для текста
         Library:RegisterTheme(Title, "TextColor3", "TextDark")
-        -- // --------------------------- // --
 
-        -- // ЛОГИКА ИКОНКИ // --
         local TabIcon
         if IconId then
             TabIcon = Instance.new("ImageLabel", Btn)
             TabIcon.Name = "Icon"
             TabIcon.Size = UDim2.new(0, 20, 0, 20)
-            -- Иконка стоит на 12px. Текст начинается на 45px.
-            -- Разрыв = 13 пикселей. Слипание невозможно.
             TabIcon.Position = UDim2.new(0, 12, 0.5, -10) 
             TabIcon.BackgroundTransparency = 1
             TabIcon.Image = "rbxassetid://" .. tostring(IconId)
             TabIcon.ZIndex = 5 
             Library:RegisterTheme(TabIcon, "ImageColor3", "TextDark")
         end
-        -- // ---------------- // --
 
         local Ind = Instance.new("Frame")
         Ind.Name = "ActiveIndicator" 
@@ -603,7 +594,6 @@ function Library:Window(TitleText)
 
         if FirstTab then
             FirstTab = false
-            -- Меняем цвет текста в Title, а не в Btn
             Title.TextColor3 = Library.Theme.Text
             if TabIcon then TabIcon.ImageColor3 = Library.Theme.Text end
             Ind.Visible = true
@@ -613,7 +603,6 @@ function Library:Window(TitleText)
         Btn.MouseButton1Click:Connect(function()
             for _,v in pairs(TabContainer:GetChildren()) do
                 if v:IsA("TextButton") then
-                    -- Возвращаем темный цвет всем неактивным вкладкам
                     local t = v:FindFirstChild("Title")
                     if t then TweenService:Create(t, TweenInfo.new(0.2), {TextColor3 = Library.Theme.TextDark}):Play() end
                     
@@ -625,7 +614,6 @@ function Library:Window(TitleText)
             end
             for _,v in pairs(PagesArea:GetChildren()) do v.Visible = false end
             
-            -- Подсвечиваем активную вкладку
             TweenService:Create(Title, TweenInfo.new(0.2), {TextColor3 = Library.Theme.Text}):Play()
             if TabIcon then 
                 TweenService:Create(TabIcon, TweenInfo.new(0.2), {ImageColor3 = Library.Theme.Text}):Play() 
@@ -656,28 +644,26 @@ function Library:Window(TitleText)
             SubPage.Visible = false
             SubPage.Parent = ContentArea
             
-            -- [FIX] Настройка левой колонки
             local LCol = Instance.new("ScrollingFrame")
             LCol.Name = "LeftColumn"
             LCol.Size = UDim2.new(0.5, -10, 1, -10)
             LCol.Position = UDim2.new(0, 10, 0, 0)
             LCol.BackgroundTransparency = 1
-            LCol.ScrollBarThickness = 2 -- Делаем скролл видимым
-            LCol.ScrollBarImageColor3 = Library.Theme.Accent -- Цвет скролла
-            LCol.AutomaticCanvasSize = Enum.AutomaticSize.Y -- [ВАЖНО] Авто-расширение вниз
+            LCol.ScrollBarThickness = 2
+            LCol.ScrollBarImageColor3 = Library.Theme.Accent
+            LCol.AutomaticCanvasSize = Enum.AutomaticSize.Y
             LCol.CanvasSize = UDim2.new(0, 0, 0, 0)
             LCol.Parent = SubPage
             Library:RegisterTheme(LCol, "ScrollBarImageColor3", "Accent")
 
-            -- [FIX] Настройка правой колонки
             local RCol = Instance.new("ScrollingFrame")
             RCol.Name = "RightColumn"
             RCol.Size = UDim2.new(0.5, -10, 1, -10)
             RCol.Position = UDim2.new(0.5, 5, 0, 0)
             RCol.BackgroundTransparency = 1
-            RCol.ScrollBarThickness = 2 -- Делаем скролл видимым
-            RCol.ScrollBarImageColor3 = Library.Theme.Accent -- Цвет скролла
-            RCol.AutomaticCanvasSize = Enum.AutomaticSize.Y -- [ВАЖНО] Авто-расширение вниз
+            RCol.ScrollBarThickness = 2
+            RCol.ScrollBarImageColor3 = Library.Theme.Accent
+            RCol.AutomaticCanvasSize = Enum.AutomaticSize.Y
             RCol.CanvasSize = UDim2.new(0, 0, 0, 0)
             RCol.Parent = SubPage
             Library:RegisterTheme(RCol, "ScrollBarImageColor3", "Accent")
@@ -689,7 +675,7 @@ function Library:Window(TitleText)
                 
                 local p = Instance.new("UIPadding", f)
                 p.PaddingBottom = UDim.new(0, 10)
-                p.PaddingRight = UDim.new(0, 5) -- Отступ от скроллбара
+                p.PaddingRight = UDim.new(0, 5)
             end
             Setup(LCol)
             Setup(RCol)
@@ -714,7 +700,7 @@ function Library:Window(TitleText)
 
             local SubFuncs = {}
             
-            function SubFuncs:Groupbox(Name, Side, IconId) -- Добавлен аргумент IconId
+            function SubFuncs:Groupbox(Name, Side, IconId)
                 local P = (Side=="Right") and RCol or LCol
                 local Box = Instance.new("Frame")
                 Box.Size = UDim2.new(1,0,0,100)
@@ -725,18 +711,16 @@ function Library:Window(TitleText)
                 S.Thickness=1
                 Library:RegisterTheme(S,"Color","Outline")
                 
-                -- // ЛОГИКА ИКОНКИ GROUPBOX // --
                 local HeaderOffset = 10
                 if IconId then
-                    HeaderOffset = 32 -- Сдвигаем текст если есть иконка
+                    HeaderOffset = 32
                     local GIcon = Instance.new("ImageLabel", Box)
                     GIcon.Size = UDim2.new(0, 16, 0, 16)
                     GIcon.Position = UDim2.new(0, 10, 0, 5)
                     GIcon.BackgroundTransparency = 1
                     GIcon.Image = "rbxassetid://" .. tostring(IconId)
-                    Library:RegisterTheme(GIcon, "ImageColor3", "Accent") -- Цвет акцента (красный)
+                    Library:RegisterTheme(GIcon, "ImageColor3", "Accent")
                 end
-                -- // ------------------------ // --
 
                 local H=Instance.new("TextLabel")
                 H.Size=UDim2.new(1,-20,0,25)
@@ -749,7 +733,6 @@ function Library:Window(TitleText)
                 H.Parent=Box
                 Library:RegisterTheme(H,"TextColor3","Accent")
 
-                -- Главный контейнер (Root)
                 local C=Instance.new("Frame")
                 C.Name = "MainContent"
                 C.Size=UDim2.new(1,0,0,0)
@@ -767,7 +750,6 @@ function Library:Window(TitleText)
                 Pa.PaddingBottom=UDim.new(0,10)
                 Pa.PaddingTop=UDim.new(0,5)
                 
-                -- Авто-ресайз
                 L:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
                     Box.Size=UDim2.new(1,0,0,L.AbsoluteContentSize.Y+45)
                 end)
@@ -784,11 +766,9 @@ function Library:Window(TitleText)
                     })
                 end
 
-                --// TREE NODE SYSTEM VARIABLES //--
-                local ContainerStack = {C} -- Стек начинается с главного контента
-                local NextItemOpenVal = nil -- Для SetNextItemOpen
+                local ContainerStack = {C}
+                local NextItemOpenVal = nil
 
-                -- Функция для получения текущего родителя (куда добавлять элементы)
                 local function GetContainer()
                     return ContainerStack[#ContainerStack]
                 end
@@ -802,8 +782,6 @@ function Library:Window(TitleText)
                     end
                 end
 
-                --// TREENODE IMPLEMENTATION //--
-
                 function BoxFuncs:SetNextItemOpen(isOpen)
                     NextItemOpenVal = isOpen
                 end
@@ -812,12 +790,10 @@ function Library:Window(TitleText)
                     return 20
                 end
             
-                -- Internal Behavior
                 local function TreeNodeBehavior(Label, Flags)
                     local Parent = GetContainer()
                     local IsFramed = (Flags and Flags.Framed)
                     
-                    -- Обертка всего узла
                     local NodeFrame = Instance.new("Frame")
                     NodeFrame.Name = "TreeNode_" .. Label
                     NodeFrame.Size = UDim2.new(1, 0, 0, 0)
@@ -834,13 +810,11 @@ function Library:Window(TitleText)
                     NodeLayout.SortOrder = Enum.SortOrder.LayoutOrder
                     NodeLayout.Padding = UDim.new(0, 0)
             
-                    -- Кнопка заголовка
                     local HeaderBtn = Instance.new("TextButton", NodeFrame)
                     HeaderBtn.Size = UDim2.new(1, 0, 0, IsFramed and 25 or 20)
                     HeaderBtn.BackgroundTransparency = 1
                     HeaderBtn.Text = ""
                     
-                    -- Стрелочка
                     local Arrow = Instance.new("TextLabel", HeaderBtn)
                     Arrow.Size = UDim2.new(0, 15, 1, 0)
                     Arrow.BackgroundTransparency = 1
@@ -850,7 +824,6 @@ function Library:Window(TitleText)
                     Arrow.TextColor3 = Library.Theme.TextDark
                     Arrow.Position = UDim2.new(0, IsFramed and 5 or 0, 0, 0)
                     
-                    -- Текст заголовка
                     local Lb = Instance.new("TextLabel", HeaderBtn)
                     Lb.Size = UDim2.new(1, -20, 1, 0)
                     Lb.Position = UDim2.new(0, 20, 0, 0)
@@ -861,28 +834,25 @@ function Library:Window(TitleText)
                     Lb.TextColor3 = Library.Theme.Text
                     Lb.TextXAlignment = Enum.TextXAlignment.Left
             
-                    -- Контейнер для детей (скрыт/раскрыт)
                     local ChildContent = Instance.new("Frame", NodeFrame)
                     ChildContent.Name = "Content"
                     ChildContent.Size = UDim2.new(1, 0, 0, 0)
                     ChildContent.BackgroundTransparency = 1
-                    ChildContent.Visible = false -- По умолчанию закрыто
+                    ChildContent.Visible = false
                     
                     local ChildLayout = Instance.new("UIListLayout", ChildContent)
                     ChildLayout.SortOrder = Enum.SortOrder.LayoutOrder
                     ChildLayout.Padding = UDim.new(0, 10)
                     
                     local ChildPadding = Instance.new("UIPadding", ChildContent)
-                    ChildPadding.PaddingLeft = UDim.new(0, IsFramed and 10 or 15) -- Лесенка
+                    ChildPadding.PaddingLeft = UDim.new(0, IsFramed and 10 or 15)
                     ChildPadding.PaddingTop = UDim.new(0, 5)
                     ChildPadding.PaddingBottom = UDim.new(0, 5)
             
-                    -- Авторазмер внутреннего контейнера
                     ChildLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
                         ChildContent.Size = UDim2.new(1, 0, 0, ChildLayout.AbsoluteContentSize.Y + 10)
                     end)
             
-                    -- Логика открытия
                     local IsOpen = false
                     if NextItemOpenVal ~= nil then
                         IsOpen = NextItemOpenVal
@@ -903,18 +873,14 @@ function Library:Window(TitleText)
                         Toggle(not IsOpen)
                     end)
             
-                    Toggle(IsOpen) -- Применить начальное состояние
-            
-                    -- ВАЖНО: Добавляем внутренний контейнер в стек
-                    -- Чтобы следующие виджеты создавались внутри него
+                    Toggle(IsOpen)
+           
                     table.insert(ContainerStack, ChildContent)
                     
-                    -- Возвращаем true, чтобы синтаксис `if TreeNode() then` работал (в Roblox UI создание идет один раз)
                     return true 
                 end
             
                 function BoxFuncs:TreePush()
-                    -- Просто создаем невидимый отступ без заголовка
                     local Parent = GetContainer()
                     local Indent = Instance.new("Frame", Parent)
                     Indent.Size = UDim2.new(1,0,0,0)
@@ -949,171 +915,16 @@ function Library:Window(TitleText)
                     return TreeNodeBehavior(Label, Flags or {})
                 end
                 
-                -- Алиасы
                 function BoxFuncs:TreeNodeV(Label) return BoxFuncs:TreeNode(Label) end
                 function BoxFuncs:TreeNodeExV(Label, Flags) return BoxFuncs:TreeNodeEx(Label, Flags) end
             
                 function BoxFuncs:CollapsingHeader(Label)
                     return TreeNodeBehavior(Label, {Framed = true})
                 end
-        
-                function BoxFuncs:ESPPreview(CustomSetupFunc)
-                    local P = GetContainer()
-                    
-                    -- Фрейм контейнера
-                    local PreviewFrame = Instance.new("Frame")
-                    PreviewFrame.Name = "ESPPreviewFrame"
-                    PreviewFrame.Size = UDim2.new(1, 0, 0, 250)
-                    PreviewFrame.BackgroundTransparency = 1
-                    PreviewFrame.Parent = P
-
-                    -- ViewportFrame
-                    local VP = Instance.new("ViewportFrame", PreviewFrame)
-                    VP.Size = UDim2.new(1, -20, 1, 0)
-                    VP.Position = UDim2.new(0, 10, 0, 0)
-                    VP.BackgroundColor3 = Color3.fromRGB(18, 18, 18)
-                    VP.BorderColor3 = Library.Theme.Outline
-                    VP.Ambient = Color3.fromRGB(150, 150, 150)
-                    VP.LightColor = Color3.fromRGB(255, 255, 255)
-                    VP.LightDirection = Vector3.new(1, -1, 0)
-                    
-                    Instance.new("UICorner", VP).CornerRadius = UDim.new(0, 6)
-                    Instance.new("UIStroke", VP).Color = Library.Theme.Outline
-
-                    local Cam = Instance.new("Camera", VP)
-                    Cam.FieldOfView = 60
-                    VP.CurrentCamera = Cam
-                    
-                    local WorldModel = Instance.new("WorldModel", VP)
-
-                    task.spawn(function()
-                        local RealChar = Player.Character or Player.CharacterAdded:Wait()
-                        if not RealChar:FindFirstChild("HumanoidRootPart") then 
-                            RealChar:WaitForChild("HumanoidRootPart", 5)
-                        end
-                        
-                        -- [[ БЛОКИРОВКА КОПИРОВАНИЯ МУСОРА ]] --
-                        local HiddenItems = {}
-                        for _, v in pairs(RealChar:GetDescendants()) do
-                            if v:IsA("Highlight") or v:IsA("SelectionBox") or v:IsA("BillboardGui") or v:IsA("SurfaceGui") or v:IsA("ParticleEmitter") or v:IsA("Beam") then
-                                if v.Archivable then
-                                    v.Archivable = false
-                                    table.insert(HiddenItems, v)
-                                end
-                            end
-                        end
-
-                        RealChar.Archivable = true
-                        local Dummy = RealChar:Clone()
-                        RealChar.Archivable = false
-
-                        -- Возвращаем как было
-                        for _, v in pairs(HiddenItems) do
-                            v.Archivable = true
-                        end
-                        
-                        if not Dummy then 
-                            Dummy = Instance.new("Model")
-                            local Part = Instance.new("Part", Dummy)
-                            Part.Name = "HumanoidRootPart"
-                            Part.Size = Vector3.new(2, 5, 1)
-                            Part.Transparency = 0.5
-                        end
-
-                        Dummy.Name = "PreviewDummy"
-                        
-                        -- Очистка и Анкоринг
-                        for _, obj in pairs(Dummy:GetDescendants()) do
-                            if obj:IsA("Script") or obj:IsA("LocalScript") or obj:IsA("Sound") or obj:IsA("Animate") then
-                                obj:Destroy()
-                            end
-                            if obj:IsA("BasePart") then
-                                obj.Anchored = true -- Важно для PivotTo
-                                obj.CanCollide = false
-                                obj.CanTouch = false
-                                obj.CanQuery = false
-                                if obj.Name == "HumanoidRootPart" then
-                                    obj.Transparency = 1 
-                                end
-                            end
-                        end
-
-                        Dummy.Parent = WorldModel
-                        
-                        -- Центрируем модель
-                        Dummy:PivotTo(CFrame.new(0, 0, 0))
-                        
-                        -- Настраиваем камеру
-                        Cam.CFrame = CFrame.new(Vector3.new(0, 2, -6.5), Vector3.new(0, 0, 0))
-                        
-                        -- Вызов пользовательской функции
-                        if CustomSetupFunc and type(CustomSetupFunc) == "function" then
-                            pcall(CustomSetupFunc, Dummy)
-                        end
-
-                        -- [ВРАЩЕНИЕ И УПРАВЛЕНИЕ]
-                        local UserDragging = false
-                        local CurrentRotY = 0
-                        local LastMouseX = 0
-                        local RotationSpeed = 0.005
-
-                        VP.InputBegan:Connect(function(Input)
-                            if Input.UserInputType == Enum.UserInputType.MouseButton1 or Input.UserInputType == Enum.UserInputType.Touch then
-                                UserDragging = true
-                                LastMouseX = Input.Position.X
-                            end
-                        end)
-
-                        UserInputService.InputChanged:Connect(function(Input)
-                            if UserDragging and (Input.UserInputType == Enum.UserInputType.MouseMovement or Input.UserInputType == Enum.UserInputType.Touch) then
-                                local Delta = Input.Position.X - LastMouseX
-                                CurrentRotY = CurrentRotY + (Delta * 0.015)
-                                LastMouseX = Input.Position.X
-                            end
-                        end)
-
-                        UserInputService.InputEnded:Connect(function(Input)
-                            if Input.UserInputType == Enum.UserInputType.MouseButton1 or Input.UserInputType == Enum.UserInputType.Touch then
-                                UserDragging = false
-                            end
-                        end)
-
-                        -- [FIXED] ЦИКЛ ВРАЩЕНИЯ
-                        -- Мы сохраняем связь в переменную, чтобы отключить ее только при ПОЛНОМ удалении UI
-                        local RenderConnection 
-                        RenderConnection = RunService.RenderStepped:Connect(function(DT)
-                            -- Проверяем, существует ли еще модель. Если нет - отключаемся.
-                            if not Dummy or not Dummy.Parent then
-                                if RenderConnection then RenderConnection:Disconnect() end
-                                return
-                            end
-                            
-                            -- Если UI скрыт (свернут), мы не обновляем CFrame для экономии ресурсов,
-                            -- НО мы НЕ отключаем цикл.
-                            if not VP.Visible or not PreviewFrame.Visible then
-                                return
-                            end
-
-                            if not UserDragging then
-                                CurrentRotY = CurrentRotY + (RotationSpeed * 60 * DT)
-                            end
-
-                            -- Используем PivotTo для самого надежного вращения
-                            Dummy:PivotTo(CFrame.new(0,0,0) * CFrame.Angles(0, CurrentRotY, 0))
-                        end)
-                        
-                        -- Страховка: Отключаем цикл, если сам фрейм превью был удален (например, скрипт выгружен)
-                        PreviewFrame.Destroying:Connect(function()
-                            if RenderConnection then RenderConnection:Disconnect() end
-                        end)
-                    end)
-                    
-                    RegisterItem("ESP Preview", PreviewFrame)
-                end
 
                 function BoxFuncs:AddLabel(Config)
                     local Text = type(Config) == "table" and Config.Title or Config
-                    local F=Instance.new("Frame", GetContainer()) -- Changed
+                    local F=Instance.new("Frame", GetContainer())
                     F.Size=UDim2.new(1,0,0,15)
                     F.BackgroundTransparency=1
                     local Lb=Instance.new("TextLabel",F)
@@ -1127,7 +938,7 @@ function Library:Window(TitleText)
                 end
 
                 function BoxFuncs:AddTextUnformatted(Text)
-                    local F = Instance.new("Frame", GetContainer()) -- Changed
+                    local F = Instance.new("Frame", GetContainer())
                     F.Size = UDim2.new(1, 0, 0, 15)
                     F.BackgroundTransparency = 1
                     local Lb = Instance.new("TextLabel", F)
@@ -1141,7 +952,7 @@ function Library:Window(TitleText)
                 end
 
                 function BoxFuncs:AddTextWrapped(Text)
-                    local P = GetContainer() -- Changed
+                    local P = GetContainer()
                     local F = Instance.new("Frame", P)
                     F.BackgroundTransparency = 1
                     local Lb = Instance.new("TextLabel", F)
@@ -1160,7 +971,7 @@ function Library:Window(TitleText)
                 end
 
                 function BoxFuncs:AddLabelText(Label, Value)
-                    local F = Instance.new("Frame", GetContainer()) -- Changed
+                    local F = Instance.new("Frame", GetContainer())
                     F.Size = UDim2.new(1, 0, 0, 15)
                     F.BackgroundTransparency = 1
                     local L1 = Instance.new("TextLabel", F)
@@ -1189,7 +1000,7 @@ function Library:Window(TitleText)
                 end
 
                 function BoxFuncs:AddSeparator()
-                    local F = Instance.new("Frame", GetContainer()) -- Changed
+                    local F = Instance.new("Frame", GetContainer())
                     F.Size = UDim2.new(1, 0, 0, 8) 
                     F.BackgroundTransparency = 1
                     local Line = Instance.new("Frame", F)
@@ -1201,7 +1012,7 @@ function Library:Window(TitleText)
                 end
 
                 function BoxFuncs:AddSpacing(Amount)
-                    local F = Instance.new("Frame", GetContainer()) -- Changed
+                    local F = Instance.new("Frame", GetContainer())
                     F.Size = UDim2.new(1, 0, 0, Amount or 10)
                     F.BackgroundTransparency = 1
                 end
@@ -1215,7 +1026,7 @@ function Library:Window(TitleText)
                 end
 
                 function BoxFuncs:AlignTextToFramePadding(Text)
-                    local F = Instance.new("Frame", GetContainer()) -- Changed
+                    local F = Instance.new("Frame", GetContainer())
                     F.Size = UDim2.new(1, 0, 0, 15)
                     F.BackgroundTransparency = 1
                     local Lb = Instance.new("TextLabel", F)
@@ -1234,7 +1045,7 @@ function Library:Window(TitleText)
                     local Head = Config.Title or "Paragraph"
                     local Cont = Config.Content or ""
                     local Wrapped = Config.TextWrapped ~= false 
-                    local P = GetContainer() -- Changed
+                    local P = GetContainer()
                     
                     local F = Instance.new("Frame", P)
                     F.BackgroundTransparency = 1
@@ -1283,7 +1094,7 @@ function Library:Window(TitleText)
                     local Desc = Config.Description
                     local Risky = Config.Risky
 
-                    local F=Instance.new("TextButton", GetContainer()) -- Changed
+                    local F=Instance.new("TextButton", GetContainer())
                     F.Size=UDim2.new(1,0,0,20)
                     F.BackgroundTransparency=1
                     F.Text=""
@@ -1334,7 +1145,7 @@ function Library:Window(TitleText)
                     local Desc = Config.Description
                     local Risky = Config.Risky
 
-                    local F=Instance.new("TextButton", GetContainer()) -- Changed
+                    local F=Instance.new("TextButton", GetContainer())
                     F.Size=UDim2.new(1,0,0,20)
                     F.BackgroundTransparency=1
                     F.Text=""
@@ -1405,7 +1216,7 @@ function Library:Window(TitleText)
                     local Suffix = Config.Suffix or ""
                     local Desc = Config.Description
 
-                    local F=Instance.new("Frame", GetContainer()) -- Changed
+                    local F=Instance.new("Frame", GetContainer())
                     F.Size=UDim2.new(1,0,0,38)
                     F.BackgroundTransparency=1
                     if Desc then AddTooltip(F, Desc) end
@@ -1477,7 +1288,7 @@ function Library:Window(TitleText)
                     local Flag = Config.Flag or Text
                     local Desc = Config.Description
 
-                    local F=Instance.new("Frame", GetContainer()) -- Changed
+                    local F=Instance.new("Frame", GetContainer())
                     F.Size=UDim2.new(1,0,0,25)
                     F.BackgroundTransparency=1
                     if Desc then AddTooltip(F, Desc) end
@@ -1562,7 +1373,7 @@ function Library:Window(TitleText)
                     local Flag = Config.Flag or Text
                     local Desc = Config.Description
 
-                    local F=Instance.new("Frame", GetContainer()) -- Changed
+                    local F=Instance.new("Frame", GetContainer())
                     F.Size=UDim2.new(1,0,0,40)
                     F.BackgroundTransparency=1
                     if Desc then AddTooltip(F, Desc) end
@@ -1692,7 +1503,7 @@ function Library:Window(TitleText)
                     local Flag = Config.Flag or Text
                     local Desc = Config.Description
 
-                    local F=Instance.new("Frame", GetContainer()) -- Changed
+                    local F=Instance.new("Frame", GetContainer())
                     F.Size=UDim2.new(1,0,0,20)
                     F.BackgroundTransparency=1
                     if Desc then AddTooltip(F, Desc) end
@@ -1729,7 +1540,7 @@ function Library:Window(TitleText)
                     local Desc = Config.Description
                     local Clear = Config.ClearOnFocus
 
-                    local F=Instance.new("Frame", GetContainer()) -- Changed
+                    local F=Instance.new("Frame", GetContainer())
                     F.Size=UDim2.new(1,0,0,40)
                     F.BackgroundTransparency=1
                     if Desc then AddTooltip(F, Desc) end
@@ -1763,7 +1574,7 @@ function Library:Window(TitleText)
                     local Call = Config.Callback or function() end
                     local Desc = Config.Description
 
-                    local F=Instance.new("Frame", GetContainer()) -- Changed
+                    local F=Instance.new("Frame", GetContainer())
                     F.Size=UDim2.new(1,0,0,32)
                     F.BackgroundTransparency=1
                     if Desc then AddTooltip(F, Desc) end
