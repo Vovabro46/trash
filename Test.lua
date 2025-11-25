@@ -938,7 +938,6 @@ function Library:Window(TitleText)
                         end
                         
                         -- [[ БЛОКИРОВКА КОПИРОВАНИЯ МУСОРА ]] --
-                        -- Мы временно запрещаем копировать любые эффекты с реального персонажа
                         local HiddenItems = {}
                         for _, v in pairs(RealChar:GetDescendants()) do
                             if v:IsA("Highlight") or v:IsA("SelectionBox") or v:IsA("BillboardGui") or v:IsA("SurfaceGui") or v:IsA("ParticleEmitter") or v:IsA("Beam") then
@@ -953,7 +952,7 @@ function Library:Window(TitleText)
                         local Dummy = RealChar:Clone()
                         RealChar.Archivable = false
 
-                        -- [[ ВОЗВРАЩАЕМ КАК БЫЛО ]] --
+                        -- Возвращаем как было
                         for _, v in pairs(HiddenItems) do
                             v.Archivable = true
                         end
@@ -968,13 +967,13 @@ function Library:Window(TitleText)
 
                         Dummy.Name = "PreviewDummy"
                         
-                        -- Дополнительная очистка скриптов внутри клона
+                        -- Очистка и Анкоринг
                         for _, obj in pairs(Dummy:GetDescendants()) do
-                            if obj:IsA("Script") or obj:IsA("LocalScript") or obj:IsA("Sound") then
+                            if obj:IsA("Script") or obj:IsA("LocalScript") or obj:IsA("Sound") or obj:IsA("Animate") then
                                 obj:Destroy()
                             end
                             if obj:IsA("BasePart") then
-                                obj.Anchored = true
+                                obj.Anchored = true -- Важно для PivotTo
                                 obj.CanCollide = false
                                 obj.CanTouch = false
                                 obj.CanQuery = false
@@ -986,18 +985,18 @@ function Library:Window(TitleText)
 
                         Dummy.Parent = WorldModel
                         
-                        local Root = Dummy:FindFirstChild("HumanoidRootPart") or Dummy.PrimaryPart
-                        if Root then
-                            Root.CFrame = CFrame.new(0, 0, 0)
-                            Cam.CFrame = CFrame.new(Vector3.new(0, 2, -6.5), Root.Position)
-                        end
+                        -- Центрируем модель
+                        Dummy:PivotTo(CFrame.new(0, 0, 0))
+                        
+                        -- Настраиваем камеру
+                        Cam.CFrame = CFrame.new(Vector3.new(0, 2, -6.5), Vector3.new(0, 0, 0))
                         
                         -- Вызов пользовательской функции
                         if CustomSetupFunc and type(CustomSetupFunc) == "function" then
                             pcall(CustomSetupFunc, Dummy)
                         end
 
-                        -- Вращение
+                        -- [ВРАЩЕНИЕ И УПРАВЛЕНИЕ]
                         local UserDragging = false
                         local CurrentRotY = 0
                         local LastMouseX = 0
@@ -1024,20 +1023,33 @@ function Library:Window(TitleText)
                             end
                         end)
 
-                        local Connection
-                        Connection = RunService.RenderStepped:Connect(function(DT)
-                            if not Dummy or not Dummy.Parent or not VP.Parent then 
-                                Connection:Disconnect() 
-                                return 
+                        -- [FIXED] ЦИКЛ ВРАЩЕНИЯ
+                        -- Мы сохраняем связь в переменную, чтобы отключить ее только при ПОЛНОМ удалении UI
+                        local RenderConnection 
+                        RenderConnection = RunService.RenderStepped:Connect(function(DT)
+                            -- Проверяем, существует ли еще модель. Если нет - отключаемся.
+                            if not Dummy or not Dummy.Parent then
+                                if RenderConnection then RenderConnection:Disconnect() end
+                                return
+                            end
+                            
+                            -- Если UI скрыт (свернут), мы не обновляем CFrame для экономии ресурсов,
+                            -- НО мы НЕ отключаем цикл.
+                            if not VP.Visible or not PreviewFrame.Visible then
+                                return
                             end
 
                             if not UserDragging then
                                 CurrentRotY = CurrentRotY + (RotationSpeed * 60 * DT)
                             end
 
-                            if Root then
-                                Root.CFrame = CFrame.new(0,0,0) * CFrame.Angles(0, CurrentRotY, 0)
-                            end
+                            -- Используем PivotTo для самого надежного вращения
+                            Dummy:PivotTo(CFrame.new(0,0,0) * CFrame.Angles(0, CurrentRotY, 0))
+                        end)
+                        
+                        -- Страховка: Отключаем цикл, если сам фрейм превью был удален (например, скрипт выгружен)
+                        PreviewFrame.Destroying:Connect(function()
+                            if RenderConnection then RenderConnection:Disconnect() end
                         end)
                     end)
                     
