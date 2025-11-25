@@ -523,7 +523,7 @@ function Library:Window(TitleText)
         P.PaddingLeft=UDim.new(0,15)
     end
 
-    function WindowFuncs:Tab(Name)
+    function WindowFuncs:Tab(Name, IconId) -- Добавлен аргумент IconId
         local Btn = Instance.new("TextButton")
         Btn.Name = Name
         Btn.Size = UDim2.new(1,0,0,30)
@@ -535,13 +535,27 @@ function Library:Window(TitleText)
         Btn.Parent=TabContainer
         Btn.ZIndex = 4
         Library:RegisterTheme(Btn,"TextColor3","TextDark")
-        local P=Instance.new("UIPadding",Btn)
-        P.PaddingLeft=UDim.new(0,25)
         
+        local P=Instance.new("UIPadding",Btn)
+        P.PaddingLeft=UDim.new(0, 45) -- Увеличили отступ для текста, чтобы влезла иконка
+        
+        -- // ЛОГИКА ИКОНКИ ВКЛАДКИ // --
+        local TabIcon
+        if IconId then
+            TabIcon = Instance.new("ImageLabel", Btn)
+            TabIcon.Name = "Icon"
+            TabIcon.Size = UDim2.new(0, 18, 0, 18)
+            TabIcon.Position = UDim2.new(0, -25, 0.5, -9) -- Позиция относительно Padding
+            TabIcon.BackgroundTransparency = 1
+            TabIcon.Image = "rbxassetid://" .. tostring(IconId)
+            Library:RegisterTheme(TabIcon, "ImageColor3", "TextDark")
+        end
+        -- // --------------------- // --
+
         local Ind=Instance.new("Frame")
         Ind.Name = "ActiveIndicator" 
         Ind.Size=UDim2.new(0,3,0.6,0)
-        Ind.Position=UDim2.new(0,-25,0.2,0)
+        Ind.Position=UDim2.new(0,-45,0.2,0) -- Подвинули индикатор левее
         Ind.Visible=false
         Ind.Parent=Btn
         Ind.ZIndex = 5 
@@ -576,6 +590,7 @@ function Library:Window(TitleText)
         if FirstTab then
             FirstTab=false
             Btn.TextColor3=Library.Theme.Text
+            if TabIcon then TabIcon.ImageColor3 = Library.Theme.Text end -- Подсветка иконки
             Ind.Visible=true
             Page.Visible=true
         end
@@ -584,15 +599,22 @@ function Library:Window(TitleText)
             for _,v in pairs(TabContainer:GetChildren()) do
                 if v:IsA("TextButton") then
                     TweenService:Create(v,TweenInfo.new(0.2),{TextColor3=Library.Theme.TextDark}):Play()
+                    -- Затемнение иконки у неактивных
+                    local ico = v:FindFirstChild("Icon")
+                    if ico then TweenService:Create(ico, TweenInfo.new(0.2), {ImageColor3=Library.Theme.TextDark}):Play() end
                     if v:FindFirstChild("ActiveIndicator") then v.ActiveIndicator.Visible=false end
                 end
             end
             for _,v in pairs(PagesArea:GetChildren()) do v.Visible=false end
+            
             TweenService:Create(Btn,TweenInfo.new(0.2),{TextColor3=Library.Theme.Text}):Play()
+            -- Подсветка иконки активной
+            if TabIcon then TweenService:Create(TabIcon, TweenInfo.new(0.2), {ImageColor3=Library.Theme.Text}):Play() end
+            
             Ind.Visible=true
             Page.Visible=true
         end)
-
+        
         local TabFuncs = {}
         local FirstSubTab = true
         
@@ -672,7 +694,7 @@ function Library:Window(TitleText)
 
             local SubFuncs = {}
             
-            function SubFuncs:Groupbox(Name, Side)
+            function SubFuncs:Groupbox(Name, Side, IconId) -- Добавлен аргумент IconId
                 local P = (Side=="Right") and RCol or LCol
                 local Box = Instance.new("Frame")
                 Box.Size = UDim2.new(1,0,0,100)
@@ -683,9 +705,22 @@ function Library:Window(TitleText)
                 S.Thickness=1
                 Library:RegisterTheme(S,"Color","Outline")
                 
+                -- // ЛОГИКА ИКОНКИ GROUPBOX // --
+                local HeaderOffset = 10
+                if IconId then
+                    HeaderOffset = 32 -- Сдвигаем текст если есть иконка
+                    local GIcon = Instance.new("ImageLabel", Box)
+                    GIcon.Size = UDim2.new(0, 16, 0, 16)
+                    GIcon.Position = UDim2.new(0, 10, 0, 5)
+                    GIcon.BackgroundTransparency = 1
+                    GIcon.Image = "rbxassetid://" .. tostring(IconId)
+                    Library:RegisterTheme(GIcon, "ImageColor3", "Accent") -- Цвет акцента (красный)
+                end
+                -- // ------------------------ // --
+
                 local H=Instance.new("TextLabel")
                 H.Size=UDim2.new(1,-20,0,25)
-                H.Position=UDim2.new(0,10,0,0)
+                H.Position=UDim2.new(0, HeaderOffset, 0, 0)
                 H.BackgroundTransparency=1
                 H.Text=Name
                 H.Font=Enum.Font.GothamBold
@@ -712,11 +747,11 @@ function Library:Window(TitleText)
                 Pa.PaddingBottom=UDim.new(0,10)
                 Pa.PaddingTop=UDim.new(0,5)
                 
-                -- Авто-ресайз самого Groupbox
-                -- Мы будем слушать изменение размера корневого контента
+                -- Авто-ресайз
                 L:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
                     Box.Size=UDim2.new(1,0,0,L.AbsoluteContentSize.Y+45)
                 end)
+                
 
                 local function RegisterItem(ItemName, ItemObj)
                     if not Btn or not SBtn or not SubPage then return end 
