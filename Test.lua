@@ -614,25 +614,40 @@ function Library:Window(TitleText)
             SubPage.Visible = false
             SubPage.Parent = ContentArea
             
-            local LCol=Instance.new("ScrollingFrame")
-            LCol.Size=UDim2.new(0.5,-10,1,-10)
-            LCol.Position=UDim2.new(0,10,0,0)
-            LCol.BackgroundTransparency=1
-            LCol.ScrollBarThickness=0
-            LCol.Parent=SubPage
-            local RCol=Instance.new("ScrollingFrame")
-            RCol.Size=UDim2.new(0.5,-10,1,-10)
-            RCol.Position=UDim2.new(0.5,5,0,0)
-            RCol.BackgroundTransparency=1
-            RCol.ScrollBarThickness=0
-            RCol.Parent=SubPage
+            -- [FIX] Настройка левой колонки
+            local LCol = Instance.new("ScrollingFrame")
+            LCol.Name = "LeftColumn"
+            LCol.Size = UDim2.new(0.5, -10, 1, -10)
+            LCol.Position = UDim2.new(0, 10, 0, 0)
+            LCol.BackgroundTransparency = 1
+            LCol.ScrollBarThickness = 2 -- Делаем скролл видимым
+            LCol.ScrollBarImageColor3 = Library.Theme.Accent -- Цвет скролла
+            LCol.AutomaticCanvasSize = Enum.AutomaticSize.Y -- [ВАЖНО] Авто-расширение вниз
+            LCol.CanvasSize = UDim2.new(0, 0, 0, 0)
+            LCol.Parent = SubPage
+            Library:RegisterTheme(LCol, "ScrollBarImageColor3", "Accent")
+
+            -- [FIX] Настройка правой колонки
+            local RCol = Instance.new("ScrollingFrame")
+            RCol.Name = "RightColumn"
+            RCol.Size = UDim2.new(0.5, -10, 1, -10)
+            RCol.Position = UDim2.new(0.5, 5, 0, 0)
+            RCol.BackgroundTransparency = 1
+            RCol.ScrollBarThickness = 2 -- Делаем скролл видимым
+            RCol.ScrollBarImageColor3 = Library.Theme.Accent -- Цвет скролла
+            RCol.AutomaticCanvasSize = Enum.AutomaticSize.Y -- [ВАЖНО] Авто-расширение вниз
+            RCol.CanvasSize = UDim2.new(0, 0, 0, 0)
+            RCol.Parent = SubPage
+            Library:RegisterTheme(RCol, "ScrollBarImageColor3", "Accent")
 
             local function Setup(f)
-                local l=Instance.new("UIListLayout",f)
-                l.Padding=UDim.new(0,12)
-                l.SortOrder=Enum.SortOrder.LayoutOrder
-                local p=Instance.new("UIPadding",f)
-                p.PaddingBottom=UDim.new(0,10)
+                local l = Instance.new("UIListLayout", f)
+                l.Padding = UDim.new(0, 12)
+                l.SortOrder = Enum.SortOrder.LayoutOrder
+                
+                local p = Instance.new("UIPadding", f)
+                p.PaddingBottom = UDim.new(0, 10)
+                p.PaddingRight = UDim.new(0, 5) -- Отступ от скроллбара
             end
             Setup(LCol)
             Setup(RCol)
