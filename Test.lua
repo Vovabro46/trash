@@ -912,7 +912,7 @@ function Library:Window(TitleText)
                     PreviewFrame.BackgroundTransparency = 1
                     PreviewFrame.Parent = P
 
-                    -- ViewportFrame (Окошко просмотра)
+                    -- ViewportFrame
                     local VP = Instance.new("ViewportFrame", PreviewFrame)
                     VP.Size = UDim2.new(1, -20, 1, 0)
                     VP.Position = UDim2.new(0, 10, 0, 0)
@@ -933,14 +933,30 @@ function Library:Window(TitleText)
 
                     task.spawn(function()
                         local RealChar = Player.Character or Player.CharacterAdded:Wait()
-                        -- Ждем, пока персонаж загрузится полностью
                         if not RealChar:FindFirstChild("HumanoidRootPart") then 
                             RealChar:WaitForChild("HumanoidRootPart", 5)
                         end
                         
+                        -- [[ БЛОКИРОВКА КОПИРОВАНИЯ МУСОРА ]] --
+                        -- Мы временно запрещаем копировать любые эффекты с реального персонажа
+                        local HiddenItems = {}
+                        for _, v in pairs(RealChar:GetDescendants()) do
+                            if v:IsA("Highlight") or v:IsA("SelectionBox") or v:IsA("BillboardGui") or v:IsA("SurfaceGui") or v:IsA("ParticleEmitter") or v:IsA("Beam") then
+                                if v.Archivable then
+                                    v.Archivable = false
+                                    table.insert(HiddenItems, v)
+                                end
+                            end
+                        end
+
                         RealChar.Archivable = true
                         local Dummy = RealChar:Clone()
                         RealChar.Archivable = false
+
+                        -- [[ ВОЗВРАЩАЕМ КАК БЫЛО ]] --
+                        for _, v in pairs(HiddenItems) do
+                            v.Archivable = true
+                        end
                         
                         if not Dummy then 
                             Dummy = Instance.new("Model")
@@ -952,18 +968,19 @@ function Library:Window(TitleText)
 
                         Dummy.Name = "PreviewDummy"
                         
-                        -- [FIX] ОЧИСТКА МУСОРА
-                        -- Удаляем всё лишнее, чтобы не было зеленых квадратов и эффектов в мире
+                        -- Дополнительная очистка скриптов внутри клона
                         for _, obj in pairs(Dummy:GetDescendants()) do
-                            if obj:IsA("Script") or obj:IsA("LocalScript") or 
-                               obj:IsA("Highlight") or obj:IsA("SelectionBox") or 
-                               obj:IsA("BillboardGui") or obj:IsA("SurfaceGui") or
-                               obj:IsA("ParticleEmitter") or obj:IsA("Beam") then
+                            if obj:IsA("Script") or obj:IsA("LocalScript") or obj:IsA("Sound") then
                                 obj:Destroy()
                             end
-                            -- Делаем HumanoidRootPart прозрачным, чтобы не мешал, но не удаляем
-                            if obj:IsA("BasePart") and obj.Name == "HumanoidRootPart" then
-                                obj.Transparency = 1 
+                            if obj:IsA("BasePart") then
+                                obj.Anchored = true
+                                obj.CanCollide = false
+                                obj.CanTouch = false
+                                obj.CanQuery = false
+                                if obj.Name == "HumanoidRootPart" then
+                                    obj.Transparency = 1 
+                                end
                             end
                         end
 
@@ -972,16 +989,15 @@ function Library:Window(TitleText)
                         local Root = Dummy:FindFirstChild("HumanoidRootPart") or Dummy.PrimaryPart
                         if Root then
                             Root.CFrame = CFrame.new(0, 0, 0)
-                            Root.Anchored = true -- Фиксируем, чтобы не падал
                             Cam.CFrame = CFrame.new(Vector3.new(0, 2, -6.5), Root.Position)
                         end
                         
-                        -- Вызов пользовательской функции настройки ESP
+                        -- Вызов пользовательской функции
                         if CustomSetupFunc and type(CustomSetupFunc) == "function" then
                             pcall(CustomSetupFunc, Dummy)
                         end
 
-                        -- [ВРАЩЕНИЕ]
+                        -- Вращение
                         local UserDragging = false
                         local CurrentRotY = 0
                         local LastMouseX = 0
