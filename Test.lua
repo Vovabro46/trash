@@ -903,49 +903,46 @@ function Library:Window(TitleText)
                 end
         
                 function BoxFuncs:ESPPreview(CustomSetupFunc)
-                    local P = GetContainer() -- Используем текущий контейнер (для поддержки TreeNode)
+                    local P = GetContainer()
                     
-                    -- Основной фрейм
+                    -- Фрейм контейнера
                     local PreviewFrame = Instance.new("Frame")
                     PreviewFrame.Name = "ESPPreviewFrame"
-                    PreviewFrame.Size = UDim2.new(1, 0, 0, 250) -- Высота превью
+                    PreviewFrame.Size = UDim2.new(1, 0, 0, 250)
                     PreviewFrame.BackgroundTransparency = 1
                     PreviewFrame.Parent = P
 
-                    -- ViewportFrame
+                    -- ViewportFrame (Окошко просмотра)
                     local VP = Instance.new("ViewportFrame", PreviewFrame)
                     VP.Size = UDim2.new(1, -20, 1, 0)
                     VP.Position = UDim2.new(0, 10, 0, 0)
-                    VP.BackgroundColor3 = Color3.fromRGB(18, 18, 18) -- Темный фон
+                    VP.BackgroundColor3 = Color3.fromRGB(18, 18, 18)
                     VP.BorderColor3 = Library.Theme.Outline
-                    VP.Ambient = Color3.fromRGB(150, 150, 150) -- Свет
+                    VP.Ambient = Color3.fromRGB(150, 150, 150)
                     VP.LightColor = Color3.fromRGB(255, 255, 255)
                     VP.LightDirection = Vector3.new(1, -1, 0)
                     
                     Instance.new("UICorner", VP).CornerRadius = UDim.new(0, 6)
                     Instance.new("UIStroke", VP).Color = Library.Theme.Outline
 
-                    -- Камера
                     local Cam = Instance.new("Camera", VP)
                     Cam.FieldOfView = 60
                     VP.CurrentCamera = Cam
                     
-                    -- WorldModel (нужен для физики одежды и анимаций внутри Viewport)
                     local WorldModel = Instance.new("WorldModel", VP)
 
-                    -- Создание персонажа
                     task.spawn(function()
-                        -- Ждем загрузки локального игрока
                         local RealChar = Player.Character or Player.CharacterAdded:Wait()
-                        RealChar:WaitForChild("HumanoidRootPart", 10)
+                        -- Ждем, пока персонаж загрузится полностью
+                        if not RealChar:FindFirstChild("HumanoidRootPart") then 
+                            RealChar:WaitForChild("HumanoidRootPart", 5)
+                        end
                         
-                        -- Клонируем персонажа (или берем Dummy если клон не вышел)
                         RealChar.Archivable = true
                         local Dummy = RealChar:Clone()
                         RealChar.Archivable = false
                         
                         if not Dummy then 
-                            -- Фолбэк на простой R15/R6 манекен, если клон не сработал (редко)
                             Dummy = Instance.new("Model")
                             local Part = Instance.new("Part", Dummy)
                             Part.Name = "HumanoidRootPart"
@@ -954,36 +951,42 @@ function Library:Window(TitleText)
                         end
 
                         Dummy.Name = "PreviewDummy"
+                        
+                        -- [FIX] ОЧИСТКА МУСОРА
+                        -- Удаляем всё лишнее, чтобы не было зеленых квадратов и эффектов в мире
+                        for _, obj in pairs(Dummy:GetDescendants()) do
+                            if obj:IsA("Script") or obj:IsA("LocalScript") or 
+                               obj:IsA("Highlight") or obj:IsA("SelectionBox") or 
+                               obj:IsA("BillboardGui") or obj:IsA("SurfaceGui") or
+                               obj:IsA("ParticleEmitter") or obj:IsA("Beam") then
+                                obj:Destroy()
+                            end
+                            -- Делаем HumanoidRootPart прозрачным, чтобы не мешал, но не удаляем
+                            if obj:IsA("BasePart") and obj.Name == "HumanoidRootPart" then
+                                obj.Transparency = 1 
+                            end
+                        end
+
                         Dummy.Parent = WorldModel
                         
-                        -- Позиционируем Dummy в центре мира Viewport
                         local Root = Dummy:FindFirstChild("HumanoidRootPart") or Dummy.PrimaryPart
                         if Root then
                             Root.CFrame = CFrame.new(0, 0, 0)
-                            -- Настраиваем камеру, чтобы смотрела на Dummy
-                            Cam.CFrame = CFrame.new(Vector3.new(0, 2, -6), Root.Position)
+                            Root.Anchored = true -- Фиксируем, чтобы не падал
+                            Cam.CFrame = CFrame.new(Vector3.new(0, 2, -6.5), Root.Position)
                         end
                         
-                        -- Очищаем скрипты, чтобы они не мешали в превью
-                        for _, v in pairs(Dummy:GetDescendants()) do
-                            if v:IsA("Script") or v:IsA("LocalScript") then v:Destroy() end
-                        end
-
-                        -- // ВЫЗОВ ПОЛЬЗОВАТЕЛЬСКОЙ ФУНКЦИИ //
-                        -- Передаем Dummy пользователю, чтобы он нацепил свой ESP
+                        -- Вызов пользовательской функции настройки ESP
                         if CustomSetupFunc and type(CustomSetupFunc) == "function" then
-                            -- Оборачиваем в pcall, чтобы ошибка в ESP не сломала UI
-                            local s, e = pcall(CustomSetupFunc, Dummy)
-                            if not s then warn("ESP Preview Error:", e) end
+                            pcall(CustomSetupFunc, Dummy)
                         end
 
-                        -- // ЛОГИКА ВРАЩЕНИЯ //
+                        -- [ВРАЩЕНИЕ]
                         local UserDragging = false
                         local CurrentRotY = 0
                         local LastMouseX = 0
-                        local RotationSpeed = 0.005 -- Скорость авто-вращения
+                        local RotationSpeed = 0.005
 
-                        -- Обработка ввода (Мышь/Тач)
                         VP.InputBegan:Connect(function(Input)
                             if Input.UserInputType == Enum.UserInputType.MouseButton1 or Input.UserInputType == Enum.UserInputType.Touch then
                                 UserDragging = true
@@ -994,7 +997,7 @@ function Library:Window(TitleText)
                         UserInputService.InputChanged:Connect(function(Input)
                             if UserDragging and (Input.UserInputType == Enum.UserInputType.MouseMovement or Input.UserInputType == Enum.UserInputType.Touch) then
                                 local Delta = Input.Position.X - LastMouseX
-                                CurrentRotY = CurrentRotY + (Delta * 0.015) -- Чувствительность вращения рукой
+                                CurrentRotY = CurrentRotY + (Delta * 0.015)
                                 LastMouseX = Input.Position.X
                             end
                         end)
@@ -1005,7 +1008,6 @@ function Library:Window(TitleText)
                             end
                         end)
 
-                        -- Render Loop (Вращение)
                         local Connection
                         Connection = RunService.RenderStepped:Connect(function(DT)
                             if not Dummy or not Dummy.Parent or not VP.Parent then 
@@ -1014,17 +1016,15 @@ function Library:Window(TitleText)
                             end
 
                             if not UserDragging then
-                                CurrentRotY = CurrentRotY + (RotationSpeed * 60 * DT) -- Авто вращение
+                                CurrentRotY = CurrentRotY + (RotationSpeed * 60 * DT)
                             end
 
                             if Root then
-                                -- Вращаем вокруг оси Y
                                 Root.CFrame = CFrame.new(0,0,0) * CFrame.Angles(0, CurrentRotY, 0)
                             end
                         end)
                     end)
                     
-                    -- Регистрация элемента для поиска
                     RegisterItem("ESP Preview", PreviewFrame)
                 end
 
