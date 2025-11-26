@@ -21,6 +21,12 @@ local Library = {
     Preview = nil,
     ConfigFolder = "RedOnyx_Configs",
     ConfigExt = ".json",
+    
+    --// НОВЫЕ НАСТРОЙКИ //--
+    GlobalSettings = {
+        GroupboxAnimations = true -- По умолчанию включено
+    },
+    
     WatermarkSettings = {
         Enabled = true,
         Text = "RedOnyx"
@@ -312,17 +318,15 @@ end
 
 --// MAIN WINDOW //--
 function Library:Window(TitleText)
-    --// AUTO-SCALING / АВТОМАТИЧЕСКИЙ РАЗМЕР //--
+    --// AUTO-SCALING //--
     local Viewport = Camera.ViewportSize
     local Width, Height = 750, 500
     local SidebarWidth = 180
     
-    -- Логика для телефонов/планшетов
     if Viewport.X < 800 then 
         Width, Height = 550, 350
         SidebarWidth = 140
     end
-    -- Для очень маленьких экранов
     if Viewport.X < 600 then 
         Width, Height = 450, 300
         SidebarWidth = 110
@@ -342,7 +346,7 @@ function Library:Window(TitleText)
     MainFrame.Position = UDim2.new(0.5, -Width/2, 0.5, -Height/2)
     MainFrame.BorderSizePixel = 0
     MainFrame.Parent = ScreenGui
-    MainFrame.ClipsDescendants = true -- Нужно для анимации открытия
+    MainFrame.ClipsDescendants = true 
     Library:RegisterTheme(MainFrame, "BackgroundColor3", "Background")
 
     local MainStroke = Instance.new("UIStroke", MainFrame)
@@ -365,7 +369,7 @@ function Library:Window(TitleText)
     Logo.BackgroundTransparency = 1
     Logo.Text = TitleText
     Logo.Font = Enum.Font.GothamBlack
-    Logo.TextSize = (SidebarWidth < 120) and 18 or 22 -- Адаптивный шрифт
+    Logo.TextSize = (SidebarWidth < 120) and 18 or 22 
     Logo.Parent = Sidebar
     Logo.ZIndex = 5 
     Library:RegisterTheme(Logo, "TextColor3", "Accent")
@@ -431,7 +435,6 @@ function Library:Window(TitleText)
     MakeDraggable(Sidebar, MainFrame)
     MakeDraggable(PagesArea, MainFrame)
 
-    --// TOGGLE UI BUTTON & ANIMATION //--
     local ToggleBtn = Instance.new("TextButton")
     ToggleBtn.Name = "ToggleUI"
     ToggleBtn.Size = UDim2.new(0, 50, 0, 50)
@@ -453,10 +456,8 @@ function Library:Window(TitleText)
         if UIOpen then
             MainFrame.Visible = true
             MainFrame.Size = UDim2.new(0, 0, 0, 0)
-            -- Анимация открытия
             TweenService:Create(MainFrame, TweenInfo.new(0.5, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {Size = OriginalSize}):Play()
         else
-            -- Анимация закрытия
             local CloseTween = TweenService:Create(MainFrame, TweenInfo.new(0.4, Enum.EasingStyle.Back, Enum.EasingDirection.In), {Size = UDim2.new(0, 0, 0, 0)})
             CloseTween:Play()
             CloseTween.Completed:Wait()
@@ -668,7 +669,6 @@ function Library:Window(TitleText)
             Ind.Visible = true
             Page.Visible = true
             
-            --// ANIMATION FOR TAB SWITCH //--
             Page.Position = UDim2.new(0, 0, 0, 15)
             TweenService:Create(Page, TweenInfo.new(0.3, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {Position = UDim2.new(0,0,0,0)}):Play()
         end)
@@ -746,8 +746,7 @@ function Library:Window(TitleText)
                 end
                 SubPage.Visible = true
                 TweenService:Create(SBtn, TweenInfo.new(0.2), {TextColor3 = Library.Theme.Accent}):Play()
-
-                --// ANIMATION FOR SUBTAB //--
+                
                 SubPage.Position = UDim2.new(0, 15, 0, 0)
                 TweenService:Create(SubPage, TweenInfo.new(0.3, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {Position = UDim2.new(0,0,0,0)}):Play()
             end)
@@ -765,11 +764,14 @@ function Library:Window(TitleText)
                 S.Thickness=1
                 Library:RegisterTheme(S,"Color","Outline")
                 
-                --// ANIMATION GROUPBOX HOVER //--
+                --// ОБНОВЛЕННАЯ ЛОГИКА АНИМАЦИИ GROUPBOX //--
                 Box.MouseEnter:Connect(function()
-                     TweenService:Create(S, TweenInfo.new(0.3), {Color = Library.Theme.Accent}):Play()
+                     if Library.GlobalSettings.GroupboxAnimations then
+                        TweenService:Create(S, TweenInfo.new(0.3), {Color = Library.Theme.Accent}):Play()
+                     end
                 end)
                 Box.MouseLeave:Connect(function()
+                     -- Возвращаем цвет обратно (даже если анимация выключена, чтобы избежать застревания цвета)
                      TweenService:Create(S, TweenInfo.new(0.3), {Color = Library.Theme.Outline}):Play()
                 end)
                 
