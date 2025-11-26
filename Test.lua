@@ -1145,59 +1145,87 @@ function Library:Window(TitleText)
                     local Desc = Config.Description
                     local Risky = Config.Risky
 
-                    local F=Instance.new("TextButton", GetContainer())
-                    F.Size=UDim2.new(1,0,0,20)
-                    F.BackgroundTransparency=1
-                    F.Text=""
+                    local F = Instance.new("TextButton", GetContainer())
+                    F.Size = UDim2.new(1, 0, 0, 20)
+                    F.BackgroundTransparency = 1
+                    F.Text = ""
                     if Desc then AddTooltip(F, Desc) end
 
-                    local Lb=Instance.new("TextLabel",F)
-                    Lb.Size=UDim2.new(1,-30,1,0)
-                    Lb.BackgroundTransparency=1
-                    Lb.Text=Text
-                    Lb.Font=Enum.Font.Gotham
-                    Lb.TextSize=12
-                    Lb.TextXAlignment=Enum.TextXAlignment.Left
+                    local Lb = Instance.new("TextLabel", F)
+                    Lb.Size = UDim2.new(1, -30, 1, 0)
+                    Lb.BackgroundTransparency = 1
+                    Lb.Text = Text
+                    Lb.Font = Enum.Font.Gotham
+                    Lb.TextSize = 12
+                    Lb.TextXAlignment = Enum.TextXAlignment.Left
                     if Risky then
                         Lb.TextColor3 = Color3.fromRGB(255, 80, 80)
                     else
-                        Library:RegisterTheme(Lb,"TextColor3","Text")
+                        Library:RegisterTheme(Lb, "TextColor3", "Text")
                     end
 
-                    local Outer=Instance.new("Frame",F)
-                    Outer.Size=UDim2.new(0,18,0,18)
-                    Outer.Position=UDim2.new(1,-20,0.5,-9)
-                    Outer.BackgroundColor3=Color3.fromRGB(35,35,35)
-                    Instance.new("UICorner",Outer).CornerRadius=UDim.new(0,4)
-                    local S=Instance.new("UIStroke",Outer)
-                    S.Color=Library.Theme.Outline
-                    S.Thickness=1
+                    -- Внешний квадрат (Фон)
+                    local Outer = Instance.new("Frame", F)
+                    Outer.Size = UDim2.new(0, 18, 0, 18)
+                    Outer.Position = UDim2.new(1, -20, 0.5, -9)
+                    Outer.BackgroundColor3 = Color3.fromRGB(35, 35, 35) -- Стандартный темный фон
+                    Instance.new("UICorner", Outer).CornerRadius = UDim.new(0, 4)
+                    
+                    local S = Instance.new("UIStroke", Outer)
+                    S.Color = Library.Theme.Outline
+                    S.Thickness = 1
+                    Library:RegisterTheme(S, "Color", "Outline")
 
-                    local Inner=Instance.new("Frame",Outer)
-                    Inner.Size=UDim2.new(1,-6,1,-6)
-                    Inner.Position=UDim2.new(0,3,0,3)
-                    Inner.BackgroundColor3=Library.Theme.Accent
-                    Inner.BackgroundTransparency=1 
-                    Instance.new("UICorner",Inner).CornerRadius=UDim.new(0,2)
+                    -- Иконка галочки
+                    local Check = Instance.new("ImageLabel", Outer)
+                    Check.Name = "Checkmark"
+                    Check.Size = UDim2.new(0, 0, 0, 0) -- Начинаем с 0 размера для анимации
+                    Check.Position = UDim2.new(0.5, 0, 0.5, 0)
+                    Check.AnchorPoint = Vector2.new(0.5, 0.5)
+                    Check.BackgroundTransparency = 1
+                    Check.Image = "rbxassetid://3944680095" -- ID иконки галочки
+                    Check.ImageColor3 = Color3.fromRGB(255, 255, 255) -- Галочка будет белой
+                    Check.ScaleType = Enum.ScaleType.Fit
+                    Check.ImageTransparency = 1 -- Скрыта по умолчанию
 
                     local function Set(v)
-                        Library.Flags[Flag]=v
+                        Library.Flags[Flag] = v
+                        
                         if v then
-                            TweenService:Create(Inner,TweenInfo.new(0.15),{BackgroundTransparency=0}):Play()
-                            TweenService:Create(Outer,TweenInfo.new(0.15),{BackgroundColor3=Color3.fromRGB(50,50,50)}):Play()
+                            -- АНИМАЦИЯ ВКЛЮЧЕНИЯ:
+                            -- 1. Фон красится в акцентный цвет (красный/твой цвет темы)
+                            TweenService:Create(Outer, TweenInfo.new(0.2), {BackgroundColor3 = Library.Theme.Accent}):Play()
+                            -- 2. Убираем обводку для стиля "заливки"
+                            TweenService:Create(S, TweenInfo.new(0.2), {Transparency = 1}):Play()
+                            -- 3. Галочка "выпрыгивает" (эффект Back)
+                            TweenService:Create(Check, TweenInfo.new(0.25, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+                                Size = UDim2.new(0, 12, 0, 12), -- Финальный размер галочки
+                                ImageTransparency = 0
+                            }):Play()
                         else
-                            TweenService:Create(Inner,TweenInfo.new(0.15),{BackgroundTransparency=1}):Play()
-                            TweenService:Create(Outer,TweenInfo.new(0.15),{BackgroundColor3=Color3.fromRGB(35,35,35)}):Play()
+                            -- АНИМАЦИЯ ВЫКЛЮЧЕНИЯ:
+                            -- 1. Фон становится темным
+                            TweenService:Create(Outer, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(35, 35, 35)}):Play()
+                            -- 2. Возвращаем обводку
+                            TweenService:Create(S, TweenInfo.new(0.2), {Transparency = 0}):Play()
+                            -- 3. Галочка уменьшается в ноль
+                            TweenService:Create(Check, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                                Size = UDim2.new(0, 0, 0, 0),
+                                ImageTransparency = 1
+                            }):Play()
                         end
-                        pcall(Callback,v)
+                        pcall(Callback, v)
                     end
 
-                    Library.Items[Flag]={Set=Set}
-                    Library.Flags[Flag]=Default
+                    Library.Items[Flag] = {Set = Set}
+                    Library.Flags[Flag] = Default
                     
+                    -- Применяем состояние по умолчанию без анимации (для быстрой загрузки конфигов)
                     if Default then
-                        Inner.BackgroundTransparency=0
-                        Outer.BackgroundColor3=Color3.fromRGB(50,50,50)
+                        Outer.BackgroundColor3 = Library.Theme.Accent
+                        S.Transparency = 1
+                        Check.Size = UDim2.new(0, 12, 0, 12)
+                        Check.ImageTransparency = 0
                     end
 
                     F.MouseButton1Click:Connect(function() Set(not Library.Flags[Flag]) end)
