@@ -9,6 +9,7 @@ local Stats = game:GetService("Stats")
 
 local Player = Players.LocalPlayer
 local Mouse = Player:GetMouse()
+local Camera = workspace.CurrentCamera
 
 local Library = {
     Flags = {},
@@ -311,6 +312,22 @@ end
 
 --// MAIN WINDOW //--
 function Library:Window(TitleText)
+    --// AUTO-SCALING / АВТОМАТИЧЕСКИЙ РАЗМЕР //--
+    local Viewport = Camera.ViewportSize
+    local Width, Height = 750, 500
+    local SidebarWidth = 180
+    
+    -- Логика для телефонов/планшетов
+    if Viewport.X < 800 then 
+        Width, Height = 550, 350
+        SidebarWidth = 140
+    end
+    -- Для очень маленьких экранов
+    if Viewport.X < 600 then 
+        Width, Height = 450, 300
+        SidebarWidth = 110
+    end
+
     local ScreenGui = Instance.new("ScreenGui")
     ScreenGui.Name = "RedOnyx"
     ScreenGui.ResetOnSpawn = false
@@ -321,10 +338,11 @@ function Library:Window(TitleText)
 
     local MainFrame = Instance.new("Frame")
     MainFrame.Name = "MainFrame"
-    MainFrame.Size = UDim2.new(0, 750, 0, 500)
-    MainFrame.Position = UDim2.new(0.5, -375, 0.5, -250)
+    MainFrame.Size = UDim2.new(0, Width, 0, Height)
+    MainFrame.Position = UDim2.new(0.5, -Width/2, 0.5, -Height/2)
     MainFrame.BorderSizePixel = 0
     MainFrame.Parent = ScreenGui
+    MainFrame.ClipsDescendants = true -- Нужно для анимации открытия
     Library:RegisterTheme(MainFrame, "BackgroundColor3", "Background")
 
     local MainStroke = Instance.new("UIStroke", MainFrame)
@@ -335,7 +353,7 @@ function Library:Window(TitleText)
     --// SIDEBAR //--
     local Sidebar = Instance.new("Frame")
     Sidebar.Name = "Sidebar"
-    Sidebar.Size = UDim2.new(0, 180, 1, 0)
+    Sidebar.Size = UDim2.new(0, SidebarWidth, 1, 0)
     Sidebar.Parent = MainFrame
     Sidebar.ZIndex = 2 
     Library:RegisterTheme(Sidebar, "BackgroundColor3", "Sidebar")
@@ -347,7 +365,7 @@ function Library:Window(TitleText)
     Logo.BackgroundTransparency = 1
     Logo.Text = TitleText
     Logo.Font = Enum.Font.GothamBlack
-    Logo.TextSize = 22
+    Logo.TextSize = (SidebarWidth < 120) and 18 or 22 -- Адаптивный шрифт
     Logo.Parent = Sidebar
     Logo.ZIndex = 5 
     Library:RegisterTheme(Logo, "TextColor3", "Accent")
@@ -405,14 +423,15 @@ function Library:Window(TitleText)
 
     local PagesArea = Instance.new("Frame")
     PagesArea.Name = "PagesArea"
-    PagesArea.Size = UDim2.new(1, -180, 1, 0)
-    PagesArea.Position = UDim2.new(0, 180, 0, 0)
+    PagesArea.Size = UDim2.new(1, -SidebarWidth, 1, 0)
+    PagesArea.Position = UDim2.new(0, SidebarWidth, 0, 0)
     PagesArea.BackgroundTransparency = 1
     PagesArea.Parent = MainFrame
 
     MakeDraggable(Sidebar, MainFrame)
     MakeDraggable(PagesArea, MainFrame)
 
+    --// TOGGLE UI BUTTON & ANIMATION //--
     local ToggleBtn = Instance.new("TextButton")
     ToggleBtn.Name = "ToggleUI"
     ToggleBtn.Size = UDim2.new(0, 50, 0, 50)
@@ -425,7 +444,25 @@ function Library:Window(TitleText)
     Instance.new("UICorner", ToggleBtn).CornerRadius = UDim.new(0,8)
     Instance.new("UIStroke", ToggleBtn).Color = Library.Theme.Accent
     MakeDraggable(ToggleBtn, ToggleBtn)
-    ToggleBtn.MouseButton1Click:Connect(function() MainFrame.Visible = not MainFrame.Visible end)
+    
+    local UIOpen = true
+    local OriginalSize = MainFrame.Size
+    
+    ToggleBtn.MouseButton1Click:Connect(function() 
+        UIOpen = not UIOpen
+        if UIOpen then
+            MainFrame.Visible = true
+            MainFrame.Size = UDim2.new(0, 0, 0, 0)
+            -- Анимация открытия
+            TweenService:Create(MainFrame, TweenInfo.new(0.5, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {Size = OriginalSize}):Play()
+        else
+            -- Анимация закрытия
+            local CloseTween = TweenService:Create(MainFrame, TweenInfo.new(0.4, Enum.EasingStyle.Back, Enum.EasingDirection.In), {Size = UDim2.new(0, 0, 0, 0)})
+            CloseTween:Play()
+            CloseTween.Completed:Wait()
+            if not UIOpen then MainFrame.Visible = false end
+        end
+    end)
 
     local DropdownHolder = Instance.new("Frame")
     DropdownHolder.Name = "DropdownHolder"
@@ -630,6 +667,10 @@ function Library:Window(TitleText)
             
             Ind.Visible = true
             Page.Visible = true
+            
+            --// ANIMATION FOR TAB SWITCH //--
+            Page.Position = UDim2.new(0, 0, 0, 15)
+            TweenService:Create(Page, TweenInfo.new(0.3, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {Position = UDim2.new(0,0,0,0)}):Play()
         end)
         
         local TabFuncs = {}
@@ -705,6 +746,10 @@ function Library:Window(TitleText)
                 end
                 SubPage.Visible = true
                 TweenService:Create(SBtn, TweenInfo.new(0.2), {TextColor3 = Library.Theme.Accent}):Play()
+
+                --// ANIMATION FOR SUBTAB //--
+                SubPage.Position = UDim2.new(0, 15, 0, 0)
+                TweenService:Create(SubPage, TweenInfo.new(0.3, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {Position = UDim2.new(0,0,0,0)}):Play()
             end)
 
             local SubFuncs = {}
@@ -719,6 +764,14 @@ function Library:Window(TitleText)
                 local S=Instance.new("UIStroke",Box)
                 S.Thickness=1
                 Library:RegisterTheme(S,"Color","Outline")
+                
+                --// ANIMATION GROUPBOX HOVER //--
+                Box.MouseEnter:Connect(function()
+                     TweenService:Create(S, TweenInfo.new(0.3), {Color = Library.Theme.Accent}):Play()
+                end)
+                Box.MouseLeave:Connect(function()
+                     TweenService:Create(S, TweenInfo.new(0.3), {Color = Library.Theme.Outline}):Play()
+                end)
                 
                 local HeaderOffset = 10
                 if IconId then
