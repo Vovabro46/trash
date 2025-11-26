@@ -1151,6 +1151,7 @@ function Library:Window(TitleText)
                     F.Text = ""
                     if Desc then AddTooltip(F, Desc) end
 
+                    -- Текст чекбокса
                     local Lb = Instance.new("TextLabel", F)
                     Lb.Size = UDim2.new(1, -30, 1, 0)
                     Lb.BackgroundTransparency = 1
@@ -1166,9 +1167,10 @@ function Library:Window(TitleText)
 
                     -- Внешний квадрат (Фон)
                     local Outer = Instance.new("Frame", F)
+                    Outer.Name = "CheckboxOuter"
                     Outer.Size = UDim2.new(0, 18, 0, 18)
                     Outer.Position = UDim2.new(1, -20, 0.5, -9)
-                    Outer.BackgroundColor3 = Color3.fromRGB(35, 35, 35) -- Стандартный темный фон
+                    Outer.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
                     Instance.new("UICorner", Outer).CornerRadius = UDim.new(0, 4)
                     
                     local S = Instance.new("UIStroke", Outer)
@@ -1176,39 +1178,39 @@ function Library:Window(TitleText)
                     S.Thickness = 1
                     Library:RegisterTheme(S, "Color", "Outline")
 
-                    -- Иконка галочки
+                    -- Иконка галочки (Слой выше фона)
                     local Check = Instance.new("ImageLabel", Outer)
-                    Check.Name = "Checkmark"
-                    Check.Size = UDim2.new(0, 0, 0, 0) -- Начинаем с 0 размера для анимации
+                    Check.Name = "CheckmarkIcon"
+                    Check.Size = UDim2.new(0, 0, 0, 0) -- Старт с 0
                     Check.Position = UDim2.new(0.5, 0, 0.5, 0)
                     Check.AnchorPoint = Vector2.new(0.5, 0.5)
                     Check.BackgroundTransparency = 1
-                    Check.Image = "rbxassetid://3944680095" -- ID иконки галочки
-                    Check.ImageColor3 = Color3.fromRGB(255, 255, 255) -- Галочка будет белой
-                    Check.ScaleType = Enum.ScaleType.Fit
-                    Check.ImageTransparency = 1 -- Скрыта по умолчанию
+                    Check.Image = "rbxassetid://6031094667" -- Жирная галочка
+                    Check.ImageColor3 = Color3.fromRGB(255, 255, 255) -- Белый цвет
+                    Check.ZIndex = 5 -- ВАЖНО: Рисуем поверх всего
+                    Check.ImageTransparency = 1 -- Скрыто по умолчанию
 
                     local function Set(v)
                         Library.Flags[Flag] = v
                         
                         if v then
-                            -- АНИМАЦИЯ ВКЛЮЧЕНИЯ:
-                            -- 1. Фон красится в акцентный цвет (красный/твой цвет темы)
+                            -- ВКЛЮЧЕНО
+                            -- 1. Фон красим в цвет темы
                             TweenService:Create(Outer, TweenInfo.new(0.2), {BackgroundColor3 = Library.Theme.Accent}):Play()
-                            -- 2. Убираем обводку для стиля "заливки"
+                            -- 2. Убираем обводку
                             TweenService:Create(S, TweenInfo.new(0.2), {Transparency = 1}):Play()
-                            -- 3. Галочка "выпрыгивает" (эффект Back)
+                            -- 3. Показываем галочку (Pop эффект)
                             TweenService:Create(Check, TweenInfo.new(0.25, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
-                                Size = UDim2.new(0, 12, 0, 12), -- Финальный размер галочки
+                                Size = UDim2.new(0, 14, 0, 14), -- Размер галочки
                                 ImageTransparency = 0
                             }):Play()
                         else
-                            -- АНИМАЦИЯ ВЫКЛЮЧЕНИЯ:
-                            -- 1. Фон становится темным
+                            -- ВЫКЛЮЧЕНО
+                            -- 1. Фон возвращаем в серый
                             TweenService:Create(Outer, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(35, 35, 35)}):Play()
                             -- 2. Возвращаем обводку
                             TweenService:Create(S, TweenInfo.new(0.2), {Transparency = 0}):Play()
-                            -- 3. Галочка уменьшается в ноль
+                            -- 3. Скрываем галочку
                             TweenService:Create(Check, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
                                 Size = UDim2.new(0, 0, 0, 0),
                                 ImageTransparency = 1
@@ -1220,11 +1222,11 @@ function Library:Window(TitleText)
                     Library.Items[Flag] = {Set = Set}
                     Library.Flags[Flag] = Default
                     
-                    -- Применяем состояние по умолчанию без анимации (для быстрой загрузки конфигов)
+                    -- Если по умолчанию включено (без анимации)
                     if Default then
                         Outer.BackgroundColor3 = Library.Theme.Accent
                         S.Transparency = 1
-                        Check.Size = UDim2.new(0, 12, 0, 12)
+                        Check.Size = UDim2.new(0, 14, 0, 14)
                         Check.ImageTransparency = 0
                     end
 
