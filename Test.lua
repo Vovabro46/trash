@@ -196,6 +196,15 @@ function Library:LoadConfig(Name)
     end
 end
 
+function Library:DeleteConfig(Name)
+    if not Library:InitConfig() or not Name then return end
+    local Path = Library.ConfigFolder.."/"..Name..Library.ConfigExt
+    if isfile(Path) then
+        delfile(Path)
+        Library:Notify("Config Deleted", "Deleted config: " .. Name, 3)
+    end
+end
+
 function Library:GetConfigs()
     if not Library:InitConfig() then return {} end
     local Configs = {}
