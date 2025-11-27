@@ -39,128 +39,128 @@ local Library = {
         Header         = Color3.fromRGB(100, 100, 100)
     },
     ThemePresets = {
-    ["Default"] = {
-        Background     = Color3.fromRGB(15, 15, 15),
-        Sidebar        = Color3.fromRGB(20, 20, 20),
-        Groupbox       = Color3.fromRGB(25, 25, 25),
-        ItemBackground = Color3.fromRGB(35, 35, 35),
-        Outline        = Color3.fromRGB(45, 45, 45),
-        Accent         = Color3.fromRGB(255, 40, 40),
-        Text           = Color3.fromRGB(235, 235, 235),
-        TextDark       = Color3.fromRGB(140, 140, 140),
-        Header         = Color3.fromRGB(100, 100, 100)
-    },
-    ["Light"] = {
-        Background     = Color3.fromRGB(240, 240, 240),
-        Sidebar        = Color3.fromRGB(225, 225, 225),
-        Groupbox       = Color3.fromRGB(255, 255, 255),
-        ItemBackground = Color3.fromRGB(245, 245, 245),
-        Outline        = Color3.fromRGB(200, 200, 200),
-        Accent         = Color3.fromRGB(0, 120, 215),
-        Text           = Color3.fromRGB(20, 20, 20),
-        TextDark       = Color3.fromRGB(100, 100, 100),
-        Header         = Color3.fromRGB(80, 80, 80)
-    },
-    ["Midnight"] = {
-        Background     = Color3.fromRGB(10, 10, 20),
-        Sidebar        = Color3.fromRGB(15, 15, 30),
-        Groupbox       = Color3.fromRGB(20, 20, 40),
-        ItemBackground = Color3.fromRGB(25, 25, 50),
-        Outline        = Color3.fromRGB(40, 40, 70),
-        Accent         = Color3.fromRGB(80, 140, 255),
-        Text           = Color3.fromRGB(220, 230, 255),
-        TextDark       = Color3.fromRGB(120, 130, 160),
-        Header         = Color3.fromRGB(90, 100, 130)
-    },
-    ["Forest"] = {
-        Background     = Color3.fromRGB(15, 20, 15),
-        Sidebar        = Color3.fromRGB(20, 25, 20),
-        Groupbox       = Color3.fromRGB(25, 30, 25),
-        ItemBackground = Color3.fromRGB(30, 35, 30),
-        Outline        = Color3.fromRGB(45, 60, 45),
-        Accent         = Color3.fromRGB(80, 200, 80),
-        Text           = Color3.fromRGB(235, 245, 235),
-        TextDark       = Color3.fromRGB(140, 160, 140),
-        Header         = Color3.fromRGB(100, 120, 100)
-    },
-    ["Amethyst"] = {
-        Background     = Color3.fromRGB(20, 15, 20),
-        Sidebar        = Color3.fromRGB(25, 20, 25),
-        Groupbox       = Color3.fromRGB(30, 25, 30),
-        ItemBackground = Color3.fromRGB(40, 30, 40),
-        Outline        = Color3.fromRGB(60, 45, 60),
-        Accent         = Color3.fromRGB(180, 80, 255),
-        Text           = Color3.fromRGB(245, 235, 245),
-        TextDark       = Color3.fromRGB(160, 140, 160),
-        Header         = Color3.fromRGB(120, 100, 120)
-    },
-    ["Sunset"] = {
-        Background     = Color3.fromRGB(20, 15, 10),
-        Sidebar        = Color3.fromRGB(30, 20, 15),
-        Groupbox       = Color3.fromRGB(40, 25, 20),
-        ItemBackground = Color3.fromRGB(50, 30, 25),
-        Outline        = Color3.fromRGB(70, 45, 40),
-        Accent         = Color3.fromRGB(255, 100, 50),
-        Text           = Color3.fromRGB(255, 235, 220),
-        TextDark       = Color3.fromRGB(180, 140, 120),
-        Header         = Color3.fromRGB(150, 110, 90)
-    },
-    ["Ocean"] = {
-        Background     = Color3.fromRGB(10, 15, 20),
-        Sidebar        = Color3.fromRGB(15, 20, 30),
-        Groupbox       = Color3.fromRGB(20, 25, 40),
-        ItemBackground = Color3.fromRGB(25, 30, 50),
-        Outline        = Color3.fromRGB(40, 50, 70),
-        Accent         = Color3.fromRGB(0, 200, 255),
-        Text           = Color3.fromRGB(220, 240, 255),
-        TextDark       = Color3.fromRGB(120, 150, 180),
-        Header         = Color3.fromRGB(90, 120, 150)
-    },
-    ["Crimson"] = {
-        Background     = Color3.fromRGB(20, 10, 10),
-        Sidebar        = Color3.fromRGB(30, 15, 15),
-        Groupbox       = Color3.fromRGB(40, 20, 20),
-        ItemBackground = Color3.fromRGB(50, 25, 25),
-        Outline        = Color3.fromRGB(70, 35, 35),
-        Accent         = Color3.fromRGB(220, 20, 60),
-        Text           = Color3.fromRGB(255, 220, 220),
-        TextDark       = Color3.fromRGB(180, 120, 120),
-        Header         = Color3.fromRGB(150, 90, 90)
-    },
-    ["Terminal"] = {
-        Background     = Color3.fromRGB(0, 10, 0),
-        Sidebar        = Color3.fromRGB(0, 15, 0),
-        Groupbox       = Color3.fromRGB(0, 20, 0),
-        ItemBackground = Color3.fromRGB(0, 25, 0),
-        Outline        = Color3.fromRGB(0, 40, 0),
-        Accent         = Color3.fromRGB(0, 255, 0),
-        Text           = Color3.fromRGB(200, 255, 200),
-        TextDark       = Color3.fromRGB(0, 150, 0),
-        Header         = Color3.fromRGB(0, 120, 0)
-    },
-    ["Royal Gold"] = {
-        Background     = Color3.fromRGB(20, 15, 5),
-        Sidebar        = Color3.fromRGB(30, 20, 10),
-        Groupbox       = Color3.fromRGB(40, 25, 15),
-        ItemBackground = Color3.fromRGB(50, 30, 20),
-        Outline        = Color3.fromRGB(70, 45, 30),
-        Accent         = Color3.fromRGB(255, 215, 0),
-        Text           = Color3.fromRGB(255, 245, 200),
-        TextDark       = Color3.fromRGB(180, 160, 100),
-        Header         = Color3.fromRGB(150, 130, 70)
-    },
-    ["Arctic"] = {
-        Background     = Color3.fromRGB(230, 240, 255),
-        Sidebar        = Color3.fromRGB(210, 225, 245),
-        Groupbox       = Color3.fromRGB(250, 250, 255),
-        ItemBackground = Color3.fromRGB(240, 245, 255),
-        Outline        = Color3.fromRGB(180, 200, 230),
-        Accent         = Color3.fromRGB(0, 100, 200),
-        Text           = Color3.fromRGB(10, 20, 40),
-        TextDark       = Color3.fromRGB(100, 120, 150),
-        Header         = Color3.fromRGB(70, 90, 120)
+        ["Default"] = {
+            Background     = Color3.fromRGB(15, 15, 15),
+            Sidebar        = Color3.fromRGB(20, 20, 20),
+            Groupbox       = Color3.fromRGB(25, 25, 25),
+            ItemBackground = Color3.fromRGB(35, 35, 35),
+            Outline        = Color3.fromRGB(45, 45, 45),
+            Accent         = Color3.fromRGB(255, 40, 40),
+            Text           = Color3.fromRGB(235, 235, 235),
+            TextDark       = Color3.fromRGB(140, 140, 140),
+            Header         = Color3.fromRGB(100, 100, 100)
+        },
+        ["Light"] = {
+            Background     = Color3.fromRGB(240, 240, 240),
+            Sidebar        = Color3.fromRGB(225, 225, 225),
+            Groupbox       = Color3.fromRGB(255, 255, 255),
+            ItemBackground = Color3.fromRGB(245, 245, 245),
+            Outline        = Color3.fromRGB(200, 200, 200),
+            Accent         = Color3.fromRGB(0, 120, 215),
+            Text           = Color3.fromRGB(20, 20, 20),
+            TextDark       = Color3.fromRGB(100, 100, 100),
+            Header         = Color3.fromRGB(80, 80, 80)
+        },
+        ["Midnight"] = {
+            Background     = Color3.fromRGB(10, 10, 20),
+            Sidebar        = Color3.fromRGB(15, 15, 30),
+            Groupbox       = Color3.fromRGB(20, 20, 40),
+            ItemBackground = Color3.fromRGB(25, 25, 50),
+            Outline        = Color3.fromRGB(40, 40, 70),
+            Accent         = Color3.fromRGB(80, 140, 255),
+            Text           = Color3.fromRGB(220, 230, 255),
+            TextDark       = Color3.fromRGB(120, 130, 160),
+            Header         = Color3.fromRGB(90, 100, 130)
+        },
+        ["Forest"] = {
+            Background     = Color3.fromRGB(15, 20, 15),
+            Sidebar        = Color3.fromRGB(20, 25, 20),
+            Groupbox       = Color3.fromRGB(25, 30, 25),
+            ItemBackground = Color3.fromRGB(30, 35, 30),
+            Outline        = Color3.fromRGB(45, 60, 45),
+            Accent         = Color3.fromRGB(80, 200, 80),
+            Text           = Color3.fromRGB(235, 245, 235),
+            TextDark       = Color3.fromRGB(140, 160, 140),
+            Header         = Color3.fromRGB(100, 120, 100)
+        },
+        ["Amethyst"] = {
+            Background     = Color3.fromRGB(20, 15, 20),
+            Sidebar        = Color3.fromRGB(25, 20, 25),
+            Groupbox       = Color3.fromRGB(30, 25, 30),
+            ItemBackground = Color3.fromRGB(40, 30, 40),
+            Outline        = Color3.fromRGB(60, 45, 60),
+            Accent         = Color3.fromRGB(180, 80, 255),
+            Text           = Color3.fromRGB(245, 235, 245),
+            TextDark       = Color3.fromRGB(160, 140, 160),
+            Header         = Color3.fromRGB(120, 100, 120)
+        },
+        ["Sunset"] = {
+            Background     = Color3.fromRGB(20, 15, 10),
+            Sidebar        = Color3.fromRGB(30, 20, 15),
+            Groupbox       = Color3.fromRGB(40, 25, 20),
+            ItemBackground = Color3.fromRGB(50, 30, 25),
+            Outline        = Color3.fromRGB(70, 45, 40),
+            Accent         = Color3.fromRGB(255, 100, 50),
+            Text           = Color3.fromRGB(255, 235, 220),
+            TextDark       = Color3.fromRGB(180, 140, 120),
+            Header         = Color3.fromRGB(150, 110, 90)
+        },
+        ["Ocean"] = {
+            Background     = Color3.fromRGB(10, 15, 20),
+            Sidebar        = Color3.fromRGB(15, 20, 30),
+            Groupbox       = Color3.fromRGB(20, 25, 40),
+            ItemBackground = Color3.fromRGB(25, 30, 50),
+            Outline        = Color3.fromRGB(40, 50, 70),
+            Accent         = Color3.fromRGB(0, 200, 255),
+            Text           = Color3.fromRGB(220, 240, 255),
+            TextDark       = Color3.fromRGB(120, 150, 180),
+            Header         = Color3.fromRGB(90, 120, 150)
+        },
+        ["Crimson"] = {
+            Background     = Color3.fromRGB(20, 10, 10),
+            Sidebar        = Color3.fromRGB(30, 15, 15),
+            Groupbox       = Color3.fromRGB(40, 20, 20),
+            ItemBackground = Color3.fromRGB(50, 25, 25),
+            Outline        = Color3.fromRGB(70, 35, 35),
+            Accent         = Color3.fromRGB(220, 20, 60),
+            Text           = Color3.fromRGB(255, 220, 220),
+            TextDark       = Color3.fromRGB(180, 120, 120),
+            Header         = Color3.fromRGB(150, 90, 90)
+        },
+        ["Terminal"] = {
+            Background     = Color3.fromRGB(0, 10, 0),
+            Sidebar        = Color3.fromRGB(0, 15, 0),
+            Groupbox       = Color3.fromRGB(0, 20, 0),
+            ItemBackground = Color3.fromRGB(0, 25, 0),
+            Outline        = Color3.fromRGB(0, 40, 0),
+            Accent         = Color3.fromRGB(0, 255, 0),
+            Text           = Color3.fromRGB(200, 255, 200),
+            TextDark       = Color3.fromRGB(0, 150, 0),
+            Header         = Color3.fromRGB(0, 120, 0)
+        },
+        ["Royal Gold"] = {
+            Background     = Color3.fromRGB(20, 15, 5),
+            Sidebar        = Color3.fromRGB(30, 20, 10),
+            Groupbox       = Color3.fromRGB(40, 25, 15),
+            ItemBackground = Color3.fromRGB(50, 30, 20),
+            Outline        = Color3.fromRGB(70, 45, 30),
+            Accent         = Color3.fromRGB(255, 215, 0),
+            Text           = Color3.fromRGB(255, 245, 200),
+            TextDark       = Color3.fromRGB(180, 160, 100),
+            Header         = Color3.fromRGB(150, 130, 70)
+        },
+        ["Arctic"] = {
+            Background     = Color3.fromRGB(230, 240, 255),
+            Sidebar        = Color3.fromRGB(210, 225, 245),
+            Groupbox       = Color3.fromRGB(250, 250, 255),
+            ItemBackground = Color3.fromRGB(240, 245, 255),
+            Outline        = Color3.fromRGB(180, 200, 230),
+            Accent         = Color3.fromRGB(0, 100, 200),
+            Text           = Color3.fromRGB(10, 20, 40),
+            TextDark       = Color3.fromRGB(100, 120, 150),
+            Header         = Color3.fromRGB(70, 90, 120)
+        }
     }
-}
 }
 
 --// THEME SYSTEM //--
@@ -1878,6 +1878,313 @@ function Library:Window(TitleText)
                         pcall(Call)
                     end)
                 
+                    RegisterItem(Text, F)
+                end
+
+                --// IMGUI WIDGETS TRANSLATION //--
+
+                -- [ImGui: ProgressBar]
+                function BoxFuncs:AddProgressBar(Config)
+                    local Text = Config.Title or "Progress"
+                    local Default = Config.Default or 0
+                    local Flag = Config.Flag or Text
+                    local Desc = Config.Description
+
+                    local F = Instance.new("Frame", GetContainer())
+                    F.Size = UDim2.new(1, 0, 0, 35)
+                    F.BackgroundTransparency = 1
+                    if Desc then AddTooltip(F, Desc) end
+
+                    local Lb = Instance.new("TextLabel", F)
+                    Lb.Size = UDim2.new(1, 0, 0, 15)
+                    Lb.BackgroundTransparency = 1
+                    Lb.Text = Text
+                    Lb.Font = Enum.Font.Gotham
+                    Lb.TextSize = 12
+                    Lb.TextXAlignment = Enum.TextXAlignment.Left
+                    Library:RegisterTheme(Lb, "TextColor3", "Text")
+
+                    local BarBack = Instance.new("Frame", F)
+                    BarBack.Name = "BarBackground"
+                    BarBack.Size = UDim2.new(1, 0, 0, 14)
+                    BarBack.Position = UDim2.new(0, 0, 0, 20)
+                    BarBack.BackgroundColor3 = Library.Theme.ItemBackground
+                    Library:RegisterTheme(BarBack, "BackgroundColor3", "ItemBackground")
+                    Instance.new("UICorner", BarBack).CornerRadius = UDim.new(0, 4)
+
+                    local BarFill = Instance.new("Frame", BarBack)
+                    BarFill.Name = "BarFill"
+                    BarFill.Size = UDim2.new(math.clamp(Default, 0, 1), 0, 1, 0)
+                    BarFill.BackgroundColor3 = Library.Theme.Accent
+                    BarFill.BorderSizePixel = 0
+                    Library:RegisterTheme(BarFill, "BackgroundColor3", "Accent")
+                    Instance.new("UICorner", BarFill).CornerRadius = UDim.new(0, 4)
+
+                    local PercentText = Instance.new("TextLabel", BarBack)
+                    PercentText.Size = UDim2.new(1, 0, 1, 0)
+                    PercentText.BackgroundTransparency = 1
+                    PercentText.Font = Enum.Font.GothamBold
+                    PercentText.TextSize = 10
+                    PercentText.Text = math.floor(math.clamp(Default, 0, 1) * 100) .. "%"
+                    PercentText.TextColor3 = Library.Theme.Text
+                    PercentText.ZIndex = 2
+                    Library:RegisterTheme(PercentText, "TextColor3", "Text")
+
+                    local function Set(val)
+                        val = math.clamp(val, 0, 1)
+                        Library.Flags[Flag] = val
+                        PercentText.Text = math.floor(val * 100) .. "%"
+                        TweenService:Create(BarFill, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Size = UDim2.new(val, 0, 1, 0)}):Play()
+                    end
+
+                    Library.Items[Flag] = {Set = Set}
+                    Library.Flags[Flag] = Default
+                    
+                    RegisterItem(Text, F)
+                end
+
+                -- [ImGui: Image]
+                function BoxFuncs:AddImage(Config)
+                    local ImageId = Config.Image or "" -- rbxassetid://...
+                    local Size = Config.Size or UDim2.new(0, 100, 0, 100)
+                    local Desc = Config.Description
+                    
+                    local F = Instance.new("Frame", GetContainer())
+                    F.Size = UDim2.new(1, 0, 0, Size.Y.Offset + 5)
+                    F.BackgroundTransparency = 1
+                    
+                    local Img = Instance.new("ImageLabel", F)
+                    Img.Size = Size
+                    Img.Position = UDim2.new(0.5, -Size.X.Offset/2, 0, 0)
+                    Img.BackgroundTransparency = 1
+                    Img.Image = ImageId
+                    if Desc then AddTooltip(Img, Desc) end
+                    
+                    RegisterItem("Image", F)
+                end
+
+                -- [ImGui: ImageButton]
+                function BoxFuncs:AddImageButton(Config)
+                    local ImageId = Config.Image or ""
+                    local Callback = Config.Callback or function() end
+                    local Size = Config.Size or UDim2.new(0, 50, 0, 50)
+                    local Desc = Config.Description
+
+                    local F = Instance.new("Frame", GetContainer())
+                    F.Size = UDim2.new(1, 0, 0, Size.Y.Offset + 5)
+                    F.BackgroundTransparency = 1
+
+                    local Btn = Instance.new("ImageButton", F)
+                    Btn.Size = Size
+                    Btn.Position = UDim2.new(0.5, -Size.X.Offset/2, 0, 0)
+                    Btn.BackgroundColor3 = Library.Theme.ItemBackground
+                    Btn.Image = ImageId
+                    Library:RegisterTheme(Btn, "BackgroundColor3", "ItemBackground")
+                    Instance.new("UICorner", Btn).CornerRadius = UDim.new(0, 4)
+                    
+                    if Desc then AddTooltip(Btn, Desc) end
+
+                    Btn.MouseButton1Click:Connect(function()
+                        TweenService:Create(Btn, TweenInfo.new(0.1), {ImageColor3 = Library.Theme.Accent}):Play()
+                        task.wait(0.1)
+                        TweenService:Create(Btn, TweenInfo.new(0.1), {ImageColor3 = Color3.new(1,1,1)}):Play()
+                        pcall(Callback)
+                    end)
+
+                    RegisterItem("ImageButton", F)
+                end
+
+                -- [ImGui: RadioButton]
+                function BoxFuncs:AddRadioButton(Config)
+                    local Text = Config.Title or "Radio Button"
+                    local Options = Config.Options or {}
+                    local Default = Config.Default or Options[1]
+                    local Callback = Config.Callback or function() end
+                    local Flag = Config.Flag or Text
+                    
+                    local F = Instance.new("Frame", GetContainer())
+                    F.Size = UDim2.new(1, 0, 0, 0)
+                    F.AutomaticSize = Enum.AutomaticSize.Y
+                    F.BackgroundTransparency = 1
+
+                    local Lb = Instance.new("TextLabel", F)
+                    Lb.Size = UDim2.new(1, 0, 0, 15)
+                    Lb.BackgroundTransparency = 1
+                    Lb.Text = Text
+                    Lb.Font = Enum.Font.Gotham
+                    Lb.TextSize = 12
+                    Lb.TextXAlignment = Enum.TextXAlignment.Left
+                    Library:RegisterTheme(Lb, "TextColor3", "Text")
+
+                    local OptionButtons = {}
+                    local CurrentValue = Default
+
+                    local OptContainer = Instance.new("Frame", F)
+                    OptContainer.Size = UDim2.new(1, 0, 0, 0)
+                    OptContainer.Position = UDim2.new(0, 0, 0, 20)
+                    OptContainer.AutomaticSize = Enum.AutomaticSize.Y
+                    OptContainer.BackgroundTransparency = 1
+                    
+                    local UIList = Instance.new("UIListLayout", OptContainer)
+                    UIList.Padding = UDim.new(0, 5)
+
+                    local function UpdateState(val)
+                        CurrentValue = val
+                        Library.Flags[Flag] = val
+                        for _, btnData in pairs(OptionButtons) do
+                            local isSelected = (btnData.Value == val)
+                            local circleInner = btnData.Obj:FindFirstChild("InnerCircle", true)
+                            if circleInner then
+                                circleInner.Visible = isSelected
+                            end
+                            local txt = btnData.Obj:FindFirstChild("Label", true)
+                            if txt then
+                                TweenService:Create(txt, TweenInfo.new(0.2), {TextColor3 = isSelected and Library.Theme.Text or Library.Theme.TextDark}):Play()
+                            end
+                        end
+                        pcall(Callback, val)
+                    end
+
+                    for _, opt in ipairs(Options) do
+                        local OptBtn = Instance.new("TextButton", OptContainer)
+                        OptBtn.Size = UDim2.new(1, 0, 0, 20)
+                        OptBtn.BackgroundTransparency = 1
+                        OptBtn.Text = ""
+                        
+                        local OuterCircle = Instance.new("Frame", OptBtn)
+                        OuterCircle.Size = UDim2.new(0, 14, 0, 14)
+                        OuterCircle.Position = UDim2.new(0, 0, 0.5, -7)
+                        OuterCircle.BackgroundColor3 = Library.Theme.ItemBackground
+                        Instance.new("UICorner", OuterCircle).CornerRadius = UDim.new(1, 0)
+                        Library:RegisterTheme(OuterCircle, "BackgroundColor3", "ItemBackground")
+                        local Stroke = Instance.new("UIStroke", OuterCircle)
+                        Stroke.Color = Library.Theme.Outline
+                        Stroke.Thickness = 1
+                        Library:RegisterTheme(Stroke, "Color", "Outline")
+
+                        local InnerCircle = Instance.new("Frame", OuterCircle)
+                        InnerCircle.Name = "InnerCircle"
+                        InnerCircle.Size = UDim2.new(0, 8, 0, 8)
+                        InnerCircle.Position = UDim2.new(0.5, -4, 0.5, -4)
+                        InnerCircle.BackgroundColor3 = Library.Theme.Accent
+                        InnerCircle.Visible = false
+                        Instance.new("UICorner", InnerCircle).CornerRadius = UDim.new(1, 0)
+                        Library:RegisterTheme(InnerCircle, "BackgroundColor3", "Accent")
+
+                        local OptLabel = Instance.new("TextLabel", OptBtn)
+                        OptLabel.Name = "Label"
+                        OptLabel.Size = UDim2.new(1, -20, 1, 0)
+                        OptLabel.Position = UDim2.new(0, 20, 0, 0)
+                        OptLabel.BackgroundTransparency = 1
+                        OptLabel.Text = tostring(opt)
+                        OptLabel.Font = Enum.Font.Gotham
+                        OptLabel.TextSize = 12
+                        OptLabel.TextXAlignment = Enum.TextXAlignment.Left
+                        OptLabel.TextColor3 = Library.Theme.TextDark
+                        Library:RegisterTheme(OptLabel, "TextColor3", "TextDark")
+
+                        OptBtn.MouseButton1Click:Connect(function()
+                            UpdateState(opt)
+                        end)
+
+                        table.insert(OptionButtons, {Obj = OptBtn, Value = opt})
+                    end
+                    
+                    UpdateState(Default)
+                    Library.Items[Flag] = {Set = UpdateState}
+                    
+                    F.Size = UDim2.new(1, 0, 0, 25 + (#Options * 25))
+                    RegisterItem(Text, F)
+                end
+
+                -- [ImGui: PlotHistogram]
+                function BoxFuncs:AddGraph(Config)
+                    local Text = Config.Title or "Graph"
+                    local Values = Config.Values or {} -- Array of numbers 0-1 (or scaled)
+                    local Height = Config.Height or 60
+                    local Desc = Config.Description
+
+                    local F = Instance.new("Frame", GetContainer())
+                    F.Size = UDim2.new(1, 0, 0, Height + 20)
+                    F.BackgroundTransparency = 1
+                    if Desc then AddTooltip(F, Desc) end
+
+                    local Lb = Instance.new("TextLabel", F)
+                    Lb.Size = UDim2.new(1, 0, 0, 15)
+                    Lb.BackgroundTransparency = 1
+                    Lb.Text = Text
+                    Lb.Font = Enum.Font.Gotham
+                    Lb.TextSize = 12
+                    Lb.TextXAlignment = Enum.TextXAlignment.Left
+                    Library:RegisterTheme(Lb, "TextColor3", "Text")
+
+                    local GraphBox = Instance.new("Frame", F)
+                    GraphBox.Size = UDim2.new(1, 0, 0, Height)
+                    GraphBox.Position = UDim2.new(0, 0, 0, 20)
+                    GraphBox.BackgroundColor3 = Library.Theme.ItemBackground
+                    Library:RegisterTheme(GraphBox, "BackgroundColor3", "ItemBackground")
+                    Instance.new("UICorner", GraphBox).CornerRadius = UDim.new(0, 4)
+                    local Stroke = Instance.new("UIStroke", GraphBox)
+                    Stroke.Color = Library.Theme.Outline
+                    Stroke.Thickness = 1
+                    Library:RegisterTheme(Stroke, "Color", "Outline")
+
+                    local GraphContainer = Instance.new("Frame", GraphBox)
+                    GraphContainer.Size = UDim2.new(1, -4, 1, -4)
+                    GraphContainer.Position = UDim2.new(0, 2, 0, 2)
+                    GraphContainer.BackgroundTransparency = 1
+                    
+                    local Layout = Instance.new("UIListLayout", GraphContainer)
+                    Layout.FillDirection = Enum.FillDirection.Horizontal
+                    Layout.HorizontalAlignment = Enum.HorizontalAlignment.Left
+                    Layout.VerticalAlignment = Enum.VerticalAlignment.Bottom
+                    Layout.Padding = UDim.new(0, 1)
+
+                    local function UpdateGraph(NewValues)
+                        for _, v in pairs(GraphContainer:GetChildren()) do
+                            if v:IsA("Frame") then v:Destroy() end
+                        end
+                        
+                        if #NewValues == 0 then return end
+                        local BarWidth = (GraphContainer.AbsoluteSize.X / #NewValues) - 1
+                        if BarWidth < 1 then BarWidth = 1 end
+
+                        local MaxVal = 0
+                        for _, v in ipairs(NewValues) do if v > MaxVal then MaxVal = v end end
+                        if MaxVal == 0 then MaxVal = 1 end
+
+                        for _, val in ipairs(NewValues) do
+                            local Bar = Instance.new("Frame", GraphContainer)
+                            Bar.Size = UDim2.new(0, BarWidth, val / MaxVal, 0)
+                            Bar.BackgroundColor3 = Library.Theme.Accent
+                            Bar.BorderSizePixel = 0
+                            Library:RegisterTheme(Bar, "BackgroundColor3", "Accent")
+                            
+                            -- Simple hover for value
+                            local ValTip = Instance.new("TextLabel", Bar)
+                            ValTip.Visible = false
+                            ValTip.Size = UDim2.new(0, 50, 0, 15)
+                            ValTip.Position = UDim2.new(0.5, -25, 0, -15)
+                            ValTip.BackgroundColor3 = Library.Theme.Background
+                            ValTip.TextColor3 = Library.Theme.Text
+                            ValTip.TextSize = 8
+                            ValTip.Text = tostring(math.floor(val*10)/10)
+                            
+                            Bar.MouseEnter:Connect(function() 
+                                TweenService:Create(Bar, TweenInfo.new(0.1), {BackgroundTransparency = 0.2}):Play()
+                                ValTip.Visible = true 
+                            end)
+                            Bar.MouseLeave:Connect(function() 
+                                TweenService:Create(Bar, TweenInfo.new(0.1), {BackgroundTransparency = 0}):Play()
+                                ValTip.Visible = false 
+                            end)
+                        end
+                    end
+
+                    UpdateGraph(Values)
+                    -- Allow updating via Items table
+                    Library.Items[Text] = {Set = UpdateGraph}
+
                     RegisterItem(Text, F)
                 end
 
