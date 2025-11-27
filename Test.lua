@@ -420,7 +420,6 @@ function Library:Window(TitleText)
     Resizer.Parent = MainFrame
     Resizer.ZIndex = 200 
     Library:RegisterTheme(Resizer, "TextColor3", "TextDark")
-    AddTooltip(Resizer, "Resize")
 
     local draggingResize = false
     local dragStartResize = Vector2.new()
