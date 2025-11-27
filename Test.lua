@@ -29,7 +29,7 @@ local Library = {
         Background     = Color3.fromRGB(15, 15, 15),
         Sidebar        = Color3.fromRGB(20, 20, 20),
         Groupbox       = Color3.fromRGB(25, 25, 25),
-        ItemBackground = Color3.fromRGB(35, 35, 35), -- Новый параметр для фона элементов
+        ItemBackground = Color3.fromRGB(35, 35, 35),
         Outline        = Color3.fromRGB(45, 45, 45),
         Accent         = Color3.fromRGB(255, 40, 40),
         Text           = Color3.fromRGB(235, 235, 235),
@@ -1279,7 +1279,7 @@ function Library:Window(TitleText)
                     RegisterItem(Text, F)
                 end
 
-                -- // CHECKBOX STYLE: IMGUI //
+                -- // CHECKBOX STYLE: IMGUI (Smaller) //
                 function BoxFuncs:AddCheckbox(Config)
                     local Text = Config.Title or "Checkbox"
                     local Default = Config.Default or false
@@ -1289,17 +1289,17 @@ function Library:Window(TitleText)
                     local Risky = Config.Risky
 
                     local F = Instance.new("TextButton", GetContainer())
-                    F.Size = UDim2.new(1, 0, 0, 24)
+                    F.Size = UDim2.new(1, 0, 0, 20) -- Reduced height
                     F.BackgroundTransparency = 1
                     F.Text = ""
                     if Desc then AddTooltip(F, Desc) end
 
-                    -- Square Box
+                    -- Square Box (Smaller: 16x16)
                     local Box = Instance.new("Frame", F)
-                    Box.Size = UDim2.new(0, 20, 0, 20)
-                    Box.Position = UDim2.new(0, 0, 0.5, -10)
+                    Box.Size = UDim2.new(0, 16, 0, 16)
+                    Box.Position = UDim2.new(0, 0, 0.5, -8) -- Centered
                     Box.BackgroundColor3 = Library.Theme.ItemBackground
-                    Library:RegisterTheme(Box, "BackgroundColor3", "ItemBackground") -- Dynamic BG
+                    Library:RegisterTheme(Box, "BackgroundColor3", "ItemBackground") 
                     
                     local BoxStroke = Instance.new("UIStroke", Box)
                     BoxStroke.Color = Library.Theme.Outline
@@ -1308,26 +1308,24 @@ function Library:Window(TitleText)
 
                     -- Checkmark (Image)
                     local Check = Instance.new("ImageLabel", Box)
-                    Check.Size = UDim2.new(1, -4, 1, -4)
-                    Check.Position = UDim2.new(0, 2, 0, 2)
+                    Check.Size = UDim2.new(1, -2, 1, -2)
+                    Check.Position = UDim2.new(0, 1, 0, 1)
                     Check.BackgroundTransparency = 1
-                    Check.Image = "rbxassetid://3944680095" -- Standard checkmark asset
-                    Check.ImageColor3 = Color3.fromRGB(174, 139, 148) -- ImGui-like color
+                    Check.Image = "rbxassetid://3944680095" 
+                    Check.ImageColor3 = Library.Theme.Accent -- Uses Accent Color
+                    Library:RegisterTheme(Check, "ImageColor3", "Accent") -- Register theme
                     Check.Visible = Default
 
                     -- Text Label
                     local Label = Instance.new("TextLabel", F)
-                    Label.Size = UDim2.new(1, -30, 1, 0)
-                    Label.Position = UDim2.new(0, 30, 0, 0)
+                    Label.Size = UDim2.new(1, -25, 1, 0)
+                    Label.Position = UDim2.new(0, 25, 0, 0)
                     Label.BackgroundTransparency = 1
                     Label.Text = Text
                     Label.Font = Enum.Font.Gotham
                     Label.TextSize = 13
                     Label.TextXAlignment = Enum.TextXAlignment.Left
                     
-                    -- Color Logic based on C++ ref:
-                    -- Inactive: 105, 105, 105 (TextDark)
-                    -- Active/Hover: 255, 255, 255 (Text)
                     Label.TextColor3 = Default and Library.Theme.Text or Library.Theme.TextDark
                     if Default then
                         Library:RegisterTheme(Label, "TextColor3", "Text")
@@ -1337,10 +1335,8 @@ function Library:Window(TitleText)
 
                     -- Hover Animation Logic
                     local function UpdateVisuals(IsHovering)
-                        -- Hover animation for Box Background (simulate ImGui fill_animation)
                         local targetColor = Library.Theme.ItemBackground
                         if IsHovering then
-                            -- Slightly lighter/different on hover (Manual tween for simulation)
                             targetColor = Color3.fromRGB(
                                 math.min(Library.Theme.ItemBackground.R * 255 + 20, 255),
                                 math.min(Library.Theme.ItemBackground.G * 255 + 20, 255),
@@ -1349,7 +1345,6 @@ function Library:Window(TitleText)
                         end
                         TweenService:Create(Box, TweenInfo.new(0.2), {BackgroundColor3 = targetColor}):Play()
                         
-                        -- Hover animation for Text
                         if not Library.Flags[Flag] then
                              local txtColor = IsHovering and Library.Theme.Text or Library.Theme.TextDark
                              TweenService:Create(Label, TweenInfo.new(0.2), {TextColor3 = txtColor}):Play()
