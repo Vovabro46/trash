@@ -25,7 +25,7 @@ local Library = {
         Text = "RedOnyx"
     },
     GlobalSettings = {
-        Animations = true -- Глобальный переключатель анимаций
+        Animations = true
     },
     --// T H E M E S //--
     Theme = {
@@ -126,7 +126,7 @@ function Library:SetTheme(ThemeName)
     end
 end
 
---// HELPER FOR ANIMATIONS //--
+--// HELPER FOR ANIMATIONS (OPTIMIZED) //--
 function Library:FadeIn(Object, Time)
     if not Library.GlobalSettings.Animations then 
         if Object:IsA("CanvasGroup") then Object.GroupTransparency = 0 end
@@ -137,20 +137,19 @@ function Library:FadeIn(Object, Time)
     Object.Visible = true
     if Object:IsA("CanvasGroup") then
         Object.GroupTransparency = 1
-        -- Slide Up Effect logic if it's a page
-        local originalPos = Object.Position
-        Object.Position = UDim2.new(originalPos.X.Scale, originalPos.X.Offset, originalPos.Y.Scale, originalPos.Y.Offset + 10)
-        
-        TweenService:Create(Object, TweenInfo.new(Time or 0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-            GroupTransparency = 0,
-            Position = originalPos
+        -- OPTIMIZATION: Removed Position Tween (Slide) to fix lag.
+        -- CanvasGroup re-rendering on position change causes heavy FPS drops.
+        -- We now only tween transparency with a smoother easing style.
+        TweenService:Create(Object, TweenInfo.new(Time or 0.25, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
+            GroupTransparency = 0
         }):Play()
     else
-        -- Fallback for non-canvas objects (like Groupboxes frames)
-        -- We just tween Transparency of background
-        local targetColor = Object.BackgroundColor3
-        -- Object.BackgroundTransparency = 1
-        -- TweenService:Create(Object, TweenInfo.new(Time or 0.3), {BackgroundTransparency = 0}):Play()
+        -- Fallback for frames
+        local t = Object.Transparency
+        Object.BackgroundTransparency = 1
+        TweenService:Create(Object, TweenInfo.new(Time or 0.25, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
+            BackgroundTransparency = 0
+        }):Play()
     end
 end
 
@@ -271,15 +270,16 @@ function Library:Notify(Title, Content, Duration)
     CLab.TextColor3 = Library.Theme.TextDark
     CLab.TextXAlignment = Enum.TextXAlignment.Left
 
-    TweenService:Create(Wrapper, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Size = UDim2.new(1, 0, 0, 50)}):Play()
-    TweenService:Create(Box, TweenInfo.new(0.4, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Position = UDim2.new(0, 0, 0, 0)}):Play()
+    -- Smoother notification animation
+    TweenService:Create(Wrapper, TweenInfo.new(0.3, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {Size = UDim2.new(1, 0, 0, 50)}):Play()
+    TweenService:Create(Box, TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Position = UDim2.new(0, 0, 0, 0)}):Play()
 
     task.delay(Duration, function()
         if not Box or not Wrapper then return end
-        local OutTween = TweenService:Create(Box, TweenInfo.new(0.4, Enum.EasingStyle.Back, Enum.EasingDirection.In), {Position = UDim2.new(1, 50, 0, 0)})
+        local OutTween = TweenService:Create(Box, TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.In), {Position = UDim2.new(1, 50, 0, 0)})
         OutTween:Play()
         OutTween.Completed:Wait()
-        local ShrinkTween = TweenService:Create(Wrapper, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Size = UDim2.new(1, 0, 0, 0)})
+        local ShrinkTween = TweenService:Create(Wrapper, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Size = UDim2.new(1, 0, 0, 0)})
         ShrinkTween:Play()
         ShrinkTween.Completed:Wait()
         Wrapper:Destroy()
@@ -903,7 +903,7 @@ function Library:Window(TitleText)
                 
                 -- [UPDATED] Groupbox Entry Animation
                 Box.BackgroundTransparency = 1 
-                TweenService:Create(Box, TweenInfo.new(0.4, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {BackgroundTransparency = 0}):Play()
+                TweenService:Create(Box, TweenInfo.new(0.3, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {BackgroundTransparency = 0}):Play()
                 
                 local HeaderOffset = 10
                 if IconId then
@@ -1325,11 +1325,11 @@ function Library:Window(TitleText)
 
                     local function Set(v)
                         Library.Flags[Flag]=v
-                        TweenService:Create(Cir,TweenInfo.new(0.15),{Position=v and UDim2.new(1,-16,0.5,-7) or UDim2.new(0,2,0.5,-7)}):Play()
+                        TweenService:Create(Cir,TweenInfo.new(0.2, Enum.EasingStyle.Sine),{Position=v and UDim2.new(1,-16,0.5,-7) or UDim2.new(0,2,0.5,-7)}):Play()
                         if v then
-                            TweenService:Create(T,TweenInfo.new(0.15),{BackgroundColor3=Library.Theme.Accent}):Play()
+                            TweenService:Create(T,TweenInfo.new(0.2, Enum.EasingStyle.Sine),{BackgroundColor3=Library.Theme.Accent}):Play()
                         else
-                            TweenService:Create(T,TweenInfo.new(0.15),{BackgroundColor3=Library.Theme.ItemBackground}):Play()
+                            TweenService:Create(T,TweenInfo.new(0.2, Enum.EasingStyle.Sine),{BackgroundColor3=Library.Theme.ItemBackground}):Play()
                         end
                         pcall(Callback,v)
                     end
@@ -1404,11 +1404,11 @@ function Library:Window(TitleText)
                                 math.min(Library.Theme.ItemBackground.B * 255 + 20, 255)
                             )
                         end
-                        TweenService:Create(Box, TweenInfo.new(0.2), {BackgroundColor3 = targetColor}):Play()
+                        TweenService:Create(Box, TweenInfo.new(0.2, Enum.EasingStyle.Sine), {BackgroundColor3 = targetColor}):Play()
                         
                         if not Library.Flags[Flag] then
                              local txtColor = IsHovering and Library.Theme.Text or Library.Theme.TextDark
-                             TweenService:Create(Label, TweenInfo.new(0.2), {TextColor3 = txtColor}):Play()
+                             TweenService:Create(Label, TweenInfo.new(0.2, Enum.EasingStyle.Sine), {TextColor3 = txtColor}):Play()
                         end
                     end
 
