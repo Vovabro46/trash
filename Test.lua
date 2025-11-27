@@ -39,62 +39,128 @@ local Library = {
         Header         = Color3.fromRGB(100, 100, 100)
     },
     ThemePresets = {
-        ["Default"] = {
-            Background     = Color3.fromRGB(15, 15, 15),
-            Sidebar        = Color3.fromRGB(20, 20, 20),
-            Groupbox       = Color3.fromRGB(25, 25, 25),
-            ItemBackground = Color3.fromRGB(35, 35, 35),
-            Outline        = Color3.fromRGB(45, 45, 45),
-            Accent         = Color3.fromRGB(255, 40, 40),
-            Text           = Color3.fromRGB(235, 235, 235),
-            TextDark       = Color3.fromRGB(140, 140, 140),
-            Header         = Color3.fromRGB(100, 100, 100)
-        },
-        ["Light"] = {
-            Background     = Color3.fromRGB(240, 240, 240),
-            Sidebar        = Color3.fromRGB(225, 225, 225),
-            Groupbox       = Color3.fromRGB(255, 255, 255),
-            ItemBackground = Color3.fromRGB(245, 245, 245),
-            Outline        = Color3.fromRGB(200, 200, 200),
-            Accent         = Color3.fromRGB(0, 120, 215),
-            Text           = Color3.fromRGB(20, 20, 20),
-            TextDark       = Color3.fromRGB(100, 100, 100),
-            Header         = Color3.fromRGB(80, 80, 80)
-        },
-        ["Midnight"] = {
-            Background     = Color3.fromRGB(10, 10, 20),
-            Sidebar        = Color3.fromRGB(15, 15, 30),
-            Groupbox       = Color3.fromRGB(20, 20, 40),
-            ItemBackground = Color3.fromRGB(25, 25, 50),
-            Outline        = Color3.fromRGB(40, 40, 70),
-            Accent         = Color3.fromRGB(80, 140, 255),
-            Text           = Color3.fromRGB(220, 230, 255),
-            TextDark       = Color3.fromRGB(120, 130, 160),
-            Header         = Color3.fromRGB(90, 100, 130)
-        },
-        ["Forest"] = {
-            Background     = Color3.fromRGB(15, 20, 15),
-            Sidebar        = Color3.fromRGB(20, 25, 20),
-            Groupbox       = Color3.fromRGB(25, 30, 25),
-            ItemBackground = Color3.fromRGB(30, 35, 30),
-            Outline        = Color3.fromRGB(45, 60, 45),
-            Accent         = Color3.fromRGB(80, 200, 80),
-            Text           = Color3.fromRGB(235, 245, 235),
-            TextDark       = Color3.fromRGB(140, 160, 140),
-            Header         = Color3.fromRGB(100, 120, 100)
-        },
-        ["Amethyst"] = {
-            Background     = Color3.fromRGB(20, 15, 20),
-            Sidebar        = Color3.fromRGB(25, 20, 25),
-            Groupbox       = Color3.fromRGB(30, 25, 30),
-            ItemBackground = Color3.fromRGB(40, 30, 40),
-            Outline        = Color3.fromRGB(60, 45, 60),
-            Accent         = Color3.fromRGB(180, 80, 255),
-            Text           = Color3.fromRGB(245, 235, 245),
-            TextDark       = Color3.fromRGB(160, 140, 160),
-            Header         = Color3.fromRGB(120, 100, 120)
-        }
+    ["Default"] = {
+        Background     = Color3.fromRGB(15, 15, 15),
+        Sidebar        = Color3.fromRGB(20, 20, 20),
+        Groupbox       = Color3.fromRGB(25, 25, 25),
+        ItemBackground = Color3.fromRGB(35, 35, 35),
+        Outline        = Color3.fromRGB(45, 45, 45),
+        Accent         = Color3.fromRGB(255, 40, 40),
+        Text           = Color3.fromRGB(235, 235, 235),
+        TextDark       = Color3.fromRGB(140, 140, 140),
+        Header         = Color3.fromRGB(100, 100, 100)
+    },
+    ["Light"] = {
+        Background     = Color3.fromRGB(240, 240, 240),
+        Sidebar        = Color3.fromRGB(225, 225, 225),
+        Groupbox       = Color3.fromRGB(255, 255, 255),
+        ItemBackground = Color3.fromRGB(245, 245, 245),
+        Outline        = Color3.fromRGB(200, 200, 200),
+        Accent         = Color3.fromRGB(0, 120, 215),
+        Text           = Color3.fromRGB(20, 20, 20),
+        TextDark       = Color3.fromRGB(100, 100, 100),
+        Header         = Color3.fromRGB(80, 80, 80)
+    },
+    ["Midnight"] = {
+        Background     = Color3.fromRGB(10, 10, 20),
+        Sidebar        = Color3.fromRGB(15, 15, 30),
+        Groupbox       = Color3.fromRGB(20, 20, 40),
+        ItemBackground = Color3.fromRGB(25, 25, 50),
+        Outline        = Color3.fromRGB(40, 40, 70),
+        Accent         = Color3.fromRGB(80, 140, 255),
+        Text           = Color3.fromRGB(220, 230, 255),
+        TextDark       = Color3.fromRGB(120, 130, 160),
+        Header         = Color3.fromRGB(90, 100, 130)
+    },
+    ["Forest"] = {
+        Background     = Color3.fromRGB(15, 20, 15),
+        Sidebar        = Color3.fromRGB(20, 25, 20),
+        Groupbox       = Color3.fromRGB(25, 30, 25),
+        ItemBackground = Color3.fromRGB(30, 35, 30),
+        Outline        = Color3.fromRGB(45, 60, 45),
+        Accent         = Color3.fromRGB(80, 200, 80),
+        Text           = Color3.fromRGB(235, 245, 235),
+        TextDark       = Color3.fromRGB(140, 160, 140),
+        Header         = Color3.fromRGB(100, 120, 100)
+    },
+    ["Amethyst"] = {
+        Background     = Color3.fromRGB(20, 15, 20),
+        Sidebar        = Color3.fromRGB(25, 20, 25),
+        Groupbox       = Color3.fromRGB(30, 25, 30),
+        ItemBackground = Color3.fromRGB(40, 30, 40),
+        Outline        = Color3.fromRGB(60, 45, 60),
+        Accent         = Color3.fromRGB(180, 80, 255),
+        Text           = Color3.fromRGB(245, 235, 245),
+        TextDark       = Color3.fromRGB(160, 140, 160),
+        Header         = Color3.fromRGB(120, 100, 120)
+    },
+    ["Sunset"] = {
+        Background     = Color3.fromRGB(20, 15, 10),
+        Sidebar        = Color3.fromRGB(30, 20, 15),
+        Groupbox       = Color3.fromRGB(40, 25, 20),
+        ItemBackground = Color3.fromRGB(50, 30, 25),
+        Outline        = Color3.fromRGB(70, 45, 40),
+        Accent         = Color3.fromRGB(255, 100, 50),
+        Text           = Color3.fromRGB(255, 235, 220),
+        TextDark       = Color3.fromRGB(180, 140, 120),
+        Header         = Color3.fromRGB(150, 110, 90)
+    },
+    ["Ocean"] = {
+        Background     = Color3.fromRGB(10, 15, 20),
+        Sidebar        = Color3.fromRGB(15, 20, 30),
+        Groupbox       = Color3.fromRGB(20, 25, 40),
+        ItemBackground = Color3.fromRGB(25, 30, 50),
+        Outline        = Color3.fromRGB(40, 50, 70),
+        Accent         = Color3.fromRGB(0, 200, 255),
+        Text           = Color3.fromRGB(220, 240, 255),
+        TextDark       = Color3.fromRGB(120, 150, 180),
+        Header         = Color3.fromRGB(90, 120, 150)
+    },
+    ["Crimson"] = {
+        Background     = Color3.fromRGB(20, 10, 10),
+        Sidebar        = Color3.fromRGB(30, 15, 15),
+        Groupbox       = Color3.fromRGB(40, 20, 20),
+        ItemBackground = Color3.fromRGB(50, 25, 25),
+        Outline        = Color3.fromRGB(70, 35, 35),
+        Accent         = Color3.fromRGB(220, 20, 60),
+        Text           = Color3.fromRGB(255, 220, 220),
+        TextDark       = Color3.fromRGB(180, 120, 120),
+        Header         = Color3.fromRGB(150, 90, 90)
+    },
+    ["Terminal"] = {
+        Background     = Color3.fromRGB(0, 10, 0),
+        Sidebar        = Color3.fromRGB(0, 15, 0),
+        Groupbox       = Color3.fromRGB(0, 20, 0),
+        ItemBackground = Color3.fromRGB(0, 25, 0),
+        Outline        = Color3.fromRGB(0, 40, 0),
+        Accent         = Color3.fromRGB(0, 255, 0),
+        Text           = Color3.fromRGB(200, 255, 200),
+        TextDark       = Color3.fromRGB(0, 150, 0),
+        Header         = Color3.fromRGB(0, 120, 0)
+    },
+    ["Royal Gold"] = {
+        Background     = Color3.fromRGB(20, 15, 5),
+        Sidebar        = Color3.fromRGB(30, 20, 10),
+        Groupbox       = Color3.fromRGB(40, 25, 15),
+        ItemBackground = Color3.fromRGB(50, 30, 20),
+        Outline        = Color3.fromRGB(70, 45, 30),
+        Accent         = Color3.fromRGB(255, 215, 0),
+        Text           = Color3.fromRGB(255, 245, 200),
+        TextDark       = Color3.fromRGB(180, 160, 100),
+        Header         = Color3.fromRGB(150, 130, 70)
+    },
+    ["Arctic"] = {
+        Background     = Color3.fromRGB(230, 240, 255),
+        Sidebar        = Color3.fromRGB(210, 225, 245),
+        Groupbox       = Color3.fromRGB(250, 250, 255),
+        ItemBackground = Color3.fromRGB(240, 245, 255),
+        Outline        = Color3.fromRGB(180, 200, 230),
+        Accent         = Color3.fromRGB(0, 100, 200),
+        Text           = Color3.fromRGB(10, 20, 40),
+        TextDark       = Color3.fromRGB(100, 120, 150),
+        Header         = Color3.fromRGB(70, 90, 120)
     }
+}
 }
 
 --// THEME SYSTEM //--
