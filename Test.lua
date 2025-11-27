@@ -24,6 +24,7 @@ local Library = {
         Enabled = true,
         Text = "RedOnyx"
     },
+    --// T H E M E S //--
     Theme = {
         Background = Color3.fromRGB(15, 15, 15),
         Sidebar    = Color3.fromRGB(20, 20, 20),
@@ -33,6 +34,58 @@ local Library = {
         Text       = Color3.fromRGB(235, 235, 235),
         TextDark   = Color3.fromRGB(140, 140, 140),
         Header     = Color3.fromRGB(100, 100, 100)
+    },
+    ThemePresets = {
+        ["Default"] = {
+            Background = Color3.fromRGB(15, 15, 15),
+            Sidebar    = Color3.fromRGB(20, 20, 20),
+            Groupbox   = Color3.fromRGB(25, 25, 25),
+            Outline    = Color3.fromRGB(45, 45, 45),
+            Accent     = Color3.fromRGB(255, 40, 40),
+            Text       = Color3.fromRGB(235, 235, 235),
+            TextDark   = Color3.fromRGB(140, 140, 140),
+            Header     = Color3.fromRGB(100, 100, 100)
+        },
+        ["Light"] = {
+            Background = Color3.fromRGB(240, 240, 240),
+            Sidebar    = Color3.fromRGB(225, 225, 225),
+            Groupbox   = Color3.fromRGB(255, 255, 255),
+            Outline    = Color3.fromRGB(200, 200, 200),
+            Accent     = Color3.fromRGB(0, 120, 215),
+            Text       = Color3.fromRGB(20, 20, 20),
+            TextDark   = Color3.fromRGB(100, 100, 100),
+            Header     = Color3.fromRGB(80, 80, 80)
+        },
+        ["Midnight"] = {
+            Background = Color3.fromRGB(10, 10, 20),
+            Sidebar    = Color3.fromRGB(15, 15, 30),
+            Groupbox   = Color3.fromRGB(20, 20, 40),
+            Outline    = Color3.fromRGB(40, 40, 70),
+            Accent     = Color3.fromRGB(80, 140, 255),
+            Text       = Color3.fromRGB(220, 230, 255),
+            TextDark   = Color3.fromRGB(120, 130, 160),
+            Header     = Color3.fromRGB(90, 100, 130)
+        },
+        ["Forest"] = {
+            Background = Color3.fromRGB(15, 20, 15),
+            Sidebar    = Color3.fromRGB(20, 25, 20),
+            Groupbox   = Color3.fromRGB(25, 30, 25),
+            Outline    = Color3.fromRGB(45, 60, 45),
+            Accent     = Color3.fromRGB(80, 200, 80),
+            Text       = Color3.fromRGB(235, 245, 235),
+            TextDark   = Color3.fromRGB(140, 160, 140),
+            Header     = Color3.fromRGB(100, 120, 100)
+        },
+        ["Amethyst"] = {
+            Background = Color3.fromRGB(20, 15, 20),
+            Sidebar    = Color3.fromRGB(25, 20, 25),
+            Groupbox   = Color3.fromRGB(30, 25, 30),
+            Outline    = Color3.fromRGB(60, 45, 60),
+            Accent     = Color3.fromRGB(180, 80, 255),
+            Text       = Color3.fromRGB(245, 235, 245),
+            TextDark   = Color3.fromRGB(160, 140, 160),
+            Header     = Color3.fromRGB(120, 100, 120)
+        }
     }
 }
 
@@ -236,6 +289,17 @@ function Library:UpdateTheme(Key, Col)
     end
 end
 
+function Library:SetTheme(ThemeName)
+    local Preset = Library.ThemePresets[ThemeName]
+    if not Preset then 
+        warn("Theme preset not found: "..tostring(ThemeName))
+        return 
+    end
+    for Key, Color in pairs(Preset) do
+        Library:UpdateTheme(Key, Color)
+    end
+end
+
 local function MakeDraggable(dragFrame, moveFrame)
     local dragging, dragInput, dragStart, startPos
     dragFrame.InputBegan:Connect(function(input)
@@ -332,17 +396,17 @@ function Library:Window(TitleText)
     Library:RegisterTheme(MainStroke, "Color", "Outline")
     Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0, 4)
     
-    --// RESIZER HANDLE (MOBILE FIXED, CORNER SNAP) //--
+    --// RESIZER HANDLE //--
     local Resizer = Instance.new("TextButton")
     Resizer.Name = "Resizer"
-    Resizer.Size = UDim2.new(0, 30, 0, 30) -- Удобный размер для пальца
-    Resizer.AnchorPoint = Vector2.new(1, 1) -- Точка привязки в правом нижнем углу кнопки
-    Resizer.Position = UDim2.new(1, 0, 1, 0) -- Позиция в правом нижнем углу окна (без отступа)
+    Resizer.Size = UDim2.new(0, 30, 0, 30)
+    Resizer.AnchorPoint = Vector2.new(1, 1)
+    Resizer.Position = UDim2.new(1, 0, 1, 0)
     Resizer.BackgroundTransparency = 1
     Resizer.Text = "◢"
-    Resizer.TextSize = 16 -- Текст чуть меньше, чтобы быть аккуратным
-    Resizer.TextXAlignment = Enum.TextXAlignment.Right -- Прижимаем текст вправо
-    Resizer.TextYAlignment = Enum.TextYAlignment.Bottom -- Прижимаем текст вниз
+    Resizer.TextSize = 16
+    Resizer.TextXAlignment = Enum.TextXAlignment.Right
+    Resizer.TextYAlignment = Enum.TextYAlignment.Bottom 
     Resizer.Font = Enum.Font.Gotham
     Resizer.Parent = MainFrame
     Resizer.ZIndex = 200 
@@ -386,32 +450,6 @@ function Library:Window(TitleText)
         end
     end)
     --// END RESIZER //--
-
-    --// MINIMIZE BUTTON //--
-    local MinimizeBtn = Instance.new("TextButton")
-    MinimizeBtn.Name = "Minimize"
-    MinimizeBtn.Size = UDim2.new(0, 30, 0, 30)
-    MinimizeBtn.Position = UDim2.new(1, -35, 0, 5) 
-    MinimizeBtn.BackgroundTransparency = 1
-    MinimizeBtn.Text = "-"
-    MinimizeBtn.Font = Enum.Font.GothamBold
-    MinimizeBtn.TextSize = 24
-    MinimizeBtn.Parent = MainFrame
-    MinimizeBtn.ZIndex = 200 
-    Library:RegisterTheme(MinimizeBtn, "TextColor3", "TextDark")
-
-    AddTooltip(MinimizeBtn, "Minimize")
-
-    MinimizeBtn.MouseEnter:Connect(function()
-        TweenService:Create(MinimizeBtn, TweenInfo.new(0.2), {TextColor3 = Library.Theme.Accent}):Play()
-    end)
-    MinimizeBtn.MouseLeave:Connect(function()
-        TweenService:Create(MinimizeBtn, TweenInfo.new(0.2), {TextColor3 = Library.Theme.TextDark}):Play()
-    end)
-    MinimizeBtn.MouseButton1Click:Connect(function()
-        MainFrame.Visible = false
-    end)
-    --// END MINIMIZE //--
 
     --// SIDEBAR //--
     local Sidebar = Instance.new("Frame")
