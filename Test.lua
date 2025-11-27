@@ -27,7 +27,6 @@ local Library = {
     GlobalSettings = {
         Animations = true
     },
-    --// T H E M E S //--
     Theme = {
         Background     = Color3.fromRGB(15, 15, 15),
         Sidebar        = Color3.fromRGB(20, 20, 20),
@@ -126,7 +125,6 @@ function Library:SetTheme(ThemeName)
     end
 end
 
---// HELPER FOR ANIMATIONS (OPTIMIZED) //--
 function Library:FadeIn(Object, Time)
     if not Library.GlobalSettings.Animations then 
         if Object:IsA("CanvasGroup") then Object.GroupTransparency = 0 end
@@ -137,14 +135,10 @@ function Library:FadeIn(Object, Time)
     Object.Visible = true
     if Object:IsA("CanvasGroup") then
         Object.GroupTransparency = 1
-        -- OPTIMIZATION: Removed Position Tween (Slide) to fix lag.
-        -- CanvasGroup re-rendering on position change causes heavy FPS drops.
-        -- We now only tween transparency with a smoother easing style.
         TweenService:Create(Object, TweenInfo.new(Time or 0.25, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
             GroupTransparency = 0
         }):Play()
     else
-        -- Fallback for frames
         local t = Object.Transparency
         Object.BackgroundTransparency = 1
         TweenService:Create(Object, TweenInfo.new(Time or 0.25, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
@@ -270,7 +264,6 @@ function Library:Notify(Title, Content, Duration)
     CLab.TextColor3 = Library.Theme.TextDark
     CLab.TextXAlignment = Enum.TextXAlignment.Left
 
-    -- Smoother notification animation
     TweenService:Create(Wrapper, TweenInfo.new(0.3, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {Size = UDim2.new(1, 0, 0, 50)}):Play()
     TweenService:Create(Box, TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Position = UDim2.new(0, 0, 0, 0)}):Play()
 
@@ -490,7 +483,6 @@ function Library:Window(TitleText)
             MainFrame.Size = UDim2.new(0, newX, 0, newY)
         end
     end)
-    --// END RESIZER //--
 
     --// SIDEBAR //--
     local Sidebar = Instance.new("Frame")
@@ -517,7 +509,7 @@ function Library:Window(TitleText)
     SearchBar.Name = "SearchBar"
     SearchBar.Size = UDim2.new(1, -20, 0, 30)
     SearchBar.Position = UDim2.new(0, 10, 0, 55)
-    SearchBar.BackgroundColor3 = Library.Theme.ItemBackground -- Fixed: Use Theme Variable
+    SearchBar.BackgroundColor3 = Library.Theme.ItemBackground
     SearchBar.BorderSizePixel = 0
     SearchBar.PlaceholderText = "Search..."
     SearchBar.Text = ""
@@ -532,8 +524,7 @@ function Library:Window(TitleText)
     SBStroke.Color = Library.Theme.Outline
     SBStroke.Thickness = 1
     SBStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-    
-    -- Register Theme for SearchBar
+   
     Library:RegisterTheme(SearchBar, "BackgroundColor3", "ItemBackground")
 
     --// TAB CONTAINER //--
@@ -743,12 +734,11 @@ function Library:Window(TitleText)
         Ind.ZIndex = 5 
         Library:RegisterTheme(Ind, "BackgroundColor3", "Accent")
 
-        -- [UPDATED] Use CanvasGroup for animation
         local Page = Instance.new("CanvasGroup")
         Page.Name = Name.."_Page"
         Page.Size = UDim2.new(1, 0, 1, 0)
         Page.BackgroundTransparency = 1
-        Page.GroupTransparency = 1 -- Start invisible for animation
+        Page.GroupTransparency = 1
         Page.Visible = false
         Page.Parent = PagesArea
         
@@ -776,7 +766,7 @@ function Library:Window(TitleText)
             Title.TextColor3 = Library.Theme.Text
             if TabIcon then TabIcon.ImageColor3 = Library.Theme.Text end
             Ind.Visible = true
-            Library:FadeIn(Page) -- Initial fade in
+            Library:FadeIn(Page)
         end
 
         Btn.MouseButton1Click:Connect(function()
@@ -792,7 +782,6 @@ function Library:Window(TitleText)
                 end
             end
             
-            -- [UPDATED] Hide all pages with animation reset
             for _,v in pairs(PagesArea:GetChildren()) do 
                 if v:IsA("CanvasGroup") and v ~= Page then
                     v.Visible = false 
@@ -806,7 +795,7 @@ function Library:Window(TitleText)
             end
             
             Ind.Visible = true
-            Library:FadeIn(Page) -- Animate new page
+            Library:FadeIn(Page)
         end)
         
         local TabFuncs = {}
@@ -823,7 +812,6 @@ function Library:Window(TitleText)
             SBtn.Parent = SubTabArea
             Library:RegisterTheme(SBtn, "TextColor3", "TextDark")
             
-            -- [UPDATED] Use CanvasGroup for animation
             local SubPage = Instance.new("CanvasGroup")
             SubPage.Name = SubName.."_SubPage"
             SubPage.Size = UDim2.new(1,0,1,0)
@@ -871,7 +859,7 @@ function Library:Window(TitleText)
             if FirstSubTab then
                 FirstSubTab = false
                 SBtn.TextColor3 = Library.Theme.Accent
-                Library:FadeIn(SubPage) -- Animate on load
+                Library:FadeIn(SubPage)
                 table.insert(ThemeObjects["Accent"], {Obj = SBtn, Prop = "TextColor3", CustomCheck = function() return SubPage.Visible end})
             else
                 table.insert(ThemeObjects["TextDark"], {Obj = SBtn, Prop = "TextColor3", CustomCheck = function() return not SubPage.Visible end})
@@ -884,7 +872,7 @@ function Library:Window(TitleText)
                 for _, v in pairs(SubTabArea:GetChildren()) do 
                     if v:IsA("TextButton") then TweenService:Create(v, TweenInfo.new(0.2), {TextColor3 = Library.Theme.TextDark}):Play() end 
                 end
-                Library:FadeIn(SubPage) -- Animate switch
+                Library:FadeIn(SubPage)
                 TweenService:Create(SBtn, TweenInfo.new(0.2), {TextColor3 = Library.Theme.Accent}):Play()
             end)
 
@@ -901,7 +889,6 @@ function Library:Window(TitleText)
                 S.Thickness=1
                 Library:RegisterTheme(S,"Color","Outline")
                 
-                -- [UPDATED] Groupbox Entry Animation
                 Box.BackgroundTransparency = 1 
                 TweenService:Create(Box, TweenInfo.new(0.3, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {BackgroundTransparency = 0}):Play()
                 
@@ -998,7 +985,7 @@ function Library:Window(TitleText)
 
                     if IsFramed then
                         Instance.new("UICorner", NodeFrame).CornerRadius = UDim.new(0, 4)
-                        Library:RegisterTheme(NodeFrame, "BackgroundColor3", "ItemBackground") -- Theme Fixed
+                        Library:RegisterTheme(NodeFrame, "BackgroundColor3", "ItemBackground")
                     end
             
                     local NodeLayout = Instance.new("UIListLayout", NodeFrame)
@@ -1281,7 +1268,7 @@ function Library:Window(TitleText)
                     RegisterItem(Head, F)
                 end
 
-                -- // TOGGLE STYLE: CLASSIC //
+                -- // TOGGLE //
                 function BoxFuncs:AddToggle(Config)
                     local Text = Config.Title or "Toggle"
                     local Default = Config.Default or false
@@ -1312,7 +1299,6 @@ function Library:Window(TitleText)
                     local T=Instance.new("Frame",F)
                     T.Size=UDim2.new(0,34,0,18)
                     T.Position=UDim2.new(1,-34,0.5,-9)
-                    -- Toggle background
                     T.BackgroundColor3=Default and Library.Theme.Accent or Library.Theme.ItemBackground
                     Library:RegisterTheme(T, "BackgroundColor3", Default and "Accent" or "ItemBackground")
                     
@@ -1340,7 +1326,7 @@ function Library:Window(TitleText)
                     RegisterItem(Text, F)
                 end
 
-                -- // CHECKBOX STYLE: IMGUI (Smaller) //
+                -- // CHECKBOX //
                 function BoxFuncs:AddCheckbox(Config)
                     local Text = Config.Title or "Checkbox"
                     local Default = Config.Default or false
@@ -1350,15 +1336,14 @@ function Library:Window(TitleText)
                     local Risky = Config.Risky
 
                     local F = Instance.new("TextButton", GetContainer())
-                    F.Size = UDim2.new(1, 0, 0, 20) -- Reduced height
+                    F.Size = UDim2.new(1, 0, 0, 20)
                     F.BackgroundTransparency = 1
                     F.Text = ""
                     if Desc then AddTooltip(F, Desc) end
 
-                    -- Square Box (Smaller: 16x16)
                     local Box = Instance.new("Frame", F)
-                    Box.Size = UDim2.new(0, 16, 0, 16)
-                    Box.Position = UDim2.new(0, 0, 0.5, -8) -- Centered
+                    Box.Size = UDim2.new(0, 14, 0, 14)
+                    Box.Position = UDim2.new(0, 0, 0.5, -8)
                     Box.BackgroundColor3 = Library.Theme.ItemBackground
                     Library:RegisterTheme(Box, "BackgroundColor3", "ItemBackground") 
                     
@@ -1366,18 +1351,16 @@ function Library:Window(TitleText)
                     BoxStroke.Color = Library.Theme.Outline
                     BoxStroke.Thickness = 1
                     Library:RegisterTheme(BoxStroke, "Color", "Outline")
-
-                    -- Checkmark (Image)
+                    
                     local Check = Instance.new("ImageLabel", Box)
                     Check.Size = UDim2.new(1, -2, 1, -2)
                     Check.Position = UDim2.new(0, 1, 0, 1)
                     Check.BackgroundTransparency = 1
                     Check.Image = "rbxassetid://3944680095" 
-                    Check.ImageColor3 = Library.Theme.Accent -- Uses Accent Color
-                    Library:RegisterTheme(Check, "ImageColor3", "Accent") -- Register theme
+                    Check.ImageColor3 = Library.Theme.Accent
+                    Library:RegisterTheme(Check, "ImageColor3", "Accent")
                     Check.Visible = Default
 
-                    -- Text Label
                     local Label = Instance.new("TextLabel", F)
                     Label.Size = UDim2.new(1, -25, 1, 0)
                     Label.Position = UDim2.new(0, 25, 0, 0)
@@ -1394,7 +1377,6 @@ function Library:Window(TitleText)
                         Library:RegisterTheme(Label, "TextColor3", "TextDark")
                     end
 
-                    -- Hover Animation Logic
                     local function UpdateVisuals(IsHovering)
                         local targetColor = Library.Theme.ItemBackground
                         if IsHovering then
@@ -1472,7 +1454,7 @@ function Library:Window(TitleText)
                     B.Size=UDim2.new(1,0,0,5)
                     B.Position=UDim2.new(0,0,0,25)
                     B.BackgroundColor3=Library.Theme.ItemBackground
-                    Library:RegisterTheme(B, "BackgroundColor3", "ItemBackground") -- Theme fix
+                    Library:RegisterTheme(B, "BackgroundColor3", "ItemBackground")
                     Instance.new("UICorner",B).CornerRadius=UDim.new(1,0)
                     local Fil=Instance.new("Frame",B)
                     Fil.Size=UDim2.new((Def-Min)/(Max-Min),0,1,0)
@@ -1620,7 +1602,7 @@ function Library:Window(TitleText)
                     local B=Instance.new("TextButton",F)
                     B.Size=UDim2.new(1,0,0,22)
                     B.Position=UDim2.new(0,0,0,18)
-                    B.BackgroundColor3=Library.Theme.ItemBackground -- Theme fix
+                    B.BackgroundColor3=Library.Theme.ItemBackground
                     Library:RegisterTheme(B, "BackgroundColor3", "ItemBackground")
                     B.Font=Enum.Font.Gotham
                     B.TextSize=12
@@ -1630,7 +1612,7 @@ function Library:Window(TitleText)
                     
                     local List=Instance.new("ScrollingFrame",ScreenGui)
                     List.Visible=false
-                    List.BackgroundColor3=Library.Theme.ItemBackground -- Theme fix
+                    List.BackgroundColor3=Library.Theme.ItemBackground
                     Library:RegisterTheme(List, "BackgroundColor3", "ItemBackground")
                     List.BorderSizePixel=0
                     List.ZIndex=200 
@@ -1752,7 +1734,7 @@ function Library:Window(TitleText)
                     local B=Instance.new("TextButton",F)
                     B.Size=UDim2.new(0,60,0,18)
                     B.Position=UDim2.new(1,-60,0.5,-9)
-                    B.BackgroundColor3=Library.Theme.ItemBackground -- Theme fix
+                    B.BackgroundColor3=Library.Theme.ItemBackground
                     Library:RegisterTheme(B, "BackgroundColor3", "ItemBackground")
                     B.Text=Def.Name
                     B.Font=Enum.Font.Gotham
@@ -1790,7 +1772,7 @@ function Library:Window(TitleText)
                     local B=Instance.new("TextBox",F)
                     B.Size=UDim2.new(1,0,0,20)
                     B.Position=UDim2.new(0,0,0,18)
-                    B.BackgroundColor3=Library.Theme.ItemBackground -- Theme fix
+                    B.BackgroundColor3=Library.Theme.ItemBackground
                     Library:RegisterTheme(B, "BackgroundColor3", "ItemBackground")
                     B.Text=""
                     B.PlaceholderText=Ph
@@ -1816,7 +1798,7 @@ function Library:Window(TitleText)
                     
                     local B=Instance.new("TextButton",F)
                     B.Size=UDim2.new(1,0,1,0)
-                    B.BackgroundColor3=Library.Theme.ItemBackground -- Theme fix
+                    B.BackgroundColor3=Library.Theme.ItemBackground 
                     Library:RegisterTheme(B, "BackgroundColor3", "ItemBackground")
                     B.Text=Text
                     B.TextColor3=Library.Theme.Text
