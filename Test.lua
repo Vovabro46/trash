@@ -26,65 +26,71 @@ local Library = {
     },
     --// T H E M E S //--
     Theme = {
-        Background = Color3.fromRGB(15, 15, 15),
-        Sidebar    = Color3.fromRGB(20, 20, 20),
-        Groupbox   = Color3.fromRGB(25, 25, 25),
-        Outline    = Color3.fromRGB(45, 45, 45),
-        Accent     = Color3.fromRGB(255, 40, 40),
-        Text       = Color3.fromRGB(235, 235, 235),
-        TextDark   = Color3.fromRGB(140, 140, 140),
-        Header     = Color3.fromRGB(100, 100, 100)
+        Background     = Color3.fromRGB(15, 15, 15),
+        Sidebar        = Color3.fromRGB(20, 20, 20),
+        Groupbox       = Color3.fromRGB(25, 25, 25),
+        ItemBackground = Color3.fromRGB(35, 35, 35), -- Новый параметр для фона элементов
+        Outline        = Color3.fromRGB(45, 45, 45),
+        Accent         = Color3.fromRGB(255, 40, 40),
+        Text           = Color3.fromRGB(235, 235, 235),
+        TextDark       = Color3.fromRGB(140, 140, 140),
+        Header         = Color3.fromRGB(100, 100, 100)
     },
     ThemePresets = {
         ["Default"] = {
-            Background = Color3.fromRGB(15, 15, 15),
-            Sidebar    = Color3.fromRGB(20, 20, 20),
-            Groupbox   = Color3.fromRGB(25, 25, 25),
-            Outline    = Color3.fromRGB(45, 45, 45),
-            Accent     = Color3.fromRGB(255, 40, 40),
-            Text       = Color3.fromRGB(235, 235, 235),
-            TextDark   = Color3.fromRGB(140, 140, 140),
-            Header     = Color3.fromRGB(100, 100, 100)
+            Background     = Color3.fromRGB(15, 15, 15),
+            Sidebar        = Color3.fromRGB(20, 20, 20),
+            Groupbox       = Color3.fromRGB(25, 25, 25),
+            ItemBackground = Color3.fromRGB(35, 35, 35),
+            Outline        = Color3.fromRGB(45, 45, 45),
+            Accent         = Color3.fromRGB(255, 40, 40),
+            Text           = Color3.fromRGB(235, 235, 235),
+            TextDark       = Color3.fromRGB(140, 140, 140),
+            Header         = Color3.fromRGB(100, 100, 100)
         },
         ["Light"] = {
-            Background = Color3.fromRGB(240, 240, 240),
-            Sidebar    = Color3.fromRGB(225, 225, 225),
-            Groupbox   = Color3.fromRGB(255, 255, 255),
-            Outline    = Color3.fromRGB(200, 200, 200),
-            Accent     = Color3.fromRGB(0, 120, 215),
-            Text       = Color3.fromRGB(20, 20, 20),
-            TextDark   = Color3.fromRGB(100, 100, 100),
-            Header     = Color3.fromRGB(80, 80, 80)
+            Background     = Color3.fromRGB(240, 240, 240),
+            Sidebar        = Color3.fromRGB(225, 225, 225),
+            Groupbox       = Color3.fromRGB(255, 255, 255),
+            ItemBackground = Color3.fromRGB(245, 245, 245),
+            Outline        = Color3.fromRGB(200, 200, 200),
+            Accent         = Color3.fromRGB(0, 120, 215),
+            Text           = Color3.fromRGB(20, 20, 20),
+            TextDark       = Color3.fromRGB(100, 100, 100),
+            Header         = Color3.fromRGB(80, 80, 80)
         },
         ["Midnight"] = {
-            Background = Color3.fromRGB(10, 10, 20),
-            Sidebar    = Color3.fromRGB(15, 15, 30),
-            Groupbox   = Color3.fromRGB(20, 20, 40),
-            Outline    = Color3.fromRGB(40, 40, 70),
-            Accent     = Color3.fromRGB(80, 140, 255),
-            Text       = Color3.fromRGB(220, 230, 255),
-            TextDark   = Color3.fromRGB(120, 130, 160),
-            Header     = Color3.fromRGB(90, 100, 130)
+            Background     = Color3.fromRGB(10, 10, 20),
+            Sidebar        = Color3.fromRGB(15, 15, 30),
+            Groupbox       = Color3.fromRGB(20, 20, 40),
+            ItemBackground = Color3.fromRGB(25, 25, 50),
+            Outline        = Color3.fromRGB(40, 40, 70),
+            Accent         = Color3.fromRGB(80, 140, 255),
+            Text           = Color3.fromRGB(220, 230, 255),
+            TextDark       = Color3.fromRGB(120, 130, 160),
+            Header         = Color3.fromRGB(90, 100, 130)
         },
         ["Forest"] = {
-            Background = Color3.fromRGB(15, 20, 15),
-            Sidebar    = Color3.fromRGB(20, 25, 20),
-            Groupbox   = Color3.fromRGB(25, 30, 25),
-            Outline    = Color3.fromRGB(45, 60, 45),
-            Accent     = Color3.fromRGB(80, 200, 80),
-            Text       = Color3.fromRGB(235, 245, 235),
-            TextDark   = Color3.fromRGB(140, 160, 140),
-            Header     = Color3.fromRGB(100, 120, 100)
+            Background     = Color3.fromRGB(15, 20, 15),
+            Sidebar        = Color3.fromRGB(20, 25, 20),
+            Groupbox       = Color3.fromRGB(25, 30, 25),
+            ItemBackground = Color3.fromRGB(30, 35, 30),
+            Outline        = Color3.fromRGB(45, 60, 45),
+            Accent         = Color3.fromRGB(80, 200, 80),
+            Text           = Color3.fromRGB(235, 245, 235),
+            TextDark       = Color3.fromRGB(140, 160, 140),
+            Header         = Color3.fromRGB(100, 120, 100)
         },
         ["Amethyst"] = {
-            Background = Color3.fromRGB(20, 15, 20),
-            Sidebar    = Color3.fromRGB(25, 20, 25),
-            Groupbox   = Color3.fromRGB(30, 25, 30),
-            Outline    = Color3.fromRGB(60, 45, 60),
-            Accent     = Color3.fromRGB(180, 80, 255),
-            Text       = Color3.fromRGB(245, 235, 245),
-            TextDark   = Color3.fromRGB(160, 140, 160),
-            Header     = Color3.fromRGB(120, 100, 120)
+            Background     = Color3.fromRGB(20, 15, 20),
+            Sidebar        = Color3.fromRGB(25, 20, 25),
+            Groupbox       = Color3.fromRGB(30, 25, 30),
+            ItemBackground = Color3.fromRGB(40, 30, 40),
+            Outline        = Color3.fromRGB(60, 45, 60),
+            Accent         = Color3.fromRGB(180, 80, 255),
+            Text           = Color3.fromRGB(245, 235, 245),
+            TextDark       = Color3.fromRGB(160, 140, 160),
+            Header         = Color3.fromRGB(120, 100, 120)
         }
     }
 }
@@ -1214,6 +1220,7 @@ function Library:Window(TitleText)
                     RegisterItem(Head, F)
                 end
 
+                -- // TOGGLE STYLE: CLASSIC //
                 function BoxFuncs:AddToggle(Config)
                     local Text = Config.Title or "Toggle"
                     local Default = Config.Default or false
@@ -1244,7 +1251,10 @@ function Library:Window(TitleText)
                     local T=Instance.new("Frame",F)
                     T.Size=UDim2.new(0,34,0,18)
                     T.Position=UDim2.new(1,-34,0.5,-9)
-                    T.BackgroundColor3=Default and Library.Theme.Accent or Color3.fromRGB(50,50,50)
+                    -- Toggle background
+                    T.BackgroundColor3=Default and Library.Theme.Accent or Library.Theme.ItemBackground
+                    Library:RegisterTheme(T, "BackgroundColor3", Default and "Accent" or "ItemBackground")
+                    
                     Instance.new("UICorner",T).CornerRadius=UDim.new(1,0)
                     local Cir=Instance.new("Frame",T)
                     Cir.Size=UDim2.new(0,14,0,14)
@@ -1255,7 +1265,11 @@ function Library:Window(TitleText)
                     local function Set(v)
                         Library.Flags[Flag]=v
                         TweenService:Create(Cir,TweenInfo.new(0.15),{Position=v and UDim2.new(1,-16,0.5,-7) or UDim2.new(0,2,0.5,-7)}):Play()
-                        TweenService:Create(T,TweenInfo.new(0.15),{BackgroundColor3=v and Library.Theme.Accent or Color3.fromRGB(50,50,50)}):Play()
+                        if v then
+                            TweenService:Create(T,TweenInfo.new(0.15),{BackgroundColor3=Library.Theme.Accent}):Play()
+                        else
+                            TweenService:Create(T,TweenInfo.new(0.15),{BackgroundColor3=Library.Theme.ItemBackground}):Play()
+                        end
                         pcall(Callback,v)
                     end
                     Library.Items[Flag]={Set=Set}
@@ -1265,6 +1279,7 @@ function Library:Window(TitleText)
                     RegisterItem(Text, F)
                 end
 
+                -- // CHECKBOX STYLE: IMGUI //
                 function BoxFuncs:AddCheckbox(Config)
                     local Text = Config.Title or "Checkbox"
                     local Default = Config.Default or false
@@ -1273,60 +1288,91 @@ function Library:Window(TitleText)
                     local Desc = Config.Description
                     local Risky = Config.Risky
 
-                    local F=Instance.new("TextButton", GetContainer())
-                    F.Size=UDim2.new(1,0,0,20)
-                    F.BackgroundTransparency=1
-                    F.Text=""
+                    local F = Instance.new("TextButton", GetContainer())
+                    F.Size = UDim2.new(1, 0, 0, 24)
+                    F.BackgroundTransparency = 1
+                    F.Text = ""
                     if Desc then AddTooltip(F, Desc) end
 
-                    local Lb=Instance.new("TextLabel",F)
-                    Lb.Size=UDim2.new(1,-30,1,0)
-                    Lb.BackgroundTransparency=1
-                    Lb.Text=Text
-                    Lb.Font=Enum.Font.Gotham
-                    Lb.TextSize=12
-                    Lb.TextXAlignment=Enum.TextXAlignment.Left
-                    if Risky then
-                        Lb.TextColor3 = Color3.fromRGB(255, 80, 80)
+                    -- Square Box
+                    local Box = Instance.new("Frame", F)
+                    Box.Size = UDim2.new(0, 20, 0, 20)
+                    Box.Position = UDim2.new(0, 0, 0.5, -10)
+                    Box.BackgroundColor3 = Library.Theme.ItemBackground
+                    Library:RegisterTheme(Box, "BackgroundColor3", "ItemBackground") -- Dynamic BG
+                    
+                    local BoxStroke = Instance.new("UIStroke", Box)
+                    BoxStroke.Color = Library.Theme.Outline
+                    BoxStroke.Thickness = 1
+                    Library:RegisterTheme(BoxStroke, "Color", "Outline")
+
+                    -- Checkmark (Image)
+                    local Check = Instance.new("ImageLabel", Box)
+                    Check.Size = UDim2.new(1, -4, 1, -4)
+                    Check.Position = UDim2.new(0, 2, 0, 2)
+                    Check.BackgroundTransparency = 1
+                    Check.Image = "rbxassetid://3944680095" -- Standard checkmark asset
+                    Check.ImageColor3 = Color3.fromRGB(174, 139, 148) -- ImGui-like color
+                    Check.Visible = Default
+
+                    -- Text Label
+                    local Label = Instance.new("TextLabel", F)
+                    Label.Size = UDim2.new(1, -30, 1, 0)
+                    Label.Position = UDim2.new(0, 30, 0, 0)
+                    Label.BackgroundTransparency = 1
+                    Label.Text = Text
+                    Label.Font = Enum.Font.Gotham
+                    Label.TextSize = 13
+                    Label.TextXAlignment = Enum.TextXAlignment.Left
+                    
+                    -- Color Logic based on C++ ref:
+                    -- Inactive: 105, 105, 105 (TextDark)
+                    -- Active/Hover: 255, 255, 255 (Text)
+                    Label.TextColor3 = Default and Library.Theme.Text or Library.Theme.TextDark
+                    if Default then
+                        Library:RegisterTheme(Label, "TextColor3", "Text")
                     else
-                        Library:RegisterTheme(Lb,"TextColor3","Text")
+                        Library:RegisterTheme(Label, "TextColor3", "TextDark")
                     end
 
-                    local Outer=Instance.new("Frame",F)
-                    Outer.Size=UDim2.new(0,18,0,18)
-                    Outer.Position=UDim2.new(1,-20,0.5,-9)
-                    Outer.BackgroundColor3=Color3.fromRGB(35,35,35)
-                    Instance.new("UICorner",Outer).CornerRadius=UDim.new(0,4)
-                    local S=Instance.new("UIStroke",Outer)
-                    S.Color=Library.Theme.Outline
-                    S.Thickness=1
+                    -- Hover Animation Logic
+                    local function UpdateVisuals(IsHovering)
+                        -- Hover animation for Box Background (simulate ImGui fill_animation)
+                        local targetColor = Library.Theme.ItemBackground
+                        if IsHovering then
+                            -- Slightly lighter/different on hover (Manual tween for simulation)
+                            targetColor = Color3.fromRGB(
+                                math.min(Library.Theme.ItemBackground.R * 255 + 20, 255),
+                                math.min(Library.Theme.ItemBackground.G * 255 + 20, 255),
+                                math.min(Library.Theme.ItemBackground.B * 255 + 20, 255)
+                            )
+                        end
+                        TweenService:Create(Box, TweenInfo.new(0.2), {BackgroundColor3 = targetColor}):Play()
+                        
+                        -- Hover animation for Text
+                        if not Library.Flags[Flag] then
+                             local txtColor = IsHovering and Library.Theme.Text or Library.Theme.TextDark
+                             TweenService:Create(Label, TweenInfo.new(0.2), {TextColor3 = txtColor}):Play()
+                        end
+                    end
 
-                    local Inner=Instance.new("Frame",Outer)
-                    Inner.Size=UDim2.new(1,-6,1,-6)
-                    Inner.Position=UDim2.new(0,3,0,3)
-                    Inner.BackgroundColor3=Library.Theme.Accent
-                    Inner.BackgroundTransparency=1 
-                    Instance.new("UICorner",Inner).CornerRadius=UDim.new(0,2)
+                    F.MouseEnter:Connect(function() UpdateVisuals(true) end)
+                    F.MouseLeave:Connect(function() UpdateVisuals(false) end)
 
                     local function Set(v)
-                        Library.Flags[Flag]=v
+                        Library.Flags[Flag] = v
+                        Check.Visible = v
+                        
                         if v then
-                            TweenService:Create(Inner,TweenInfo.new(0.15),{BackgroundTransparency=0}):Play()
-                            TweenService:Create(Outer,TweenInfo.new(0.15),{BackgroundColor3=Color3.fromRGB(50,50,50)}):Play()
+                            Label.TextColor3 = Library.Theme.Text
                         else
-                            TweenService:Create(Inner,TweenInfo.new(0.15),{BackgroundTransparency=1}):Play()
-                            TweenService:Create(Outer,TweenInfo.new(0.15),{BackgroundColor3=Color3.fromRGB(35,35,35)}):Play()
+                            Label.TextColor3 = Library.Theme.TextDark
                         end
-                        pcall(Callback,v)
+                        pcall(Callback, v)
                     end
 
-                    Library.Items[Flag]={Set=Set}
-                    Library.Flags[Flag]=Default
-                    
-                    if Default then
-                        Inner.BackgroundTransparency=0
-                        Outer.BackgroundColor3=Color3.fromRGB(50,50,50)
-                    end
+                    Library.Items[Flag] = {Set = Set}
+                    Library.Flags[Flag] = Default
 
                     F.MouseButton1Click:Connect(function() Set(not Library.Flags[Flag]) end)
 
@@ -1369,7 +1415,8 @@ function Library:Window(TitleText)
                     local B=Instance.new("Frame",F)
                     B.Size=UDim2.new(1,0,0,5)
                     B.Position=UDim2.new(0,0,0,25)
-                    B.BackgroundColor3=Color3.fromRGB(40,40,40)
+                    B.BackgroundColor3=Library.Theme.ItemBackground
+                    Library:RegisterTheme(B, "BackgroundColor3", "ItemBackground") -- Theme fix
                     Instance.new("UICorner",B).CornerRadius=UDim.new(1,0)
                     local Fil=Instance.new("Frame",B)
                     Fil.Size=UDim2.new((Def-Min)/(Max-Min),0,1,0)
@@ -1517,7 +1564,8 @@ function Library:Window(TitleText)
                     local B=Instance.new("TextButton",F)
                     B.Size=UDim2.new(1,0,0,22)
                     B.Position=UDim2.new(0,0,0,18)
-                    B.BackgroundColor3=Color3.fromRGB(35,35,35)
+                    B.BackgroundColor3=Library.Theme.ItemBackground -- Theme fix
+                    Library:RegisterTheme(B, "BackgroundColor3", "ItemBackground")
                     B.Font=Enum.Font.Gotham
                     B.TextSize=12
                     B.TextColor3=Color3.fromRGB(200,200,200)
@@ -1526,7 +1574,8 @@ function Library:Window(TitleText)
                     
                     local List=Instance.new("ScrollingFrame",ScreenGui)
                     List.Visible=false
-                    List.BackgroundColor3=Color3.fromRGB(35,35,35)
+                    List.BackgroundColor3=Library.Theme.ItemBackground -- Theme fix
+                    Library:RegisterTheme(List, "BackgroundColor3", "ItemBackground")
                     List.BorderSizePixel=0
                     List.ZIndex=200 
                     List.AutomaticCanvasSize = Enum.AutomaticSize.Y
@@ -1647,7 +1696,8 @@ function Library:Window(TitleText)
                     local B=Instance.new("TextButton",F)
                     B.Size=UDim2.new(0,60,0,18)
                     B.Position=UDim2.new(1,-60,0.5,-9)
-                    B.BackgroundColor3=Color3.fromRGB(35,35,35)
+                    B.BackgroundColor3=Library.Theme.ItemBackground -- Theme fix
+                    Library:RegisterTheme(B, "BackgroundColor3", "ItemBackground")
                     B.Text=Def.Name
                     B.Font=Enum.Font.Gotham
                     B.TextSize=11
@@ -1684,7 +1734,8 @@ function Library:Window(TitleText)
                     local B=Instance.new("TextBox",F)
                     B.Size=UDim2.new(1,0,0,20)
                     B.Position=UDim2.new(0,0,0,18)
-                    B.BackgroundColor3=Color3.fromRGB(35,35,35)
+                    B.BackgroundColor3=Library.Theme.ItemBackground -- Theme fix
+                    Library:RegisterTheme(B, "BackgroundColor3", "ItemBackground")
                     B.Text=""
                     B.PlaceholderText=Ph
                     B.TextColor3=Color3.fromRGB(230,230,230)
@@ -1709,7 +1760,8 @@ function Library:Window(TitleText)
                     
                     local B=Instance.new("TextButton",F)
                     B.Size=UDim2.new(1,0,1,0)
-                    B.BackgroundColor3=Color3.fromRGB(35,35,35)
+                    B.BackgroundColor3=Library.Theme.ItemBackground -- Theme fix
+                    Library:RegisterTheme(B, "BackgroundColor3", "ItemBackground")
                     B.Text=Text
                     B.TextColor3=Library.Theme.Text
                     B.Font=Enum.Font.Gotham
@@ -1718,7 +1770,7 @@ function Library:Window(TitleText)
                     B.MouseButton1Click:Connect(function()
                         TweenService:Create(B,TweenInfo.new(0.1),{BackgroundColor3=Library.Theme.Accent}):Play()
                         wait(0.1)
-                        TweenService:Create(B,TweenInfo.new(0.1),{BackgroundColor3=Color3.fromRGB(35,35,35)}):Play()
+                        TweenService:Create(B,TweenInfo.new(0.1),{BackgroundColor3=Library.Theme.ItemBackground}):Play()
                         pcall(Call)
                     end)
                 
