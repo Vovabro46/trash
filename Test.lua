@@ -331,6 +331,77 @@ function Library:Window(TitleText)
     MainStroke.Thickness = 1
     Library:RegisterTheme(MainStroke, "Color", "Outline")
     Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0, 4)
+    
+    --// RESIZER HANDLE (NEW) //--
+    local Resizer = Instance.new("ImageButton")
+    Resizer.Name = "Resizer"
+    Resizer.BackgroundTransparency = 1
+    Resizer.Size = UDim2.new(0, 20, 0, 20)
+    Resizer.Position = UDim2.new(1, -20, 1, -20)
+    Resizer.Image = "rbxassetid://4746676106" -- Стандартная иконка изменения размера
+    Resizer.ImageColor3 = Library.Theme.TextDark
+    Resizer.Parent = MainFrame
+    Resizer.ZIndex = 50
+    Library:RegisterTheme(Resizer, "ImageColor3", "TextDark")
+
+    local draggingResize = false
+    local dragStartResize = Vector2.new()
+    local startSizeResize = UDim2.new()
+
+    Resizer.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            draggingResize = true
+            dragStartResize = input.Position
+            startSizeResize = MainFrame.Size
+            input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then
+                    draggingResize = false
+                end
+            end)
+        end
+    end)
+
+    UserInputService.InputChanged:Connect(function(input)
+        if draggingResize and input.UserInputType == Enum.UserInputType.MouseMovement then
+            local delta = input.Position - dragStartResize
+            local newX = startSizeResize.X.Offset + delta.X
+            local newY = startSizeResize.Y.Offset + delta.Y
+            
+            -- Минимальные размеры окна, чтобы интерфейс не ломался
+            if newX < 600 then newX = 600 end
+            if newY < 400 then newY = 400 end
+            
+            MainFrame.Size = UDim2.new(0, newX, 0, newY)
+        end
+    end)
+    --// END RESIZER //--
+
+    --// MINIMIZE BUTTON (NEW) //--
+    local MinimizeBtn = Instance.new("TextButton")
+    MinimizeBtn.Name = "Minimize"
+    MinimizeBtn.Size = UDim2.new(0, 25, 0, 25)
+    MinimizeBtn.Position = UDim2.new(1, -30, 0, 5) -- Правый верхний угол
+    MinimizeBtn.BackgroundTransparency = 1
+    MinimizeBtn.Text = "-"
+    MinimizeBtn.Font = Enum.Font.GothamBold
+    MinimizeBtn.TextSize = 20
+    MinimizeBtn.TextColor3 = Library.Theme.TextDark
+    MinimizeBtn.Parent = MainFrame
+    MinimizeBtn.ZIndex = 50
+    Library:RegisterTheme(MinimizeBtn, "TextColor3", "TextDark")
+
+    AddTooltip(MinimizeBtn, "Minimize")
+
+    MinimizeBtn.MouseEnter:Connect(function()
+        TweenService:Create(MinimizeBtn, TweenInfo.new(0.2), {TextColor3 = Library.Theme.Accent}):Play()
+    end)
+    MinimizeBtn.MouseLeave:Connect(function()
+        TweenService:Create(MinimizeBtn, TweenInfo.new(0.2), {TextColor3 = Library.Theme.TextDark}):Play()
+    end)
+    MinimizeBtn.MouseButton1Click:Connect(function()
+        MainFrame.Visible = false
+    end)
+    --// END MINIMIZE //--
 
     --// SIDEBAR //--
     local Sidebar = Instance.new("Frame")
