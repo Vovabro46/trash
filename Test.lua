@@ -2188,6 +2188,197 @@ function Library:Window(TitleText)
                     RegisterItem(Text, F)
                 end
 
+                -- [ImGui: VSliderFloat / VSliderInt]
+                function BoxFuncs:AddVerticalSlider(Config)
+                    local Text = Config.Title or "V.Slider"
+                    local Min = Config.Min or 0
+                    local Max = Config.Max or 100
+                    local Def = Config.Default or Min
+                    local Callback = Config.Callback or function() end
+                    local Flag = Config.Flag or Text
+                    local Height = Config.Height or 100
+                    local Desc = Config.Description
+
+                    -- Контейнер для слайдера и подписи
+                    local F = Instance.new("Frame", GetContainer())
+                    F.Size = UDim2.new(1, 0, 0, Height + 25) -- Высота слайдера + место под текст
+                    F.BackgroundTransparency = 1
+                    if Desc then AddTooltip(F, Desc) end
+
+                    -- Подпись сверху
+                    local Lb = Instance.new("TextLabel", F)
+                    Lb.Size = UDim2.new(1, 0, 0, 15)
+                    Lb.BackgroundTransparency = 1
+                    Lb.Text = Text
+                    Lb.Font = Enum.Font.Gotham
+                    Lb.TextSize = 12
+                    Lb.TextXAlignment = Enum.TextXAlignment.Center
+                    Library:RegisterTheme(Lb, "TextColor3", "Text")
+
+                    -- Фон слайдера (Вертикальная полоса)
+                    local SliderBg = Instance.new("Frame", F)
+                    SliderBg.Name = "SliderBackground"
+                    SliderBg.Size = UDim2.new(0, 20, 0, Height)
+                    SliderBg.Position = UDim2.new(0.5, -10, 0, 20)
+                    SliderBg.BackgroundColor3 = Library.Theme.ItemBackground
+                    Library:RegisterTheme(SliderBg, "BackgroundColor3", "ItemBackground")
+                    Instance.new("UICorner", SliderBg).CornerRadius = UDim.new(0, 4)
+
+                    -- Заполнение слайдера
+                    local SliderFill = Instance.new("Frame", SliderBg)
+                    SliderFill.Name = "SliderFill"
+                    SliderFill.AnchorPoint = Vector2.new(0, 1) -- Растет снизу вверх
+                    SliderFill.Position = UDim2.new(0, 0, 1, 0)
+                    SliderFill.Size = UDim2.new(1, 0, (Def - Min) / (Max - Min), 0)
+                    SliderFill.BackgroundColor3 = Library.Theme.Accent
+                    SliderFill.BorderSizePixel = 0
+                    Library:RegisterTheme(SliderFill, "BackgroundColor3", "Accent")
+                    Instance.new("UICorner", SliderFill).CornerRadius = UDim.new(0, 4)
+
+                    -- Текст значения внутри слайдера (или рядом)
+                    local ValText = Instance.new("TextLabel", SliderBg)
+                    ValText.Size = UDim2.new(2, 0, 1, 0)
+                    ValText.Position = UDim2.new(-0.5, 0, 0, 0) -- По центру полоски
+                    ValText.BackgroundTransparency = 1
+                    ValText.Font = Enum.Font.GothamBold
+                    ValText.TextSize = 10
+                    ValText.Text = tostring(math.floor(Def * 100)/100)
+                    ValText.TextColor3 = Library.Theme.Text
+                    ValText.TextStrokeTransparency = 0.5
+                    ValText.ZIndex = 3
+                    -- Поворачиваем текст вертикально, если он длинный, или оставляем так
+                    -- ValText.Rotation = -90 
+
+                    -- Кнопка для перетаскивания
+                    local Btn = Instance.new("TextButton", SliderBg)
+                    Btn.Size = UDim2.new(1, 0, 1, 0)
+                    Btn.BackgroundTransparency = 1
+                    Btn.Text = ""
+
+                    local function Set(v)
+                        v = math.clamp(v, Min, Max)
+                        -- Округление до 2 знаков
+                        v = math.floor(v * 100) / 100
+                        
+                        Library.Flags[Flag] = v
+                        ValText.Text = tostring(v)
+                        
+                        -- Расчет процента заполнения (снизу вверх)
+                        local percent = (v - Min) / (Max - Min)
+                        TweenService:Create(SliderFill, TweenInfo.new(0.1), {Size = UDim2.new(1, 0, percent, 0)}):Play()
+                        
+                        pcall(Callback, v)
+                    end
+
+                    Library.Items[Flag] = {Set = Set}
+                    Library.Flags[Flag] = Def
+
+                    local dragging = false
+                    local function UpdateInput(input)
+                        -- Y ось инвертирована в GUI (0 сверху), но нам нужно чтобы 0 был снизу для слайдера
+                        -- SliderBg.AbsolutePosition.Y + SliderBg.AbsoluteSize.Y = Низ слайдера
+                        local bottomY = SliderBg.AbsolutePosition.Y + SliderBg.AbsoluteSize.Y
+                        local mouseY = input.Position.Y
+                        
+                        -- Дистанция от низа
+                        local distFromBottom = bottomY - mouseY
+                        local percent = math.clamp(distFromBottom / SliderBg.AbsoluteSize.Y, 0, 1)
+                        
+                        local newVal = Min + (Max - Min) * percent
+                        Set(newVal)
+                    end
+
+                    Btn.InputBegan:Connect(function(input)
+                        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                            dragging = true
+                            UpdateInput(input)
+                        end
+                    end)
+
+                    UserInputService.InputEnded:Connect(function(input)
+                        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                            dragging = false
+                        end
+                    end)
+
+                    UserInputService.InputChanged:Connect(function(input)
+                        if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+                            UpdateInput(input)
+                        end
+                    end)
+
+                    RegisterItem(Text, F)
+                end
+
+                -- [ImGui: Selectable]
+                -- Полезно для создания списков, где можно выбрать элемент нажатием
+                function BoxFuncs:AddSelectable(Config)
+                    local Text = Config.Title or "Selectable"
+                    local Selected = Config.Default or false
+                    local Callback = Config.Callback or function() end
+                    local Flag = Config.Flag or Text
+                    local Desc = Config.Description
+
+                    local F = Instance.new("TextButton", GetContainer())
+                    F.Size = UDim2.new(1, 0, 0, 22)
+                    F.BackgroundTransparency = Selected and 0 or 1
+                    F.BackgroundColor3 = Library.Theme.Accent -- Используем Accent для выделения
+                    F.Text = ""
+                    F.AutoButtonColor = false
+                    Instance.new("UICorner", F).CornerRadius = UDim.new(0, 4)
+                    
+                    if Desc then AddTooltip(F, Desc) end
+
+                    -- Регистрируем тему, но с хитрой проверкой, чтобы менять цвет только если выбрано
+                    Library:RegisterTheme(F, "BackgroundColor3", "Accent") 
+
+                    local Lb = Instance.new("TextLabel", F)
+                    Lb.Size = UDim2.new(1, -10, 1, 0)
+                    Lb.Position = UDim2.new(0, 10, 0, 0)
+                    Lb.BackgroundTransparency = 1
+                    Lb.Text = Text
+                    Lb.Font = Enum.Font.Gotham
+                    Lb.TextSize = 12
+                    Lb.TextXAlignment = Enum.TextXAlignment.Left
+                    Lb.TextColor3 = Selected and Library.Theme.Text or Library.Theme.TextDark
+                    
+                    -- Анимация при наведении (как в ImGui Hovered)
+                    local function UpdateVisuals(isHovered, isSelected)
+                        if isSelected then
+                            TweenService:Create(F, TweenInfo.new(0.2), {BackgroundTransparency = 0.4}):Play() -- Полупрозрачный акцент
+                            TweenService:Create(Lb, TweenInfo.new(0.2), {TextColor3 = Library.Theme.Text}):Play()
+                        elseif isHovered then
+                            TweenService:Create(F, TweenInfo.new(0.2), {BackgroundTransparency = 0.8}):Play() -- Слабая подсветка
+                            TweenService:Create(Lb, TweenInfo.new(0.2), {TextColor3 = Library.Theme.Text}):Play()
+                        else
+                            TweenService:Create(F, TweenInfo.new(0.2), {BackgroundTransparency = 1}):Play()
+                            TweenService:Create(Lb, TweenInfo.new(0.2), {TextColor3 = Library.Theme.TextDark}):Play()
+                        end
+                    end
+
+                    F.MouseEnter:Connect(function() UpdateVisuals(true, Library.Flags[Flag]) end)
+                    F.MouseLeave:Connect(function() UpdateVisuals(false, Library.Flags[Flag]) end)
+
+                    local function Set(val)
+                        Library.Flags[Flag] = val
+                        UpdateVisuals(false, val) -- Обновляем визуал
+                        pcall(Callback, val)
+                    end
+
+                    Library.Items[Flag] = {Set = Set}
+                    Library.Flags[Flag] = Selected
+                    
+                    -- Инициализация цвета
+                    UpdateVisuals(false, Selected)
+
+                    F.MouseButton1Click:Connect(function()
+                        -- Переключаем состояние (Toggle behavior для Selectable)
+                        Set(not Library.Flags[Flag])
+                    end)
+
+                    RegisterItem(Text, F)
+                end
+
                 return BoxFuncs
             end
             return SubFuncs
