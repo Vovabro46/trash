@@ -2378,6 +2378,219 @@ function Library:Window(TitleText)
 
                     RegisterItem(Text, F)
                 end
+                
+                --// TEXT EDITING WIDGETS (Based on Input Logic) //--
+
+                -- [TextArea] Многострочное поле ввода (для скриптов, конфигов, заметок)
+                function BoxFuncs:AddTextArea(Config)
+                    local Text = Config.Title or "Text Area"
+                    local Placeholder = Config.Placeholder or "Enter text here..."
+                    local Default = Config.Default or ""
+                    local Callback = Config.Callback or function() end
+                    local Flag = Config.Flag or Text
+                    local Height = Config.Height or 100
+                    local Desc = Config.Description
+
+                    local F = Instance.new("Frame", GetContainer())
+                    F.Size = UDim2.new(1, 0, 0, Height + 25)
+                    F.BackgroundTransparency = 1
+                    if Desc then AddTooltip(F, Desc) end
+
+                    local Lb = Instance.new("TextLabel", F)
+                    Lb.Size = UDim2.new(1, 0, 0, 15)
+                    Lb.BackgroundTransparency = 1
+                    Lb.Text = Text
+                    Lb.Font = Enum.Font.Gotham
+                    Lb.TextSize = 12
+                    Lb.TextXAlignment = Enum.TextXAlignment.Left
+                    Library:RegisterTheme(Lb, "TextColor3", "Text")
+
+                    local InputBox = Instance.new("TextBox", F)
+                    InputBox.Size = UDim2.new(1, 0, 0, Height)
+                    InputBox.Position = UDim2.new(0, 0, 0, 20)
+                    InputBox.BackgroundColor3 = Library.Theme.ItemBackground
+                    InputBox.Text = Default
+                    InputBox.PlaceholderText = Placeholder
+                    InputBox.TextColor3 = Library.Theme.Text
+                    InputBox.PlaceholderColor3 = Library.Theme.TextDark
+                    InputBox.Font = Enum.Font.Code -- Моноширинный шрифт удобнее для кода/большого текста
+                    InputBox.TextSize = 13
+                    InputBox.TextXAlignment = Enum.TextXAlignment.Left
+                    InputBox.TextYAlignment = Enum.TextYAlignment.Top
+                    InputBox.TextWrapped = true
+                    InputBox.MultiLine = true -- Включаем многострочность
+                    InputBox.ClearTextOnFocus = false
+                    
+                    Library:RegisterTheme(InputBox, "BackgroundColor3", "ItemBackground")
+                    Library:RegisterTheme(InputBox, "TextColor3", "Text")
+                    Library:RegisterTheme(InputBox, "PlaceholderColor3", "TextDark")
+                    
+                    Instance.new("UICorner", InputBox).CornerRadius = UDim.new(0, 4)
+                    
+                    local P = Instance.new("UIPadding", InputBox)
+                    P.PaddingLeft = UDim.new(0, 5)
+                    P.PaddingTop = UDim.new(0, 5)
+                    P.PaddingRight = UDim.new(0, 5)
+                    P.PaddingBottom = UDim.new(0, 5)
+
+                    InputBox.FocusLost:Connect(function()
+                        Library.Flags[Flag] = InputBox.Text
+                        pcall(Callback, InputBox.Text)
+                    end)
+
+                    Library.Items[Flag] = {
+                        Set = function(text)
+                            InputBox.Text = text
+                            Library.Flags[Flag] = text
+                        end
+                    }
+                    Library.Flags[Flag] = Default
+
+                    RegisterItem(Text, F)
+                end
+
+                -- [Console] Виджет консоли для отображения логов внутри меню
+                function BoxFuncs:AddConsole(Config)
+                    local Text = Config.Title or "Console"
+                    local Height = Config.Height or 150
+                    local ReadOnly = Config.ReadOnly ~= false -- По умолчанию только чтение
+                    local Flag = Config.Flag or Text
+                    
+                    local F = Instance.new("Frame", GetContainer())
+                    F.Size = UDim2.new(1, 0, 0, Height + 25)
+                    F.BackgroundTransparency = 1
+
+                    local TopBar = Instance.new("Frame", F)
+                    TopBar.Size = UDim2.new(1, 0, 0, 20)
+                    TopBar.BackgroundTransparency = 1
+                    
+                    local Lb = Instance.new("TextLabel", TopBar)
+                    Lb.Size = UDim2.new(0.5, 0, 1, 0)
+                    Lb.BackgroundTransparency = 1
+                    Lb.Text = Text
+                    Lb.Font = Enum.Font.GothamBold
+                    Lb.TextSize = 12
+                    Lb.TextXAlignment = Enum.TextXAlignment.Left
+                    Library:RegisterTheme(Lb, "TextColor3", "Text")
+
+                    local ClearBtn = Instance.new("TextButton", TopBar)
+                    ClearBtn.Size = UDim2.new(0, 40, 1, 0)
+                    ClearBtn.Position = UDim2.new(1, -40, 0, 0)
+                    ClearBtn.BackgroundTransparency = 1
+                    ClearBtn.Text = "Clear"
+                    ClearBtn.Font = Enum.Font.Gotham
+                    ClearBtn.TextSize = 10
+                    ClearBtn.TextColor3 = Library.Theme.Accent
+                    Library:RegisterTheme(ClearBtn, "TextColor3", "Accent")
+
+                    local Scroll = Instance.new("ScrollingFrame", F)
+                    Scroll.Name = "ConsoleScroll"
+                    Scroll.Size = UDim2.new(1, 0, 0, Height)
+                    Scroll.Position = UDim2.new(0, 0, 0, 25)
+                    Scroll.BackgroundColor3 = Color3.fromRGB(10, 10, 10) -- Темнее фона
+                    Scroll.ScrollBarThickness = 2
+                    Scroll.ScrollBarImageColor3 = Library.Theme.Accent
+                    Library:RegisterTheme(Scroll, "ScrollBarImageColor3", "Accent")
+                    Instance.new("UICorner", Scroll).CornerRadius = UDim.new(0, 4)
+                    
+                    local UIList = Instance.new("UIListLayout", Scroll)
+                    UIList.SortOrder = Enum.SortOrder.LayoutOrder
+                    UIList.Padding = UDim.new(0, 2)
+                    
+                    local Pad = Instance.new("UIPadding", Scroll)
+                    Pad.PaddingLeft = UDim.new(0, 5)
+                    Pad.PaddingTop = UDim.new(0, 5)
+
+                    local Logs = {}
+
+                    -- Функция добавления лога
+                    local function AddLog(Msg, Color)
+                        local LogLabel = Instance.new("TextLabel", Scroll)
+                        LogLabel.Size = UDim2.new(1, -5, 0, 0)
+                        LogLabel.AutomaticSize = Enum.AutomaticSize.Y
+                        LogLabel.BackgroundTransparency = 1
+                        LogLabel.Text = string.format("[%s] %s", os.date("%H:%M:%S"), tostring(Msg))
+                        LogLabel.Font = Enum.Font.Code
+                        LogLabel.TextSize = 11
+                        LogLabel.TextColor3 = Color or Library.Theme.Text
+                        LogLabel.TextXAlignment = Enum.TextXAlignment.Left
+                        LogLabel.TextWrapped = true
+                        
+                        -- Лимит логов для оптимизации (храним 100 последних)
+                        table.insert(Logs, LogLabel)
+                        if #Logs > 100 then
+                            Logs[1]:Destroy()
+                            table.remove(Logs, 1)
+                        end
+                        
+                        -- Автоскролл вниз
+                        Scroll.CanvasPosition = Vector2.new(0, 99999)
+                    end
+
+                    ClearBtn.MouseButton1Click:Connect(function()
+                        for _, v in pairs(Logs) do v:Destroy() end
+                        Logs = {}
+                    end)
+
+                    -- Экспортируем функцию Log в Library.Items
+                    Library.Items[Flag] = {
+                        Log = AddLog,
+                        Clear = function() 
+                            for _, v in pairs(Logs) do v:Destroy() end 
+                            Logs = {} 
+                        end
+                    }
+
+                    RegisterItem(Text, F)
+                end
+
+                -- [SearchInput] Поле ввода с иконкой лупы и мгновенным коллбэком
+                function BoxFuncs:AddSearchBox(Config)
+                    local Text = Config.Title or "Search" -- Используется как Placeholder
+                    local Callback = Config.Callback or function() end
+                    local Flag = Config.Flag or Text
+                    local Desc = Config.Description
+
+                    local F = Instance.new("Frame", GetContainer())
+                    F.Size = UDim2.new(1, 0, 0, 35)
+                    F.BackgroundTransparency = 1
+                    if Desc then AddTooltip(F, Desc) end
+
+                    local BoxBg = Instance.new("Frame", F)
+                    BoxBg.Size = UDim2.new(1, 0, 1, 0)
+                    BoxBg.BackgroundColor3 = Library.Theme.ItemBackground
+                    Library:RegisterTheme(BoxBg, "BackgroundColor3", "ItemBackground")
+                    Instance.new("UICorner", BoxBg).CornerRadius = UDim.new(0, 16) -- Круглый стиль
+                    
+                    local Icon = Instance.new("ImageLabel", BoxBg)
+                    Icon.Size = UDim2.new(0, 14, 0, 14)
+                    Icon.Position = UDim2.new(0, 10, 0.5, -7)
+                    Icon.BackgroundTransparency = 1
+                    Icon.Image = "rbxassetid://3944700161" -- Лупа
+                    Icon.ImageColor3 = Library.Theme.TextDark
+                    Library:RegisterTheme(Icon, "ImageColor3", "TextDark")
+
+                    local Input = Instance.new("TextBox", BoxBg)
+                    Input.Size = UDim2.new(1, -35, 1, 0)
+                    Input.Position = UDim2.new(0, 30, 0, 0)
+                    Input.BackgroundTransparency = 1
+                    Input.Text = ""
+                    Input.PlaceholderText = Text
+                    Input.TextColor3 = Library.Theme.Text
+                    Input.PlaceholderColor3 = Library.Theme.TextDark
+                    Input.Font = Enum.Font.Gotham
+                    Input.TextSize = 13
+                    Input.TextXAlignment = Enum.TextXAlignment.Left
+                    Library:RegisterTheme(Input, "TextColor3", "Text")
+                    Library:RegisterTheme(Input, "PlaceholderColor3", "TextDark")
+
+                    Input:GetPropertyChangedSignal("Text"):Connect(function()
+                        Library.Flags[Flag] = Input.Text
+                        pcall(Callback, Input.Text)
+                    end)
+
+                    RegisterItem(Text, F)
+                end
 
                 return BoxFuncs
             end
