@@ -332,17 +332,19 @@ function Library:Window(TitleText)
     Library:RegisterTheme(MainStroke, "Color", "Outline")
     Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0, 4)
     
-    --// RESIZER HANDLE (NEW) //--
-    local Resizer = Instance.new("ImageButton")
+    --// RESIZER HANDLE (FIXED) //--
+    local Resizer = Instance.new("TextButton")
     Resizer.Name = "Resizer"
-    Resizer.BackgroundTransparency = 1
     Resizer.Size = UDim2.new(0, 20, 0, 20)
     Resizer.Position = UDim2.new(1, -20, 1, -20)
-    Resizer.Image = "rbxassetid://4746676106" -- Стандартная иконка изменения размера
-    Resizer.ImageColor3 = Library.Theme.TextDark
+    Resizer.BackgroundTransparency = 1
+    Resizer.Text = "◢" -- Используем символ треугольника вместо картинки для надежности
+    Resizer.TextSize = 14
+    Resizer.Font = Enum.Font.Gotham
     Resizer.Parent = MainFrame
-    Resizer.ZIndex = 50
-    Library:RegisterTheme(Resizer, "ImageColor3", "TextDark")
+    Resizer.ZIndex = 200 -- Очень высокий ZIndex, чтобы быть поверх всего
+    Library:RegisterTheme(Resizer, "TextColor3", "TextDark")
+    AddTooltip(Resizer, "Resize")
 
     local draggingResize = false
     local dragStartResize = Vector2.new()
@@ -353,9 +355,14 @@ function Library:Window(TitleText)
             draggingResize = true
             dragStartResize = input.Position
             startSizeResize = MainFrame.Size
+            
+            -- Подсветка при нажатии
+            TweenService:Create(Resizer, TweenInfo.new(0.2), {TextColor3 = Library.Theme.Accent}):Play()
+            
             input.Changed:Connect(function()
                 if input.UserInputState == Enum.UserInputState.End then
                     draggingResize = false
+                    TweenService:Create(Resizer, TweenInfo.new(0.2), {TextColor3 = Library.Theme.TextDark}):Play()
                 end
             end)
         end
@@ -367,7 +374,7 @@ function Library:Window(TitleText)
             local newX = startSizeResize.X.Offset + delta.X
             local newY = startSizeResize.Y.Offset + delta.Y
             
-            -- Минимальные размеры окна, чтобы интерфейс не ломался
+            -- Минимальные размеры окна
             if newX < 600 then newX = 600 end
             if newY < 400 then newY = 400 end
             
@@ -376,7 +383,7 @@ function Library:Window(TitleText)
     end)
     --// END RESIZER //--
 
-    --// MINIMIZE BUTTON (NEW) //--
+    --// MINIMIZE BUTTON //--
     local MinimizeBtn = Instance.new("TextButton")
     MinimizeBtn.Name = "Minimize"
     MinimizeBtn.Size = UDim2.new(0, 25, 0, 25)
@@ -385,9 +392,8 @@ function Library:Window(TitleText)
     MinimizeBtn.Text = "-"
     MinimizeBtn.Font = Enum.Font.GothamBold
     MinimizeBtn.TextSize = 20
-    MinimizeBtn.TextColor3 = Library.Theme.TextDark
     MinimizeBtn.Parent = MainFrame
-    MinimizeBtn.ZIndex = 50
+    MinimizeBtn.ZIndex = 200 -- Высокий ZIndex
     Library:RegisterTheme(MinimizeBtn, "TextColor3", "TextDark")
 
     AddTooltip(MinimizeBtn, "Minimize")
