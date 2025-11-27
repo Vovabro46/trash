@@ -482,7 +482,7 @@ function Library:Window(TitleText)
     SearchBar.Name = "SearchBar"
     SearchBar.Size = UDim2.new(1, -20, 0, 30)
     SearchBar.Position = UDim2.new(0, 10, 0, 55)
-    SearchBar.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+    SearchBar.BackgroundColor3 = Library.Theme.ItemBackground -- Fixed: Use Theme Variable
     SearchBar.BorderSizePixel = 0
     SearchBar.PlaceholderText = "Search..."
     SearchBar.Text = ""
@@ -497,6 +497,9 @@ function Library:Window(TitleText)
     SBStroke.Color = Library.Theme.Outline
     SBStroke.Thickness = 1
     SBStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+    
+    -- Register Theme for SearchBar
+    Library:RegisterTheme(SearchBar, "BackgroundColor3", "ItemBackground")
 
     --// TAB CONTAINER //--
     local TabContainer = Instance.new("ScrollingFrame")
@@ -1220,7 +1223,6 @@ function Library:Window(TitleText)
                     RegisterItem(Head, F)
                 end
 
-                -- // TOGGLE STYLE: CLASSIC //
                 function BoxFuncs:AddToggle(Config)
                     local Text = Config.Title or "Toggle"
                     local Default = Config.Default or false
@@ -1279,7 +1281,6 @@ function Library:Window(TitleText)
                     RegisterItem(Text, F)
                 end
 
-                -- // CHECKBOX STYLE: IMGUI (Smaller) //
                 function BoxFuncs:AddCheckbox(Config)
                     local Text = Config.Title or "Checkbox"
                     local Default = Config.Default or false
