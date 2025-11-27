@@ -95,6 +95,34 @@ local Library = {
     }
 }
 
+--// THEME SYSTEM //--
+local ThemeObjects = {}
+function Library:RegisterTheme(Obj, Prop, Key)
+    if not ThemeObjects[Key] then ThemeObjects[Key] = {} end
+    table.insert(ThemeObjects[Key], {Obj = Obj, Prop = Prop})
+    Obj[Prop] = Library.Theme[Key]
+end
+
+function Library:UpdateTheme(Key, Col)
+    Library.Theme[Key] = Col
+    if ThemeObjects[Key] then
+        for _, D in pairs(ThemeObjects[Key]) do
+            pcall(function() TweenService:Create(D.Obj, TweenInfo.new(0.2), {[D.Prop] = Col}):Play() end)
+        end
+    end
+end
+
+function Library:SetTheme(ThemeName)
+    local Preset = Library.ThemePresets[ThemeName]
+    if not Preset then 
+        warn("Theme preset not found: "..tostring(ThemeName))
+        return 
+    end
+    for Key, Color in pairs(Preset) do
+        Library:UpdateTheme(Key, Color)
+    end
+end
+
 --// TOOLTIP SYSTEM //
 local TooltipObj = nil
 local function CreateTooltipSystem(ScreenGui)
@@ -102,8 +130,8 @@ local function CreateTooltipSystem(ScreenGui)
     Tooltip.Name = "Tooltip"
     Tooltip.Size = UDim2.new(0, 0, 0, 0)
     Tooltip.AutomaticSize = Enum.AutomaticSize.XY
-    Tooltip.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-    Tooltip.TextColor3 = Color3.fromRGB(255, 255, 255)
+    Tooltip.BackgroundColor3 = Library.Theme.ItemBackground -- Dynamic Theme
+    Tooltip.TextColor3 = Library.Theme.Text -- Dynamic Theme
     Tooltip.Font = Enum.Font.Gotham
     Tooltip.TextSize = 12
     Tooltip.TextWrapped = false
@@ -113,12 +141,17 @@ local function CreateTooltipSystem(ScreenGui)
 
     Instance.new("UICorner", Tooltip).CornerRadius = UDim.new(0, 4)
     local TStroke = Instance.new("UIStroke", Tooltip)
-    TStroke.Color = Color3.fromRGB(60, 60, 60)
+    TStroke.Color = Library.Theme.Outline -- Dynamic Theme
     TStroke.Thickness = 1
     Instance.new("UIPadding", Tooltip).PaddingLeft = UDim.new(0, 6)
     Instance.new("UIPadding", Tooltip).PaddingRight = UDim.new(0, 6)
     Instance.new("UIPadding", Tooltip).PaddingTop = UDim.new(0, 4)
     Instance.new("UIPadding", Tooltip).PaddingBottom = UDim.new(0, 4)
+
+    -- Register Theme Colors for Tooltip
+    Library:RegisterTheme(Tooltip, "BackgroundColor3", "ItemBackground")
+    Library:RegisterTheme(Tooltip, "TextColor3", "Text")
+    Library:RegisterTheme(TStroke, "Color", "Outline")
 
     RunService.RenderStepped:Connect(function()
         if Tooltip.Visible then
@@ -276,34 +309,6 @@ function Library:GetConfigs()
         end
     end
     return Configs
-end
-
---// THEME & DRAGGING //--
-local ThemeObjects = {}
-function Library:RegisterTheme(Obj, Prop, Key)
-    if not ThemeObjects[Key] then ThemeObjects[Key] = {} end
-    table.insert(ThemeObjects[Key], {Obj = Obj, Prop = Prop})
-    Obj[Prop] = Library.Theme[Key]
-end
-
-function Library:UpdateTheme(Key, Col)
-    Library.Theme[Key] = Col
-    if ThemeObjects[Key] then
-        for _, D in pairs(ThemeObjects[Key]) do
-            pcall(function() TweenService:Create(D.Obj, TweenInfo.new(0.2), {[D.Prop] = Col}):Play() end)
-        end
-    end
-end
-
-function Library:SetTheme(ThemeName)
-    local Preset = Library.ThemePresets[ThemeName]
-    if not Preset then 
-        warn("Theme preset not found: "..tostring(ThemeName))
-        return 
-    end
-    for Key, Color in pairs(Preset) do
-        Library:UpdateTheme(Key, Color)
-    end
 end
 
 local function MakeDraggable(dragFrame, moveFrame)
@@ -936,11 +941,12 @@ function Library:Window(TitleText)
                     NodeFrame.Size = UDim2.new(1, 0, 0, 0)
                     NodeFrame.AutomaticSize = Enum.AutomaticSize.Y
                     NodeFrame.BackgroundTransparency = IsFramed and 0 or 1
-                    NodeFrame.BackgroundColor3 = IsFramed and Color3.fromRGB(35, 35, 35) or Color3.new(0,0,0)
+                    NodeFrame.BackgroundColor3 = IsFramed and Library.Theme.ItemBackground or Color3.new(0,0,0)
                     NodeFrame.Parent = Parent
 
                     if IsFramed then
                         Instance.new("UICorner", NodeFrame).CornerRadius = UDim.new(0, 4)
+                        Library:RegisterTheme(NodeFrame, "BackgroundColor3", "ItemBackground") -- Theme Fixed
                     end
             
                     local NodeLayout = Instance.new("UIListLayout", NodeFrame)
@@ -1223,6 +1229,7 @@ function Library:Window(TitleText)
                     RegisterItem(Head, F)
                 end
 
+                -- // TOGGLE STYLE: CLASSIC //
                 function BoxFuncs:AddToggle(Config)
                     local Text = Config.Title or "Toggle"
                     local Default = Config.Default or false
@@ -1281,6 +1288,7 @@ function Library:Window(TitleText)
                     RegisterItem(Text, F)
                 end
 
+                -- // CHECKBOX STYLE: IMGUI (Smaller) //
                 function BoxFuncs:AddCheckbox(Config)
                     local Text = Config.Title or "Checkbox"
                     local Default = Config.Default or false
