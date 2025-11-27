@@ -332,14 +332,17 @@ function Library:Window(TitleText)
     Library:RegisterTheme(MainStroke, "Color", "Outline")
     Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0, 4)
     
-    --// RESIZER HANDLE (MOBILE FIXED) //--
+    --// RESIZER HANDLE (MOBILE FIXED, CORNER SNAP) //--
     local Resizer = Instance.new("TextButton")
     Resizer.Name = "Resizer"
-    Resizer.Size = UDim2.new(0, 30, 0, 30) -- Увеличил зону нажатия для пальца
-    Resizer.Position = UDim2.new(1, -30, 1, -30)
+    Resizer.Size = UDim2.new(0, 30, 0, 30) -- Удобный размер для пальца
+    Resizer.AnchorPoint = Vector2.new(1, 1) -- Точка привязки в правом нижнем углу кнопки
+    Resizer.Position = UDim2.new(1, 0, 1, 0) -- Позиция в правом нижнем углу окна (без отступа)
     Resizer.BackgroundTransparency = 1
     Resizer.Text = "◢"
-    Resizer.TextSize = 18
+    Resizer.TextSize = 16 -- Текст чуть меньше, чтобы быть аккуратным
+    Resizer.TextXAlignment = Enum.TextXAlignment.Right -- Прижимаем текст вправо
+    Resizer.TextYAlignment = Enum.TextYAlignment.Bottom -- Прижимаем текст вниз
     Resizer.Font = Enum.Font.Gotham
     Resizer.Parent = MainFrame
     Resizer.ZIndex = 200 
@@ -352,12 +355,11 @@ function Library:Window(TitleText)
     local dragInputResize = nil
 
     Resizer.InputBegan:Connect(function(input)
-        -- Добавил проверку на Touch
         if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
             draggingResize = true
             dragStartResize = input.Position
             startSizeResize = MainFrame.Size
-            dragInputResize = input -- Запоминаем палец или мышь
+            dragInputResize = input
 
             TweenService:Create(Resizer, TweenInfo.new(0.2), {TextColor3 = Library.Theme.Accent}):Play()
             
@@ -372,14 +374,12 @@ function Library:Window(TitleText)
     end)
 
     UserInputService.InputChanged:Connect(function(input)
-        -- Проверяем движение: либо это сохраненный ввод (палец), либо мышь
         if draggingResize and (input == dragInputResize or input.UserInputType == Enum.UserInputType.MouseMovement) then
             local delta = input.Position - dragStartResize
             local newX = startSizeResize.X.Offset + delta.X
             local newY = startSizeResize.Y.Offset + delta.Y
             
-            -- Минимальные размеры
-            if newX < 300 then newX = 300 end -- Уменьшил минимум для телефонов
+            if newX < 300 then newX = 300 end
             if newY < 200 then newY = 200 end
             
             MainFrame.Size = UDim2.new(0, newX, 0, newY)
@@ -390,7 +390,7 @@ function Library:Window(TitleText)
     --// MINIMIZE BUTTON //--
     local MinimizeBtn = Instance.new("TextButton")
     MinimizeBtn.Name = "Minimize"
-    MinimizeBtn.Size = UDim2.new(0, 30, 0, 30) -- Чуть больше для удобства
+    MinimizeBtn.Size = UDim2.new(0, 30, 0, 30)
     MinimizeBtn.Position = UDim2.new(1, -35, 0, 5) 
     MinimizeBtn.BackgroundTransparency = 1
     MinimizeBtn.Text = "-"
