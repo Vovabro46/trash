@@ -24,7 +24,6 @@ local Library = {
         Enabled = true,
         Text = "RedOnyx"
     },
-    --// T H E M E S //--
     Theme = {
         Background     = Color3.fromRGB(15, 15, 15),
         Sidebar        = Color3.fromRGB(20, 20, 20),
@@ -130,8 +129,8 @@ local function CreateTooltipSystem(ScreenGui)
     Tooltip.Name = "Tooltip"
     Tooltip.Size = UDim2.new(0, 0, 0, 0)
     Tooltip.AutomaticSize = Enum.AutomaticSize.XY
-    Tooltip.BackgroundColor3 = Library.Theme.ItemBackground -- Dynamic Theme
-    Tooltip.TextColor3 = Library.Theme.Text -- Dynamic Theme
+    Tooltip.BackgroundColor3 = Library.Theme.ItemBackground
+    Tooltip.TextColor3 = Library.Theme.Text
     Tooltip.Font = Enum.Font.Gotham
     Tooltip.TextSize = 12
     Tooltip.TextWrapped = false
@@ -141,14 +140,13 @@ local function CreateTooltipSystem(ScreenGui)
 
     Instance.new("UICorner", Tooltip).CornerRadius = UDim.new(0, 4)
     local TStroke = Instance.new("UIStroke", Tooltip)
-    TStroke.Color = Library.Theme.Outline -- Dynamic Theme
+    TStroke.Color = Library.Theme.Outline
     TStroke.Thickness = 1
     Instance.new("UIPadding", Tooltip).PaddingLeft = UDim.new(0, 6)
     Instance.new("UIPadding", Tooltip).PaddingRight = UDim.new(0, 6)
     Instance.new("UIPadding", Tooltip).PaddingTop = UDim.new(0, 4)
     Instance.new("UIPadding", Tooltip).PaddingBottom = UDim.new(0, 4)
 
-    -- Register Theme Colors for Tooltip
     Library:RegisterTheme(Tooltip, "BackgroundColor3", "ItemBackground")
     Library:RegisterTheme(Tooltip, "TextColor3", "Text")
     Library:RegisterTheme(TStroke, "Color", "Outline")
@@ -460,7 +458,6 @@ function Library:Window(TitleText)
             MainFrame.Size = UDim2.new(0, newX, 0, newY)
         end
     end)
-    --// END RESIZER //--
 
     --// SIDEBAR //--
     local Sidebar = Instance.new("Frame")
@@ -487,7 +484,7 @@ function Library:Window(TitleText)
     SearchBar.Name = "SearchBar"
     SearchBar.Size = UDim2.new(1, -20, 0, 30)
     SearchBar.Position = UDim2.new(0, 10, 0, 55)
-    SearchBar.BackgroundColor3 = Library.Theme.ItemBackground -- Fixed: Use Theme Variable
+    SearchBar.BackgroundColor3 = Library.Theme.ItemBackground
     SearchBar.BorderSizePixel = 0
     SearchBar.PlaceholderText = "Search..."
     SearchBar.Text = ""
@@ -503,7 +500,6 @@ function Library:Window(TitleText)
     SBStroke.Thickness = 1
     SBStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
     
-    -- Register Theme for SearchBar
     Library:RegisterTheme(SearchBar, "BackgroundColor3", "ItemBackground")
 
     --// TAB CONTAINER //--
@@ -946,7 +942,7 @@ function Library:Window(TitleText)
 
                     if IsFramed then
                         Instance.new("UICorner", NodeFrame).CornerRadius = UDim.new(0, 4)
-                        Library:RegisterTheme(NodeFrame, "BackgroundColor3", "ItemBackground") -- Theme Fixed
+                        Library:RegisterTheme(NodeFrame, "BackgroundColor3", "ItemBackground")
                     end
             
                     local NodeLayout = Instance.new("UIListLayout", NodeFrame)
@@ -1260,7 +1256,6 @@ function Library:Window(TitleText)
                     local T=Instance.new("Frame",F)
                     T.Size=UDim2.new(0,34,0,18)
                     T.Position=UDim2.new(1,-34,0.5,-9)
-                    -- Toggle background
                     T.BackgroundColor3=Default and Library.Theme.Accent or Library.Theme.ItemBackground
                     Library:RegisterTheme(T, "BackgroundColor3", Default and "Accent" or "ItemBackground")
                     
@@ -1288,7 +1283,7 @@ function Library:Window(TitleText)
                     RegisterItem(Text, F)
                 end
 
-                -- // CHECKBOX STYLE: IMGUI (Smaller) //
+                -- // CHECKBOX STYLE //
                 function BoxFuncs:AddCheckbox(Config)
                     local Text = Config.Title or "Checkbox"
                     local Default = Config.Default or false
@@ -1298,15 +1293,14 @@ function Library:Window(TitleText)
                     local Risky = Config.Risky
 
                     local F = Instance.new("TextButton", GetContainer())
-                    F.Size = UDim2.new(1, 0, 0, 20) -- Reduced height
+                    F.Size = UDim2.new(1, 0, 0, 20)
                     F.BackgroundTransparency = 1
                     F.Text = ""
                     if Desc then AddTooltip(F, Desc) end
 
-                    -- Square Box (Smaller: 16x16)
                     local Box = Instance.new("Frame", F)
-                    Box.Size = UDim2.new(0, 16, 0, 16)
-                    Box.Position = UDim2.new(0, 0, 0.5, -8) -- Centered
+                    Box.Size = UDim2.new(0, 14, 0, 14)
+                    Box.Position = UDim2.new(0, 0, 0.5, -8)
                     Box.BackgroundColor3 = Library.Theme.ItemBackground
                     Library:RegisterTheme(Box, "BackgroundColor3", "ItemBackground") 
                     
@@ -1315,17 +1309,15 @@ function Library:Window(TitleText)
                     BoxStroke.Thickness = 1
                     Library:RegisterTheme(BoxStroke, "Color", "Outline")
 
-                    -- Checkmark (Image)
                     local Check = Instance.new("ImageLabel", Box)
                     Check.Size = UDim2.new(1, -2, 1, -2)
                     Check.Position = UDim2.new(0, 1, 0, 1)
                     Check.BackgroundTransparency = 1
                     Check.Image = "rbxassetid://3944680095" 
-                    Check.ImageColor3 = Library.Theme.Accent -- Uses Accent Color
-                    Library:RegisterTheme(Check, "ImageColor3", "Accent") -- Register theme
+                    Check.ImageColor3 = Library.Theme.Accent
+                    Library:RegisterTheme(Check, "ImageColor3", "Accent")
                     Check.Visible = Default
 
-                    -- Text Label
                     local Label = Instance.new("TextLabel", F)
                     Label.Size = UDim2.new(1, -25, 1, 0)
                     Label.Position = UDim2.new(0, 25, 0, 0)
@@ -1342,7 +1334,6 @@ function Library:Window(TitleText)
                         Library:RegisterTheme(Label, "TextColor3", "TextDark")
                     end
 
-                    -- Hover Animation Logic
                     local function UpdateVisuals(IsHovering)
                         local targetColor = Library.Theme.ItemBackground
                         if IsHovering then
@@ -1420,7 +1411,7 @@ function Library:Window(TitleText)
                     B.Size=UDim2.new(1,0,0,5)
                     B.Position=UDim2.new(0,0,0,25)
                     B.BackgroundColor3=Library.Theme.ItemBackground
-                    Library:RegisterTheme(B, "BackgroundColor3", "ItemBackground") -- Theme fix
+                    Library:RegisterTheme(B, "BackgroundColor3", "ItemBackground")
                     Instance.new("UICorner",B).CornerRadius=UDim.new(1,0)
                     local Fil=Instance.new("Frame",B)
                     Fil.Size=UDim2.new((Def-Min)/(Max-Min),0,1,0)
@@ -1568,7 +1559,7 @@ function Library:Window(TitleText)
                     local B=Instance.new("TextButton",F)
                     B.Size=UDim2.new(1,0,0,22)
                     B.Position=UDim2.new(0,0,0,18)
-                    B.BackgroundColor3=Library.Theme.ItemBackground -- Theme fix
+                    B.BackgroundColor3=Library.Theme.ItemBackground
                     Library:RegisterTheme(B, "BackgroundColor3", "ItemBackground")
                     B.Font=Enum.Font.Gotham
                     B.TextSize=12
@@ -1578,7 +1569,7 @@ function Library:Window(TitleText)
                     
                     local List=Instance.new("ScrollingFrame",ScreenGui)
                     List.Visible=false
-                    List.BackgroundColor3=Library.Theme.ItemBackground -- Theme fix
+                    List.BackgroundColor3=Library.Theme.ItemBackground
                     Library:RegisterTheme(List, "BackgroundColor3", "ItemBackground")
                     List.BorderSizePixel=0
                     List.ZIndex=200 
@@ -1700,7 +1691,7 @@ function Library:Window(TitleText)
                     local B=Instance.new("TextButton",F)
                     B.Size=UDim2.new(0,60,0,18)
                     B.Position=UDim2.new(1,-60,0.5,-9)
-                    B.BackgroundColor3=Library.Theme.ItemBackground -- Theme fix
+                    B.BackgroundColor3=Library.Theme.ItemBackground
                     Library:RegisterTheme(B, "BackgroundColor3", "ItemBackground")
                     B.Text=Def.Name
                     B.Font=Enum.Font.Gotham
@@ -1738,7 +1729,7 @@ function Library:Window(TitleText)
                     local B=Instance.new("TextBox",F)
                     B.Size=UDim2.new(1,0,0,20)
                     B.Position=UDim2.new(0,0,0,18)
-                    B.BackgroundColor3=Library.Theme.ItemBackground -- Theme fix
+                    B.BackgroundColor3=Library.Theme.ItemBackground
                     Library:RegisterTheme(B, "BackgroundColor3", "ItemBackground")
                     B.Text=""
                     B.PlaceholderText=Ph
@@ -1764,7 +1755,7 @@ function Library:Window(TitleText)
                     
                     local B=Instance.new("TextButton",F)
                     B.Size=UDim2.new(1,0,1,0)
-                    B.BackgroundColor3=Library.Theme.ItemBackground -- Theme fix
+                    B.BackgroundColor3=Library.Theme.ItemBackground
                     Library:RegisterTheme(B, "BackgroundColor3", "ItemBackground")
                     B.Text=Text
                     B.TextColor3=Library.Theme.Text
