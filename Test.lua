@@ -332,36 +332,39 @@ function Library:Window(TitleText)
     Library:RegisterTheme(MainStroke, "Color", "Outline")
     Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0, 4)
     
-    --// RESIZER HANDLE (FIXED) //--
+    --// RESIZER HANDLE (MOBILE FIXED) //--
     local Resizer = Instance.new("TextButton")
     Resizer.Name = "Resizer"
-    Resizer.Size = UDim2.new(0, 20, 0, 20)
-    Resizer.Position = UDim2.new(1, -20, 1, -20)
+    Resizer.Size = UDim2.new(0, 30, 0, 30) -- Увеличил зону нажатия для пальца
+    Resizer.Position = UDim2.new(1, -30, 1, -30)
     Resizer.BackgroundTransparency = 1
-    Resizer.Text = "◢" -- Используем символ треугольника вместо картинки для надежности
-    Resizer.TextSize = 14
+    Resizer.Text = "◢"
+    Resizer.TextSize = 18
     Resizer.Font = Enum.Font.Gotham
     Resizer.Parent = MainFrame
-    Resizer.ZIndex = 200 -- Очень высокий ZIndex, чтобы быть поверх всего
+    Resizer.ZIndex = 200 
     Library:RegisterTheme(Resizer, "TextColor3", "TextDark")
     AddTooltip(Resizer, "Resize")
 
     local draggingResize = false
     local dragStartResize = Vector2.new()
     local startSizeResize = UDim2.new()
+    local dragInputResize = nil
 
     Resizer.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        -- Добавил проверку на Touch
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
             draggingResize = true
             dragStartResize = input.Position
             startSizeResize = MainFrame.Size
-            
-            -- Подсветка при нажатии
+            dragInputResize = input -- Запоминаем палец или мышь
+
             TweenService:Create(Resizer, TweenInfo.new(0.2), {TextColor3 = Library.Theme.Accent}):Play()
             
             input.Changed:Connect(function()
                 if input.UserInputState == Enum.UserInputState.End then
                     draggingResize = false
+                    dragInputResize = nil
                     TweenService:Create(Resizer, TweenInfo.new(0.2), {TextColor3 = Library.Theme.TextDark}):Play()
                 end
             end)
@@ -369,14 +372,15 @@ function Library:Window(TitleText)
     end)
 
     UserInputService.InputChanged:Connect(function(input)
-        if draggingResize and input.UserInputType == Enum.UserInputType.MouseMovement then
+        -- Проверяем движение: либо это сохраненный ввод (палец), либо мышь
+        if draggingResize and (input == dragInputResize or input.UserInputType == Enum.UserInputType.MouseMovement) then
             local delta = input.Position - dragStartResize
             local newX = startSizeResize.X.Offset + delta.X
             local newY = startSizeResize.Y.Offset + delta.Y
             
-            -- Минимальные размеры окна
-            if newX < 600 then newX = 600 end
-            if newY < 400 then newY = 400 end
+            -- Минимальные размеры
+            if newX < 300 then newX = 300 end -- Уменьшил минимум для телефонов
+            if newY < 200 then newY = 200 end
             
             MainFrame.Size = UDim2.new(0, newX, 0, newY)
         end
@@ -386,14 +390,14 @@ function Library:Window(TitleText)
     --// MINIMIZE BUTTON //--
     local MinimizeBtn = Instance.new("TextButton")
     MinimizeBtn.Name = "Minimize"
-    MinimizeBtn.Size = UDim2.new(0, 25, 0, 25)
-    MinimizeBtn.Position = UDim2.new(1, -30, 0, 5) -- Правый верхний угол
+    MinimizeBtn.Size = UDim2.new(0, 30, 0, 30) -- Чуть больше для удобства
+    MinimizeBtn.Position = UDim2.new(1, -35, 0, 5) 
     MinimizeBtn.BackgroundTransparency = 1
     MinimizeBtn.Text = "-"
     MinimizeBtn.Font = Enum.Font.GothamBold
-    MinimizeBtn.TextSize = 20
+    MinimizeBtn.TextSize = 24
     MinimizeBtn.Parent = MainFrame
-    MinimizeBtn.ZIndex = 200 -- Высокий ZIndex
+    MinimizeBtn.ZIndex = 200 
     Library:RegisterTheme(MinimizeBtn, "TextColor3", "TextDark")
 
     AddTooltip(MinimizeBtn, "Minimize")
