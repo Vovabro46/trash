@@ -1,9 +1,7 @@
 --[[
-    🌌 AURORA LIBRARY v40.0 (FULL RELEASE)
-    - Feature: Added User Profile Card in Sidebar
-    - Feature: Added Watermark System
-    - Core: Full Icon Support (Tabs, SubTabs, Groups)
-    - Core: All Elements Included (Toggle, Slider, Dropdown, ColorPicker, Keybind, etc.)
+    🌌 AURORA LIBRARY v40.1 (FIXED)
+    - Fixed: Missing elements (Card, Paragraph, InputGroup) causing script errors.
+    - Fixed: Sidebar scrolling issues (added AutomaticCanvasSize).
 ]]
 
 local HttpService = game:GetService("HttpService")
@@ -70,6 +68,14 @@ function Library:LoadConfig(Name)
     end
 end
 
+function Library:GetConfigs()
+    if not isfolder(Library.FolderName.."/Configs") then makefolder(Library.FolderName.."/Configs") end
+    local files = listfiles(Library.FolderName.."/Configs")
+    local configs = {}
+    for _, file in pairs(files) do table.insert(configs, file:match("([^/]+)%.json$")) end
+    return configs
+end
+
 -- // UTILS //
 local function Create(class, props)
     local inst = Instance.new(class)
@@ -102,8 +108,8 @@ end
 
 -- // WATERMARK //
 function Library:Watermark(Text)
-    local Screen = CoreGui:FindFirstChild("AuroraLib_v40") or Instance.new("ScreenGui", CoreGui)
-    Screen.Name = "AuroraLib_v40"
+    local Screen = CoreGui:FindFirstChild("AuroraLib_v40")
+    if not Screen then return end
     local WM = Create("Frame", {Parent = Screen, BackgroundColor3 = Library.Theme.Background, Position = UDim2.new(0.01, 0, 0.01, 0), Size = UDim2.new(0, 0, 0, 26), ZIndex = 100}); AddCorner(WM, 4); AddStroke(WM, Library.Theme.Accent)
     local Lab = Create("TextLabel", {Parent = WM, BackgroundTransparency = 1, Position = UDim2.new(0, 8, 0, 0), Size = UDim2.new(0, 0, 1, 0), Text = Text, Font = Library.Theme.FontBold, TextColor3 = Library.Theme.Text, TextSize = 13, TextXAlignment = Enum.TextXAlignment.Left, AutomaticSize = Enum.AutomaticSize.X})
     WM.Size = UDim2.new(0, Lab.TextBounds.X + 16, 0, 26)
@@ -145,11 +151,44 @@ function Library:CreateSection(Parent, Title, ShowFunc, Icon)
         return Lab
     end
 
+    function El:AddParagraph(options)
+        local Title, Content = options.Title or "Paragraph", options.Content or ""
+        local Box = Create("Frame", {Parent = Container, BackgroundColor3 = Library.Theme.ElementBG, Size = UDim2.new(1, 0, 0, 0), AutomaticSize = Enum.AutomaticSize.Y, ZIndex = 7}); AddCorner(Box, 4)
+        Create("UIPadding", {Parent = Box, PaddingTop = UDim.new(0, 8), PaddingBottom = UDim.new(0, 8), PaddingLeft = UDim.new(0, 10), PaddingRight = UDim.new(0, 10)})
+        Create("UIListLayout", {Parent = Box, SortOrder = Enum.SortOrder.LayoutOrder, Padding = UDim.new(0, 5)})
+        Create("TextLabel", {Parent = Box, BackgroundTransparency = 1, Size = UDim2.new(1, 0, 0, 15), Font = Library.Theme.FontBold, Text = Title, TextColor3 = Library.Theme.Accent, TextSize = 13, TextXAlignment = Enum.TextXAlignment.Left, ZIndex = 8})
+        Create("TextLabel", {Parent = Box, BackgroundTransparency = 1, Size = UDim2.new(1, 0, 0, 0), AutomaticSize = Enum.AutomaticSize.Y, Font = Library.Theme.Font, Text = Content, TextColor3 = Library.Theme.TextDim, TextSize = 12, TextXAlignment = Enum.TextXAlignment.Left, TextWrapped = true, ZIndex = 8})
+        AddTooltip(Box, options.Description); Register(Title, Box)
+    end
+
     function El:AddButton(options)
         local Title, Callback = options.Title or "Button", options.Callback or function() end
         local Btn = Create("TextButton", {Parent = Container, BackgroundColor3 = Library.Theme.ElementBG, Size = UDim2.new(1, 0, 0, 32), Text = Title, Font = Library.Theme.Font, TextColor3 = Library.Theme.Text, TextSize = 13, AutoButtonColor = false, ZIndex = 7}); AddCorner(Btn, 4)
         Btn.MouseButton1Click:Connect(function() Tween(Btn, {BackgroundColor3 = Library.Theme.Accent, TextColor3 = Library.Theme.SectionBG}, 0.1); task.delay(0.15, function() Tween(Btn, {BackgroundColor3 = Library.Theme.ElementBG, TextColor3 = Library.Theme.Text}, 0.2) end); Callback() end)
         AddTooltip(Btn, options.Description); Register(Title, Btn)
+    end
+
+    function El:AddSeparator()
+        local Sep = Create("Frame", {Parent = Container, BackgroundColor3 = Library.Theme.Border, Size = UDim2.new(1, 0, 0, 1), BorderSizePixel = 0, ZIndex = 10}); Create("UIPadding", {Parent = Sep, PaddingTop = UDim.new(0, 5), PaddingBottom = UDim.new(0, 5)})
+    end
+
+    function El:AddSpace(Amount)
+        Create("Frame", {Parent = Container, BackgroundTransparency = 1, Size = UDim2.new(1, 0, 0, Amount or 10)})
+    end
+
+    function El:AddCard(options)
+        local Title, Content, Icon = options.Title or "Card", options.Content or "", options.Icon
+        local Card = Create("Frame", {Parent = Container, BackgroundColor3 = Library.Theme.CardBG, Size = UDim2.new(1, 0, 0, 0), AutomaticSize = Enum.AutomaticSize.Y, ZIndex = 7}); AddCorner(Card, 6); AddStroke(Card, Library.Theme.Border, 1)
+        Create("UIPadding", {Parent = Card, PaddingTop = UDim.new(0, 10), PaddingBottom = UDim.new(0, 10), PaddingLeft = UDim.new(0, 10), PaddingRight = UDim.new(0, 10)})
+        if Icon then Create("ImageLabel", {Parent = Card, BackgroundTransparency = 1, Size = UDim2.new(0, 20, 0, 20), Image = GetIcon(Icon), ImageColor3 = Library.Theme.Accent, ZIndex = 8}) end
+        Create("TextLabel", {Parent = Card, BackgroundTransparency = 1, Position = UDim2.new(0, Icon and 30 or 0, 0, 0), Size = UDim2.new(1, -30, 0, 20), Font = Library.Theme.FontBold, Text = Title, TextColor3 = Library.Theme.Text, TextSize = 13, TextXAlignment = Enum.TextXAlignment.Left, ZIndex = 8})
+        Create("TextLabel", {Parent = Card, BackgroundTransparency = 1, Position = UDim2.new(0, 0, 0, 25), Size = UDim2.new(1, 0, 0, 0), AutomaticSize = Enum.AutomaticSize.Y, Font = Library.Theme.Font, Text = Content, TextColor3 = Library.Theme.TextDim, TextSize = 12, TextXAlignment = Enum.TextXAlignment.Left, TextWrapped = true, ZIndex = 8})
+        AddTooltip(Card, options.Description); Register(Title, Card)
+    end
+
+    function El:AddImage(options)
+        local Img = Create("ImageLabel", {Parent = Container, BackgroundTransparency = 1, Size = options.Size or UDim2.new(0,100,0,100), Image = GetIcon(options.Image), ZIndex = 7})
+        AddTooltip(Img, options.Description)
     end
 
     function El:AddToggle(options)
@@ -199,6 +238,24 @@ function Library:CreateSection(Parent, Title, ShowFunc, Icon)
         return Funcs
     end
 
+    function El:AddDragFloat(options)
+        local Min, Max = options.Min or 0, options.Max or 100
+        local Val = options.Default or Min; if options.Flag then Library.Flags[options.Flag] = Val end
+        local Fr = Create("Frame", {Parent = Container, BackgroundColor3 = Library.Theme.ElementBG, Size = UDim2.new(1, 0, 0, 45), ZIndex = 7}); AddCorner(Fr, 4)
+        Create("TextLabel", {Parent = Fr, BackgroundTransparency = 1, Position = UDim2.new(0, 10, 0, 5), Size = UDim2.new(1, -20, 0, 20), Font = Library.Theme.Font, Text = options.Title, TextColor3 = Library.Theme.Text, TextSize = 13, TextXAlignment = Enum.TextXAlignment.Left, ZIndex = 8})
+        local DragBtn = Create("TextButton", {Parent = Fr, BackgroundColor3 = Library.Theme.Background, Position = UDim2.new(0, 10, 0, 25), Size = UDim2.new(1, -20, 0, 15), Text = "", AutoButtonColor = false, ZIndex = 8}); AddCorner(DragBtn, 4)
+        local ValLbl = Create("TextLabel", {Parent = DragBtn, BackgroundTransparency = 1, Size = UDim2.new(1, 0, 1, 0), Font = Library.Theme.FontBold, Text = tostring(Val) .. " < >", TextColor3 = Library.Theme.Accent, TextSize = 12, ZIndex = 9})
+        local Funcs = {}
+        function Funcs:Set(num) Val = math.clamp(num, Min, Max); ValLbl.Text = tostring(Val) .. " < >"; if options.Flag then Library.Flags[options.Flag] = Val end; if options.Callback then options.Callback(Val) end end
+        if options.Flag then Library.Items[options.Flag] = Funcs end
+        local Dragging, StartX, StartVal = false, 0, 0
+        DragBtn.InputBegan:Connect(function(i) if IsMouse(i) then Dragging = true; StartX = i.Position.X; StartVal = Val; UserInputService.MouseIconEnabled = false end end)
+        UserInputService.InputEnded:Connect(function(i) if IsMouse(i) then Dragging = false; UserInputService.MouseIconEnabled = true end end)
+        UserInputService.InputChanged:Connect(function(i) if Dragging and (i.UserInputType == Enum.UserInputType.MouseMovement or i.UserInputType == Enum.UserInputType.Touch) then local Delta = i.Position.X - StartX; local Change = Delta * ((Max - Min) / 200); Funcs:Set(math.floor(StartVal + Change)) end end)
+        AddTooltip(DragBtn, options.Description or "Click and drag left/right"); Register(options.Title, Fr)
+        return Funcs
+    end
+
     function El:AddInput(options)
         local Default = options.Default or ""; if options.Flag then Library.Flags[options.Flag] = Default end
         local Fr = Create("Frame", {Parent = Container, BackgroundColor3 = Library.Theme.ElementBG, Size = UDim2.new(1, 0, 0, 45), ZIndex = 7}); AddCorner(Fr, 4)
@@ -243,7 +300,7 @@ function Library:CreateSection(Parent, Title, ShowFunc, Icon)
         Register(options.Title, Fr)
         local Funcs = {}
         local function UpdateText() local t = {}; for k, v in pairs(Selected) do if v then table.insert(t, k) end end; Lbl.Text = #t == 0 and "None" or #t == 1 and t[1] or #t .. " Selected" end; UpdateText()
-        function Funcs:Set(val) Selected = val; if options.Flag then Library.Flags[options.Flag] = Selected end; UpdateText(); if options.Callback then options.Callback(Selected) end end
+        function Funcs:Set(val) Selected = val; if options.Flag then Library.Flags[options.Flag] = Selected; UpdateText(); if options.Callback then options.Callback(Selected) end end end
         if options.Flag then Library.Items[options.Flag] = Funcs end
         Btn.MouseButton1Click:Connect(function() Exp = not Exp; local H = Exp and math.clamp(#options.Values * 27, 0, 150) or 0
             if Exp then for _, v in pairs(Li:GetChildren()) do if v:IsA("TextButton") then v:Destroy() end end; for _, v in pairs(options.Values) do local I = Create("TextButton", {Parent = Li, BackgroundTransparency = 1, Size = UDim2.new(1, 0, 0, 25), Font = Library.Theme.Font, Text = v, TextColor3 = Selected[v] and Library.Theme.Accent or Library.Theme.TextDim, TextSize = 12, ZIndex = 22}); I.MouseButton1Click:Connect(function() Selected[v] = not Selected[v]; I.TextColor3 = Selected[v] and Library.Theme.Accent or Library.Theme.TextDim; if options.Flag then Library.Flags[options.Flag] = Selected end; UpdateText(); if options.Callback then options.Callback(Selected) end end) end end
@@ -309,12 +366,41 @@ function Library:CreateSection(Parent, Title, ShowFunc, Icon)
         AddTooltip(Btn, options.Description)
     end
 
+    function El:AddInputGroup(Title)
+        local GroupFrame = Create("Frame", {Parent = Container, BackgroundColor3 = Library.Theme.Background, Size = UDim2.new(1, 0, 0, 0), AutomaticSize = Enum.AutomaticSize.Y, BackgroundTransparency = 0.5, ZIndex = 7}); AddCorner(GroupFrame, 4); AddStroke(GroupFrame, Library.Theme.Border, 1)
+        Create("UIPadding", {Parent = GroupFrame, PaddingLeft = UDim.new(0, 8), PaddingRight = UDim.new(0, 8), PaddingTop = UDim.new(0, 8), PaddingBottom = UDim.new(0, 8)})
+        Create("UIListLayout", {Parent = GroupFrame, SortOrder = Enum.SortOrder.LayoutOrder, Padding = UDim.new(0, 6)})
+        if Title then Create("TextLabel", {Parent = GroupFrame, BackgroundTransparency = 1, Size = UDim2.new(1, 0, 0, 15), Font = Library.Theme.FontBold, Text = Title, TextColor3 = Library.Theme.TextDim, TextSize = 11, TextXAlignment = Enum.TextXAlignment.Left, ZIndex = 8}) end
+        
+        local ProxyEl = {}
+        function ProxyEl:AddToggle(opt)
+            local State = opt.Default or false; if opt.Flag then Library.Flags[opt.Flag] = State end
+            local Btn = Create("TextButton", {Parent = GroupFrame, BackgroundColor3 = Library.Theme.ElementBG, Size = UDim2.new(1, 0, 0, 25), Text = "", AutoButtonColor = false, ZIndex = 8}); AddCorner(Btn, 4)
+            Create("TextLabel", {Parent = Btn, BackgroundTransparency = 1, Position = UDim2.new(0, 25, 0, 0), Size = UDim2.new(1, -25, 1, 0), Font = Library.Theme.Font, Text = opt.Title, TextColor3 = Library.Theme.Text, TextSize = 12, TextXAlignment = Enum.TextXAlignment.Left, ZIndex = 9})
+            local Box = Create("Frame", {Parent = Btn, BackgroundColor3 = State and Library.Theme.Accent or Library.Theme.Background, Position = UDim2.new(0, 5, 0.5, -6), Size = UDim2.new(0, 12, 0, 12), ZIndex = 9}); AddCorner(Box, 3)
+            Btn.MouseButton1Click:Connect(function() State = not State; Box.BackgroundColor3 = State and Library.Theme.Accent or Library.Theme.Background; if opt.Flag then Library.Flags[opt.Flag] = State end; if opt.Callback then opt.Callback(State) end end)
+            Register(opt.Title, Btn); AddTooltip(Btn, opt.Description)
+        end
+        function ProxyEl:AddInput(opt)
+            local Default = opt.Default or ""; if opt.Flag then Library.Flags[opt.Flag] = Default end
+            local Box = Create("TextBox", {Parent = GroupFrame, BackgroundColor3 = Library.Theme.ElementBG, Size = UDim2.new(1, 0, 0, 25), Font = Library.Theme.Font, Text = Default, PlaceholderText = opt.Title, TextColor3 = Library.Theme.Text, TextSize = 12, ZIndex = 8, ClearTextOnFocus = false}); AddCorner(Box, 4)
+            Box.FocusLost:Connect(function() if opt.Flag then Library.Flags[opt.Flag] = Box.Text end; if opt.Callback then opt.Callback(Box.Text) end end)
+            Register(opt.Title, Box); AddTooltip(Box, opt.Description)
+        end
+        function ProxyEl:AddButton(opt)
+            local Btn = Create("TextButton", {Parent = GroupFrame, BackgroundColor3 = Library.Theme.ElementBG, Size = UDim2.new(1, 0, 0, 25), Text = opt.Title, Font = Library.Theme.Font, TextColor3 = Library.Theme.Text, TextSize = 12, AutoButtonColor = false, ZIndex = 8}); AddCorner(Btn, 4)
+            Btn.MouseButton1Click:Connect(function() Tween(Btn, {BackgroundColor3 = Library.Theme.Accent, TextColor3 = Library.Theme.SectionBG}, 0.1); task.delay(0.15, function() Tween(Btn, {BackgroundColor3 = Library.Theme.ElementBG, TextColor3 = Library.Theme.Text}, 0.2) end); if opt.Callback then opt.Callback() end end)
+            Register(opt.Title, Btn); AddTooltip(Btn, opt.Description)
+        end
+        return ProxyEl
+    end
+
     return El
 end
 
 -- // WINDOW SYSTEM //
 function Library:Window(options)
-    local ScreenGui = Create("ScreenGui", {Name = "AuroraLib_v40", Parent = CoreGui, ZIndexBehavior = Enum.ZIndexBehavior.Sibling, DisplayOrder = 9999})
+    local ScreenGui = Create("ScreenGui", {Name = "AuroraLib_v40_1", Parent = CoreGui, ZIndexBehavior = Enum.ZIndexBehavior.Sibling, DisplayOrder = 9999})
     local Main = Create("Frame", {Parent = ScreenGui, BackgroundColor3 = Library.Theme.Background, Position = UDim2.new(0.5, -300, 0.5, -200), Size = UDim2.new(0, 600, 0, 400), ClipsDescendants = false, Visible = true}); AddCorner(Main, 8); AddStroke(Main, Library.Theme.Accent, 2)
     InitParticles(Main)
 
@@ -394,7 +480,7 @@ function Library:Window(options)
     UserInputService.InputEnded:Connect(function(i) if IsMouse(i) then Dragging = false end end)
 
     -- // SIDEBAR & PROFILE CARD //
-    local TabArea = Create("ScrollingFrame", {Parent = Main, BackgroundColor3 = Library.Theme.SectionBG, Position = UDim2.new(0, 15, 0, 50), Size = UDim2.new(0, 140, 1, -115), ZIndex = 2, ScrollBarThickness = 0, BackgroundTransparency = 0}); AddCorner(TabArea, 6)
+    local TabArea = Create("ScrollingFrame", {Parent = Main, BackgroundColor3 = Library.Theme.SectionBG, Position = UDim2.new(0, 15, 0, 50), Size = UDim2.new(0, 140, 1, -115), ZIndex = 2, ScrollBarThickness = 0, BackgroundTransparency = 0, AutomaticCanvasSize = Enum.AutomaticSize.Y, CanvasSize = UDim2.new(0,0,0,0)}); AddCorner(TabArea, 6)
     Create("UIListLayout", {Parent = TabArea, Padding = UDim.new(0, 5), SortOrder = Enum.SortOrder.LayoutOrder}); Create("UIPadding", {Parent = TabArea, PaddingTop = UDim.new(0, 10), PaddingBottom = UDim.new(0, 10)})
     
     local ProfileCard = Create("Frame", {Parent = Main, BackgroundColor3 = Library.Theme.SectionBG, Position = UDim2.new(0, 15, 1, -55), Size = UDim2.new(0, 140, 0, 45), ZIndex = 2}); AddCorner(ProfileCard, 6)
