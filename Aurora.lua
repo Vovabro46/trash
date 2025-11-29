@@ -1,5 +1,6 @@
 local Library = {
     Flags = {},
+    SearchElements = {},
     Theme = {
         Accent = Color3.fromRGB(0, 255, 180),
         Background = Color3.fromRGB(20, 20, 25),
@@ -45,6 +46,10 @@ local function IsMouse(input)
     return input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch
 end
 
+local function ToHex(color)
+    return string.format("#%02X%02X%02X", color.R * 255, color.G * 255, color.B * 255)
+end
+
 -- // PARTICLES //
 local function InitParticles(parent)
     local ParticleContainer = Create("Frame", {Parent = parent, Size = UDim2.new(1,0,1,0), BackgroundTransparency = 1, ZIndex = 1, ClipsDescendants = true})
@@ -63,13 +68,11 @@ local function InitParticles(parent)
     end)
 end
 
--- // TOOLTIP & NOTIFICATION //
-local TooltipLabel, TooltipFrame
+-- // NOTIFICATIONS //
 local NotifyList
-
 function Library:Notify(Text, Duration)
     if not NotifyList then
-        local Screen = CoreGui:FindFirstChild("AuroraLib_v27_1")
+        local Screen = CoreGui:FindFirstChild("AuroraLib_v29")
         if Screen then
             NotifyList = Create("Frame", {Parent = Screen, BackgroundTransparency = 1, Position = UDim2.new(1, -220, 1, -50), Size = UDim2.new(0, 200, 0, 0), AnchorPoint = Vector2.new(0, 1)})
             Create("UIListLayout", {Parent = NotifyList, SortOrder = Enum.SortOrder.LayoutOrder, VerticalAlignment = Enum.VerticalAlignment.Bottom, Padding = UDim.new(0, 5)})
@@ -86,6 +89,8 @@ function Library:Notify(Text, Duration)
     end
 end
 
+-- // TOOLTIP SYSTEM //
+local TooltipLabel, TooltipFrame
 local function AddTooltip(element, text)
     if not text then return end
     element.MouseEnter:Connect(function()
@@ -106,9 +111,8 @@ function Library:CreateSection(Parent, Title)
     
     local El = {}
 
-    -- [ HELPER: REGISTER ELEMENT FOR SEARCH ]
     local function Register(Name, Instance)
-        if Library.SearchElements then table.insert(Library.SearchElements, {Name = Name, Instance = Instance}) end
+        table.insert(Library.SearchElements, {Name = Name, Instance = Instance})
     end
 
     function El:AddLabel(Text)
@@ -123,16 +127,14 @@ function Library:CreateSection(Parent, Title)
         Create("UIListLayout", {Parent = Box, SortOrder = Enum.SortOrder.LayoutOrder, Padding = UDim.new(0, 5)})
         Create("TextLabel", {Parent = Box, BackgroundTransparency = 1, Size = UDim2.new(1, 0, 0, 15), Font = Library.Theme.FontBold, Text = Title, TextColor3 = Library.Theme.Accent, TextSize = 13, TextXAlignment = Enum.TextXAlignment.Left, ZIndex = 8})
         Create("TextLabel", {Parent = Box, BackgroundTransparency = 1, Size = UDim2.new(1, 0, 0, 0), AutomaticSize = Enum.AutomaticSize.Y, Font = Library.Theme.Font, Text = Content, TextColor3 = Library.Theme.TextDim, TextSize = 12, TextXAlignment = Enum.TextXAlignment.Left, TextWrapped = true, ZIndex = 8})
-        AddTooltip(Box, options.Description)
-        Register(Title, Box)
+        AddTooltip(Box, options.Description); Register(Title, Box)
     end
 
     function El:AddButton(options)
         local Title, Callback = options.Title or "Button", options.Callback or function() end
         local Btn = Create("TextButton", {Parent = Container, BackgroundColor3 = Library.Theme.ElementBG, Size = UDim2.new(1, 0, 0, 32), Text = Title, Font = Library.Theme.Font, TextColor3 = Library.Theme.Text, TextSize = 13, AutoButtonColor = false, ZIndex = 7}); AddCorner(Btn, 4)
         Btn.MouseButton1Click:Connect(function() Tween(Btn, {BackgroundColor3 = Library.Theme.Accent, TextColor3 = Library.Theme.SectionBG}, 0.1); task.delay(0.15, function() Tween(Btn, {BackgroundColor3 = Library.Theme.ElementBG, TextColor3 = Library.Theme.Text}, 0.2) end); Callback() end)
-        AddTooltip(Btn, options.Description)
-        Register(Title, Btn)
+        AddTooltip(Btn, options.Description); Register(Title, Btn)
     end
 
     function El:AddSeparator()
@@ -150,7 +152,7 @@ function Library:CreateSection(Parent, Title)
         Create("ImageLabel", {Parent = Card, BackgroundTransparency = 1, Size = UDim2.new(0, 20, 0, 20), Image = Icon, ImageColor3 = Library.Theme.Accent, ZIndex = 8})
         Create("TextLabel", {Parent = Card, BackgroundTransparency = 1, Position = UDim2.new(0, 30, 0, 0), Size = UDim2.new(1, -30, 0, 20), Font = Library.Theme.FontBold, Text = Title, TextColor3 = Library.Theme.Text, TextSize = 13, TextXAlignment = Enum.TextXAlignment.Left, ZIndex = 8})
         Create("TextLabel", {Parent = Card, BackgroundTransparency = 1, Position = UDim2.new(0, 0, 0, 25), Size = UDim2.new(1, 0, 0, 0), AutomaticSize = Enum.AutomaticSize.Y, Font = Library.Theme.Font, Text = Content, TextColor3 = Library.Theme.TextDim, TextSize = 12, TextXAlignment = Enum.TextXAlignment.Left, TextWrapped = true, ZIndex = 8})
-        AddTooltip(Card, options.Description)
+        AddTooltip(Card, options.Description); Register(Title, Card)
     end
 
     function El:AddToggle(options)
@@ -159,12 +161,10 @@ function Library:CreateSection(Parent, Title)
         Create("TextLabel", {Parent = Btn, BackgroundTransparency = 1, Position = UDim2.new(0, 10, 0, 0), Size = UDim2.new(1, -60, 1, 0), Font = Library.Theme.Font, Text = options.Title, TextColor3 = Library.Theme.Text, TextSize = 13, TextXAlignment = Enum.TextXAlignment.Left, ZIndex = 8})
         local Box = Create("Frame", {Parent = Btn, BackgroundColor3 = State and Library.Theme.Accent or Library.Theme.Background, Position = UDim2.new(1, -45, 0.5, -10), Size = UDim2.new(0, 35, 0, 20), ZIndex = 8}); AddCorner(Box, 10); AddStroke(Box, Library.Theme.Border)
         local Cir = Create("Frame", {Parent = Box, BackgroundColor3 = State and Color3.new(1,1,1) or Library.Theme.TextDim, Position = UDim2.new(0, State and 17 or 2, 0.5, -8), Size = UDim2.new(0, 16, 0, 16), ZIndex = 9}); AddCorner(Cir, 10)
-        
-        Register(options.Title, Btn)
         local Funcs = {}
         function Funcs:Set(bool) State = bool; if options.Flag then Library.Flags[options.Flag] = State end; Tween(Box, {BackgroundColor3 = State and Library.Theme.Accent or Library.Theme.Background}); Tween(Cir, {Position = UDim2.new(0, State and 17 or 2, 0.5, -8), BackgroundColor3 = State and Color3.new(1,1,1) or Library.Theme.TextDim}); if options.Callback then options.Callback(State) end end
         Btn.MouseButton1Click:Connect(function() Funcs:Set(not State) end)
-        AddTooltip(Btn, options.Description)
+        AddTooltip(Btn, options.Description); Register(options.Title, Btn)
         return Funcs
     end
 
@@ -174,13 +174,11 @@ function Library:CreateSection(Parent, Title)
         Create("TextLabel", {Parent = Btn, BackgroundTransparency = 1, Position = UDim2.new(0, 35, 0, 0), Size = UDim2.new(1, -35, 1, 0), Font = Library.Theme.Font, Text = options.Title, TextColor3 = Library.Theme.Text, TextSize = 13, TextXAlignment = Enum.TextXAlignment.Left, ZIndex = 8})
         local Box = Create("Frame", {Parent = Btn, BackgroundColor3 = Library.Theme.Background, Position = UDim2.new(0, 10, 0.5, -9), Size = UDim2.new(0, 18, 0, 18), ZIndex = 8}); AddCorner(Box, 4); AddStroke(Box, Library.Theme.Border)
         local Tick = Create("ImageLabel", {Parent = Box, BackgroundTransparency = 1, AnchorPoint = Vector2.new(0.5,0.5), Position = UDim2.new(0.5, 0, 0.5, 0), Size = UDim2.new(0, 0, 0, 0), Image = "rbxassetid://6031094667", ImageColor3 = Library.Theme.Accent, ZIndex = 9})
-        
-        Register(options.Title, Btn)
         local Funcs = {}
         function Funcs:Set(bool) State = bool; if options.Flag then Library.Flags[options.Flag] = State end; Tween(Tick, {Size = State and UDim2.new(0, 14, 0, 14) or UDim2.new(0,0,0,0)}, 0.15); if options.Callback then options.Callback(State) end end
         if State then Tick.Size = UDim2.new(0,14,0,14) end
         Btn.MouseButton1Click:Connect(function() Funcs:Set(not State) end)
-        AddTooltip(Btn, options.Description)
+        AddTooltip(Btn, options.Description); Register(options.Title, Btn)
         return Funcs
     end
 
@@ -192,14 +190,12 @@ function Library:CreateSection(Parent, Title)
         local Tr = Create("Frame", {Parent = Fr, BackgroundColor3 = Library.Theme.Background, Position = UDim2.new(0, 10, 0, 30), Size = UDim2.new(1, -20, 0, 6), ZIndex = 8}); AddCorner(Tr, 4)
         local Fil = Create("Frame", {Parent = Tr, BackgroundColor3 = Library.Theme.Accent, Size = UDim2.new((Val-options.Min)/(options.Max-options.Min), 0, 1, 0), ZIndex = 9}); AddCorner(Fil, 4)
         local Btn = Create("TextButton", {Parent = Tr, BackgroundTransparency = 1, Size = UDim2.new(1, 0, 1, 0), Text = "", ZIndex = 10})
-        
-        Register(options.Title, Fr)
         local Funcs = {}
         function Funcs:Set(num) Val = math.clamp(num, options.Min, options.Max); if options.Flag then Library.Flags[options.Flag] = Val end; InputBox.Text = tostring(Val); Tween(Fil, {Size = UDim2.new((Val-options.Min)/(options.Max-options.Min), 0, 1, 0)}, 0.05); if options.Callback then options.Callback(Val) end end
         InputBox.FocusLost:Connect(function() local n = tonumber(InputBox.Text); if n then Funcs:Set(n) else InputBox.Text = tostring(Val) end end)
         local function Upd(i) local p = math.clamp((i.Position.X - Tr.AbsolutePosition.X) / Tr.AbsoluteSize.X, 0, 1); Funcs:Set(math.floor(options.Min + ((options.Max-options.Min)*p))) end
         local drag = false; Btn.InputBegan:Connect(function(i) if IsMouse(i) then drag = true; Upd(i) end end); UserInputService.InputEnded:Connect(function(i) if IsMouse(i) then drag = false end end); UserInputService.InputChanged:Connect(function(i) if drag and (i.UserInputType == Enum.UserInputType.MouseMovement or i.UserInputType == Enum.UserInputType.Touch) then Upd(i) end end)
-        AddTooltip(Fr, options.Description)
+        AddTooltip(Fr, options.Description); Register(options.Title, Fr)
         return Funcs
     end
 
@@ -210,13 +206,11 @@ function Library:CreateSection(Parent, Title)
         Create("TextLabel", {Parent = Fr, BackgroundTransparency = 1, Position = UDim2.new(0, 10, 0, 5), Size = UDim2.new(1, -20, 0, 20), Font = Library.Theme.Font, Text = options.Title, TextColor3 = Library.Theme.Text, TextSize = 13, TextXAlignment = Enum.TextXAlignment.Left, ZIndex = 8})
         local DragBtn = Create("TextButton", {Parent = Fr, BackgroundColor3 = Library.Theme.Background, Position = UDim2.new(0, 10, 0, 25), Size = UDim2.new(1, -20, 0, 15), Text = "", AutoButtonColor = false, ZIndex = 8}); AddCorner(DragBtn, 4)
         local ValLbl = Create("TextLabel", {Parent = DragBtn, BackgroundTransparency = 1, Size = UDim2.new(1, 0, 1, 0), Font = Library.Theme.FontBold, Text = tostring(Val) .. " < >", TextColor3 = Library.Theme.Accent, TextSize = 12, ZIndex = 9})
-        
-        Register(options.Title, Fr)
         local Dragging, StartX, StartVal = false, 0, 0
         DragBtn.InputBegan:Connect(function(i) if IsMouse(i) then Dragging = true; StartX = i.Position.X; StartVal = Val; UserInputService.MouseIconEnabled = false end end)
         UserInputService.InputEnded:Connect(function(i) if IsMouse(i) then Dragging = false; UserInputService.MouseIconEnabled = true end end)
         UserInputService.InputChanged:Connect(function(i) if Dragging and (i.UserInputType == Enum.UserInputType.MouseMovement) then local Delta = i.Position.X - StartX; local Change = Delta * ((Max - Min) / 200); Val = math.clamp(math.floor(StartVal + Change), Min, Max); ValLbl.Text = tostring(Val) .. " < >"; if options.Flag then Library.Flags[options.Flag] = Val end; if options.Callback then options.Callback(Val) end end end)
-        AddTooltip(DragBtn, options.Description or "Click and drag left/right")
+        AddTooltip(DragBtn, options.Description or "Click and drag left/right"); Register(options.Title, Fr)
     end
 
     function El:AddInput(options)
@@ -224,9 +218,8 @@ function Library:CreateSection(Parent, Title)
         local Fr = Create("Frame", {Parent = Container, BackgroundColor3 = Library.Theme.ElementBG, Size = UDim2.new(1, 0, 0, 45), ZIndex = 7}); AddCorner(Fr, 4)
         Create("TextLabel", {Parent = Fr, BackgroundTransparency = 1, Position = UDim2.new(0, 10, 0, 5), Size = UDim2.new(1, -20, 0, 20), Font = Library.Theme.Font, Text = options.Title, TextColor3 = Library.Theme.Text, TextSize = 13, TextXAlignment = Enum.TextXAlignment.Left, ZIndex = 8})
         local Box = Create("TextBox", {Parent = Fr, BackgroundColor3 = Library.Theme.Background, Position = UDim2.new(0, 10, 0, 25), Size = UDim2.new(1, -20, 0, 15), Font = Library.Theme.Font, Text = Default, PlaceholderText = "Type...", TextColor3 = Library.Theme.TextDim, TextSize = 12, TextXAlignment = Enum.TextXAlignment.Left, ClearTextOnFocus = false, ZIndex = 8}); AddCorner(Box, 4)
-        Register(options.Title, Fr)
         Box.FocusLost:Connect(function() if options.Flag then Library.Flags[options.Flag] = Box.Text end; if options.Callback then options.Callback(Box.Text) end end)
-        AddTooltip(Fr, options.Description)
+        AddTooltip(Fr, options.Description); Register(options.Title, Fr)
     end
 
     function El:AddDropdown(options)
@@ -289,39 +282,29 @@ function Library:CreateSection(Parent, Title)
         Create("ImageLabel", {Parent = PrevContainer, Size = UDim2.new(1,0,1,0), Image = "rbxassetid://388260974", ScaleType = Enum.ScaleType.Tile, TileSize = UDim2.new(0, 10, 0, 10), ZIndex = 22})
         local Prev = Create("Frame", {Parent = PrevContainer, BackgroundColor3 = Col, Size = UDim2.new(1, 0, 1, 0), ZIndex = 23}); AddCorner(Prev, 4); AddStroke(PrevContainer, Library.Theme.Border)
         local Exp = Create("Frame", {Parent = Fr, BackgroundColor3 = Library.Theme.Background, Position = UDim2.new(0, 10, 0, 35), Size = UDim2.new(1, -20, 0, 170), Visible = false, ZIndex = 21}); AddCorner(Exp, 4)
-        
-        -- FIX WHITE CORNERS (CLIPPING)
         local SVCon = Create("Frame", {Parent = Exp, Position = UDim2.new(0,0,0,0), Size = UDim2.new(0.65,0,0,130), BackgroundTransparency = 1, ClipsDescendants = true, ZIndex = 22}); AddCorner(SVCon, 4)
         local SV = Create("Frame", {Parent = SVCon, Size = UDim2.new(1,0,1,0), BackgroundColor3 = Color3.fromHSV(H,1,1), ZIndex = 22})
         Create("UIGradient", {Parent=Create("Frame", {Parent=SV,Size=UDim2.new(1,0,1,0),BackgroundColor3=Color3.new(1,1,1),ZIndex=23}),Color=ColorSequence.new(Color3.new(1,1,1)),Transparency=NumberSequence.new(0,1)})
         Create("UIGradient", {Parent=Create("Frame", {Parent=SV,Size=UDim2.new(1,0,1,0),BackgroundColor3=Color3.new(0,0,0),ZIndex=24}),Rotation=90,Color=ColorSequence.new(Color3.new(0,0,0)),Transparency=NumberSequence.new(1,0)})
         local SVM = Create("Frame", {Parent = SVCon, BackgroundColor3 = Color3.new(1,1,1), Size = UDim2.new(0,4,0,4), Position = UDim2.new(S,0,1-V,0), ZIndex = 25}); AddStroke(SVM, Color3.new(0,0,0))
-        
         local HSCon = Create("Frame", {Parent = Exp, Position = UDim2.new(0.7,0,0,0), Size = UDim2.new(0.12,0,0,130), BackgroundTransparency = 1, ClipsDescendants = true, ZIndex = 22}); AddCorner(HSCon, 4)
         local HS = Create("Frame", {Parent = HSCon, Size = UDim2.new(1,0,1,0), BackgroundColor3 = Color3.new(1,1,1), ZIndex = 22})
         Create("UIGradient", {Parent=HS, Rotation=90, Color=ColorSequence.new{ColorSequenceKeypoint.new(0,Color3.fromHSV(1,1,1)),ColorSequenceKeypoint.new(0.17,Color3.fromHSV(0.83,1,1)),ColorSequenceKeypoint.new(0.33,Color3.fromHSV(0.66,1,1)),ColorSequenceKeypoint.new(0.5,Color3.fromHSV(0.5,1,1)),ColorSequenceKeypoint.new(0.67,Color3.fromHSV(0.33,1,1)),ColorSequenceKeypoint.new(0.83,Color3.fromHSV(0.17,1,1)),ColorSequenceKeypoint.new(1,Color3.fromHSV(0,1,1))}})
         local HHM = Create("Frame", {Parent = HSCon, BackgroundColor3=Color3.new(1,1,1), Size=UDim2.new(1,0,0,2), Position=UDim2.new(0,0,1-H,0), ZIndex=25}); AddStroke(HHM, Color3.new(0,0,0))
-        
         local AS = Create("Frame", {Parent = Exp, Position = UDim2.new(0.87, 0, 0, 0), Size = UDim2.new(0.12, 0, 0, 130), BackgroundColor3 = Color3.new(1,1,1), ZIndex = 22}); AddCorner(AS, 4)
         Create("ImageLabel", {Parent = AS, Size = UDim2.new(1,0,1,0), Image = "rbxassetid://388260974", ScaleType = Enum.ScaleType.Tile, TileSize = UDim2.new(0, 10, 0, 10), ZIndex = 22})
         local AG = Create("UIGradient", {Parent=Create("Frame", {Parent=AS, Size=UDim2.new(1,0,1,0), BackgroundColor3=Col, ZIndex=23}), Rotation=90, Color=ColorSequence.new(Col), Transparency=NumberSequence.new(0,1)})
         local AAM = Create("Frame", {Parent=AS, BackgroundColor3=Color3.new(1,1,1), Size=UDim2.new(1,0,0,2), Position=UDim2.new(0,0,Alp,0), BorderSizePixel=0, ZIndex=25}); AddStroke(AAM, Color3.new(0,0,0))
-        
-        Register(options.Title, Fr)
         local Funcs = {}
         function Funcs:Set(color, alpha) Col, Alp = color, alpha or Alp; if options.Flag then Library.Flags[options.Flag] = Col end; H,S,V = Color3.toHSV(Col); Prev.BackgroundColor3 = Col; Prev.BackgroundTransparency = Alp; SV.BackgroundColor3 = Color3.fromHSV(H,1,1); AG.Parent.BackgroundColor3 = Col; AG.Color = ColorSequence.new(Col); if options.Callback then options.Callback(Col, Alp) end end
         local function Upd() Col=Color3.fromHSV(H,S,V); Funcs:Set(Col, Alp) end
         local dS,dH,dA=false,false,false
-        local function Input(i,m)
-            if m=="SV" then local X=math.clamp(i.Position.X-SV.AbsolutePosition.X,0,SV.AbsoluteSize.X)/SV.AbsoluteSize.X; local Y=math.clamp(i.Position.Y-SV.AbsolutePosition.Y,0,SV.AbsoluteSize.Y)/SV.AbsoluteSize.Y; S,V=X,1-Y; SVM.Position=UDim2.new(X,0,Y,0)
-            elseif m=="H" then local Y=math.clamp(i.Position.Y-HS.AbsolutePosition.Y,0,HS.AbsoluteSize.Y)/HS.AbsoluteSize.Y; H=1-Y; HHM.Position=UDim2.new(0,0,Y,0)
-            elseif m=="A" then local Y=math.clamp(i.Position.Y-AS.AbsolutePosition.Y,0,AS.AbsoluteSize.Y)/AS.AbsoluteSize.Y; Alp=Y; AAM.Position=UDim2.new(0,0,Y,0) end; Upd()
-        end
+        local function Input(i,m) if m=="SV" then local X=math.clamp(i.Position.X-SV.AbsolutePosition.X,0,SV.AbsoluteSize.X)/SV.AbsoluteSize.X; local Y=math.clamp(i.Position.Y-SV.AbsolutePosition.Y,0,SV.AbsoluteSize.Y)/SV.AbsoluteSize.Y; S,V=X,1-Y; SVM.Position=UDim2.new(X,0,Y,0) elseif m=="H" then local Y=math.clamp(i.Position.Y-HS.AbsolutePosition.Y,0,HS.AbsoluteSize.Y)/HS.AbsoluteSize.Y; H=1-Y; HHM.Position=UDim2.new(0,0,Y,0) elseif m=="A" then local Y=math.clamp(i.Position.Y-AS.AbsolutePosition.Y,0,AS.AbsoluteSize.Y)/AS.AbsoluteSize.Y; Alp=Y; AAM.Position=UDim2.new(0,0,Y,0) end; Upd() end
         for _,v in pairs({SV,HS,AS}) do v.InputBegan:Connect(function(i) if IsMouse(i) then if v==SV then dS=true elseif v==HS then dH=true else dA=true end; Input(i, v==SV and "SV" or v==HS and "H" or "A") end end) end
         UserInputService.InputEnded:Connect(function(i) if IsMouse(i) then dS,dH,dA=false,false,false end end)
         UserInputService.InputChanged:Connect(function(i) if (dS or dH or dA) and (i.UserInputType==Enum.UserInputType.MouseMovement or i.UserInputType==Enum.UserInputType.Touch) then Input(i, dS and "SV" or dH and "H" or "A") end end)
         Btn.MouseButton1Click:Connect(function() Open=not Open; Tween(Fr, {Size=UDim2.new(1,0,0,Open and 170 or 32)}); Exp.Visible=Open end)
-        AddTooltip(Fr, options.Description)
+        AddTooltip(Fr, options.Description); Register(options.Title, Fr)
         return Funcs
     end
 
@@ -370,11 +353,11 @@ function Library:CreateSection(Parent, Title)
 end
 
 function Library:Window(options)
-    local ScreenGui = Create("ScreenGui", {Name = "AuroraLib_v27_1", Parent = CoreGui, ZIndexBehavior = Enum.ZIndexBehavior.Sibling, DisplayOrder = 9999})
+    local ScreenGui = Create("ScreenGui", {Name = "AuroraLib_v29", Parent = CoreGui, ZIndexBehavior = Enum.ZIndexBehavior.Sibling, DisplayOrder = 9999})
     local Main = Create("Frame", {Parent = ScreenGui, BackgroundColor3 = Library.Theme.Background, Position = UDim2.new(0.5, -300, 0.5, -200), Size = UDim2.new(0, 600, 0, 400), ClipsDescendants = false, Visible = true}); AddCorner(Main, 8); AddStroke(Main, Library.Theme.Accent, 2)
     InitParticles(Main)
 
-    Library.SearchElements = {} -- Reset Search Table
+    Library.SearchElements = {}
 
     TooltipFrame = Create("Frame", {Parent = ScreenGui, BackgroundColor3 = Library.Theme.Background, Size = UDim2.new(0, 0, 0, 26), Visible = false, ZIndex = 100}); AddCorner(TooltipFrame, 4); AddStroke(TooltipFrame, Library.Theme.Border)
     TooltipLabel = Create("TextLabel", {Parent = TooltipFrame, BackgroundTransparency = 1, Size = UDim2.new(1, 0, 1, 0), Position = UDim2.new(0, 5, 0, 0), Text = "", Font = Library.Theme.Font, TextSize = 12, TextColor3 = Library.Theme.Text, TextXAlignment = Enum.TextXAlignment.Left, ZIndex = 101})
@@ -398,9 +381,9 @@ function Library:Window(options)
     local Topbar = Create("Frame", {Parent = Main, BackgroundColor3 = Library.Theme.Background, Size = UDim2.new(1, 0, 0, 40), ZIndex = 2}); AddCorner(Topbar, 8)
     Create("TextLabel", {Parent = Topbar, BackgroundTransparency = 1, Size = UDim2.new(1, 0, 1, 0), Position = UDim2.new(0, 20, 0, 0), Font = Library.Theme.FontBold, Text = options.Title or "Library", TextColor3 = Library.Theme.Text, TextSize = 16, TextXAlignment = Enum.TextXAlignment.Left, ZIndex = 3})
     
-    -- GLOBAL SEARCH
     local SearchOpen = false
-    local SearchBtn = Create("ImageButton", {Parent = Topbar, BackgroundTransparency = 1, Position = UDim2.new(1, -35, 0, 8), Size = UDim2.new(0, 24, 0, 24), Image = "rbxassetid://3926305904", ImageColor3 = Library.Theme.Text, ZIndex = 4})
+    -- UPDATED SEARCH ICON (v29)
+    local SearchBtn = Create("ImageButton", {Parent = Topbar, BackgroundTransparency = 1, Position = UDim2.new(1, -35, 0, 8), Size = UDim2.new(0, 24, 0, 24), Image = "rbxassetid://6031154871", ImageColor3 = Library.Theme.Text, ZIndex = 4})
     local SearchBar = Create("TextBox", {Parent = Topbar, BackgroundColor3 = Library.Theme.ElementBG, BackgroundTransparency = 1, Position = UDim2.new(1, -35, 0, 5), Size = UDim2.new(0, 0, 0, 30), Font = Library.Theme.Font, Text = "", PlaceholderText = "Search...", TextColor3 = Library.Theme.Text, TextSize = 13, TextXAlignment = Enum.TextXAlignment.Left, Visible = false, ZIndex = 3, ClipsDescendants = true}); AddCorner(SearchBar, 4)
     SearchBtn.MouseButton1Click:Connect(function() SearchOpen = not SearchOpen; SearchBar.Visible = true; if SearchOpen then Tween(SearchBar, {Size = UDim2.new(0, 150, 0, 30), Position = UDim2.new(1, -190, 0, 5), BackgroundTransparency = 0}) else Tween(SearchBar, {Size = UDim2.new(0, 0, 0, 30), Position = UDim2.new(1, -35, 0, 5), BackgroundTransparency = 1}); for _, v in pairs(Library.SearchElements) do v.Instance.Visible = true end end end)
     SearchBar:GetPropertyChangedSignal("Text"):Connect(function() local txt = SearchBar.Text:lower(); for _, el in pairs(Library.SearchElements) do el.Instance.Visible = el.Name:lower():find(txt) ~= nil end end)
@@ -448,3 +431,5 @@ function Library:Window(options)
     end
     return WindowObj
 end
+
+return Library
