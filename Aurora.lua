@@ -1,13 +1,23 @@
 --[[
-    🌌 AURORA LIBRARY v32.0 (STABLE & FIXED)
-    - Fix: Search Icon reverted to classic (rbxassetid://3926305904)
-    - Fix: Tab Switching Logic (Solves "Only one tab" issue)
-    - Fix: DragFloat & Slider Mobile Support
-    - Core: Optimized for loadstring usage
+    🌌 AURORA LIBRARY v33.0 (CONFIG SYSTEM & NEW ELEMENTS)
+    - Feature: Full Configuration System (Save/Load/Delete)
+    - Feature: RadioButton Element
+    - Feature: ComboBox Element
+    - Core: Items Registry for Config loading
 ]]
+
+local HttpService = game:GetService("HttpService")
+local UserInputService = game:GetService("UserInputService")
+local TweenService = game:GetService("TweenService")
+local RunService = game:GetService("RunService")
+local CoreGui = game:GetService("CoreGui")
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local Mouse = LocalPlayer:GetMouse()
 
 local Library = {
     Flags = {},
+    Items = {}, -- For Config System
     SearchElements = {},
     ActiveKeybinds = {},
     Theme = {
@@ -21,16 +31,45 @@ local Library = {
         CardBG = Color3.fromRGB(40, 40, 45),
         Font = Enum.Font.GothamMedium,
         FontBold = Enum.Font.GothamBold,
-    }
+    },
+    FolderName = "Aurora"
 }
 
-local UserInputService = game:GetService("UserInputService")
-local TweenService = game:GetService("TweenService")
-local RunService = game:GetService("RunService")
-local CoreGui = game:GetService("CoreGui")
-local Players = game:GetService("Players")
-local LocalPlayer = Players.LocalPlayer
-local Mouse = LocalPlayer:GetMouse()
+-- // CONFIG SYSTEM //
+function Library:SaveConfig(Name)
+    local json = HttpService:JSONEncode(Library.Flags)
+    if not isfolder(Library.FolderName) then makefolder(Library.FolderName) end
+    if not isfolder(Library.FolderName.."/Configs") then makefolder(Library.FolderName.."/Configs") end
+    writefile(Library.FolderName.."/Configs/"..Name..".json", json)
+end
+
+function Library:LoadConfig(Name)
+    if isfile(Library.FolderName.."/Configs/"..Name..".json") then
+        local json = readfile(Library.FolderName.."/Configs/"..Name..".json")
+        local data = HttpService:JSONDecode(json)
+        for Flag, Value in pairs(data) do
+            if Library.Items[Flag] then
+                Library.Items[Flag]:Set(Value)
+            end
+        end
+    end
+end
+
+function Library:DeleteConfig(Name)
+    if isfile(Library.FolderName.."/Configs/"..Name..".json") then
+        delfile(Library.FolderName.."/Configs/"..Name..".json")
+    end
+end
+
+function Library:GetConfigs()
+    if not isfolder(Library.FolderName.."/Configs") then makefolder(Library.FolderName.."/Configs") end
+    local files = listfiles(Library.FolderName.."/Configs")
+    local configs = {}
+    for _, file in pairs(files) do
+        table.insert(configs, file:match("([^/]+)%.json$"))
+    end
+    return configs
+end
 
 -- // UTILS //
 local function Create(class, props)
@@ -55,10 +94,6 @@ local function IsMouse(input)
     return input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch
 end
 
-local function ToHex(color)
-    return string.format("#%02X%02X%02X", color.R * 255, color.G * 255, color.B * 255)
-end
-
 -- // PARTICLES //
 local function InitParticles(parent)
     local ParticleContainer = Create("Frame", {Parent = parent, Size = UDim2.new(1,0,1,0), BackgroundTransparency = 1, ZIndex = 1, ClipsDescendants = true})
@@ -81,7 +116,7 @@ end
 local CursorIcon
 function Library:SetCursor(Enabled)
     if not CursorIcon then
-        local Screen = CoreGui:FindFirstChild("AuroraLib_v32")
+        local Screen = CoreGui:FindFirstChild("AuroraLib_v33")
         if not Screen then return end
         CursorIcon = Create("ImageLabel", {Parent = Screen, Size = UDim2.new(0, 20, 0, 20), Image = "rbxassetid://6031094678", ImageColor3 = Library.Theme.Accent, BackgroundTransparency = 1, ZIndex = 9999, Visible = false})
         RunService.RenderStepped:Connect(function()
@@ -102,7 +137,7 @@ end
 local NotifyList
 function Library:Notify(Text, Duration)
     if not NotifyList then
-        local Screen = CoreGui:FindFirstChild("AuroraLib_v32")
+        local Screen = CoreGui:FindFirstChild("AuroraLib_v33")
         if Screen then
             NotifyList = Create("Frame", {Parent = Screen, BackgroundTransparency = 1, Position = UDim2.new(1, -220, 1, -50), Size = UDim2.new(0, 200, 0, 0), AnchorPoint = Vector2.new(0, 1)})
             Create("UIListLayout", {Parent = NotifyList, SortOrder = Enum.SortOrder.LayoutOrder, VerticalAlignment = Enum.VerticalAlignment.Bottom, Padding = UDim.new(0, 5)})
@@ -205,6 +240,7 @@ function Library:CreateSection(Parent, Title, ShowFunc)
         local Cir = Create("Frame", {Parent = Box, BackgroundColor3 = State and Color3.new(1,1,1) or Library.Theme.TextDim, Position = UDim2.new(0, State and 17 or 2, 0.5, -8), Size = UDim2.new(0, 16, 0, 16), ZIndex = 9}); AddCorner(Cir, 10)
         local Funcs = {}
         function Funcs:Set(bool) State = bool; if options.Flag then Library.Flags[options.Flag] = State end; Tween(Box, {BackgroundColor3 = State and Library.Theme.Accent or Library.Theme.Background}); Tween(Cir, {Position = UDim2.new(0, State and 17 or 2, 0.5, -8), BackgroundColor3 = State and Color3.new(1,1,1) or Library.Theme.TextDim}); if options.Callback then options.Callback(State) end end
+        if options.Flag then Library.Items[options.Flag] = Funcs end
         Btn.MouseButton1Click:Connect(function() Funcs:Set(not State) end)
         AddTooltip(Btn, options.Description); Register(options.Title, Btn)
         return Funcs
@@ -218,6 +254,7 @@ function Library:CreateSection(Parent, Title, ShowFunc)
         local Tick = Create("ImageLabel", {Parent = Box, BackgroundTransparency = 1, AnchorPoint = Vector2.new(0.5,0.5), Position = UDim2.new(0.5, 0, 0.5, 0), Size = UDim2.new(0, 0, 0, 0), Image = "rbxassetid://6031094667", ImageColor3 = Library.Theme.Accent, ZIndex = 9})
         local Funcs = {}
         function Funcs:Set(bool) State = bool; if options.Flag then Library.Flags[options.Flag] = State end; Tween(Tick, {Size = State and UDim2.new(0, 14, 0, 14) or UDim2.new(0,0,0,0)}, 0.15); if options.Callback then options.Callback(State) end end
+        if options.Flag then Library.Items[options.Flag] = Funcs end
         if State then Tick.Size = UDim2.new(0,14,0,14) end
         Btn.MouseButton1Click:Connect(function() Funcs:Set(not State) end)
         AddTooltip(Btn, options.Description); Register(options.Title, Btn)
@@ -234,6 +271,7 @@ function Library:CreateSection(Parent, Title, ShowFunc)
         local Btn = Create("TextButton", {Parent = Tr, BackgroundTransparency = 1, Size = UDim2.new(1, 0, 1, 0), Text = "", ZIndex = 10})
         local Funcs = {}
         function Funcs:Set(num) Val = math.clamp(num, options.Min, options.Max); if options.Flag then Library.Flags[options.Flag] = Val end; InputBox.Text = tostring(Val); Tween(Fil, {Size = UDim2.new((Val-options.Min)/(options.Max-options.Min), 0, 1, 0)}, 0.05); if options.Callback then options.Callback(Val) end end
+        if options.Flag then Library.Items[options.Flag] = Funcs end
         InputBox.FocusLost:Connect(function() local n = tonumber(InputBox.Text); if n then Funcs:Set(n) else InputBox.Text = tostring(Val) end end)
         local function Upd(i) local p = math.clamp((i.Position.X - Tr.AbsolutePosition.X) / Tr.AbsoluteSize.X, 0, 1); Funcs:Set(math.floor(options.Min + ((options.Max-options.Min)*p))) end
         local drag = false; Btn.InputBegan:Connect(function(i) if IsMouse(i) then drag = true; Upd(i) end end); UserInputService.InputEnded:Connect(function(i) if IsMouse(i) then drag = false end end); UserInputService.InputChanged:Connect(function(i) if drag and (i.UserInputType == Enum.UserInputType.MouseMovement or i.UserInputType == Enum.UserInputType.Touch) then Upd(i) end end)
@@ -248,11 +286,15 @@ function Library:CreateSection(Parent, Title, ShowFunc)
         Create("TextLabel", {Parent = Fr, BackgroundTransparency = 1, Position = UDim2.new(0, 10, 0, 5), Size = UDim2.new(1, -20, 0, 20), Font = Library.Theme.Font, Text = options.Title, TextColor3 = Library.Theme.Text, TextSize = 13, TextXAlignment = Enum.TextXAlignment.Left, ZIndex = 8})
         local DragBtn = Create("TextButton", {Parent = Fr, BackgroundColor3 = Library.Theme.Background, Position = UDim2.new(0, 10, 0, 25), Size = UDim2.new(1, -20, 0, 15), Text = "", AutoButtonColor = false, ZIndex = 8}); AddCorner(DragBtn, 4)
         local ValLbl = Create("TextLabel", {Parent = DragBtn, BackgroundTransparency = 1, Size = UDim2.new(1, 0, 1, 0), Font = Library.Theme.FontBold, Text = tostring(Val) .. " < >", TextColor3 = Library.Theme.Accent, TextSize = 12, ZIndex = 9})
+        local Funcs = {}
+        function Funcs:Set(num) Val = math.clamp(num, Min, Max); ValLbl.Text = tostring(Val) .. " < >"; if options.Flag then Library.Flags[options.Flag] = Val end; if options.Callback then options.Callback(Val) end end
+        if options.Flag then Library.Items[options.Flag] = Funcs end
         local Dragging, StartX, StartVal = false, 0, 0
         DragBtn.InputBegan:Connect(function(i) if IsMouse(i) then Dragging = true; StartX = i.Position.X; StartVal = Val; UserInputService.MouseIconEnabled = false end end)
         UserInputService.InputEnded:Connect(function(i) if IsMouse(i) then Dragging = false; UserInputService.MouseIconEnabled = true end end)
-        UserInputService.InputChanged:Connect(function(i) if Dragging and (i.UserInputType == Enum.UserInputType.MouseMovement or i.UserInputType == Enum.UserInputType.Touch) then local Delta = i.Position.X - StartX; local Change = Delta * ((Max - Min) / 200); Val = math.clamp(math.floor(StartVal + Change), Min, Max); ValLbl.Text = tostring(Val) .. " < >"; if options.Flag then Library.Flags[options.Flag] = Val end; if options.Callback then options.Callback(Val) end end end)
+        UserInputService.InputChanged:Connect(function(i) if Dragging and (i.UserInputType == Enum.UserInputType.MouseMovement or i.UserInputType == Enum.UserInputType.Touch) then local Delta = i.Position.X - StartX; local Change = Delta * ((Max - Min) / 200); Funcs:Set(math.floor(StartVal + Change)) end end)
         AddTooltip(DragBtn, options.Description or "Click and drag left/right"); Register(options.Title, Fr)
+        return Funcs
     end
 
     function El:AddInput(options)
@@ -260,8 +302,12 @@ function Library:CreateSection(Parent, Title, ShowFunc)
         local Fr = Create("Frame", {Parent = Container, BackgroundColor3 = Library.Theme.ElementBG, Size = UDim2.new(1, 0, 0, 45), ZIndex = 7}); AddCorner(Fr, 4)
         Create("TextLabel", {Parent = Fr, BackgroundTransparency = 1, Position = UDim2.new(0, 10, 0, 5), Size = UDim2.new(1, -20, 0, 20), Font = Library.Theme.Font, Text = options.Title, TextColor3 = Library.Theme.Text, TextSize = 13, TextXAlignment = Enum.TextXAlignment.Left, ZIndex = 8})
         local Box = Create("TextBox", {Parent = Fr, BackgroundColor3 = Library.Theme.Background, Position = UDim2.new(0, 10, 0, 25), Size = UDim2.new(1, -20, 0, 15), Font = Library.Theme.Font, Text = Default, PlaceholderText = "Type...", TextColor3 = Library.Theme.TextDim, TextSize = 12, TextXAlignment = Enum.TextXAlignment.Left, ClearTextOnFocus = false, ZIndex = 8}); AddCorner(Box, 4)
-        Box.FocusLost:Connect(function() if options.Flag then Library.Flags[options.Flag] = Box.Text end; if options.Callback then options.Callback(Box.Text) end end)
+        local Funcs = {}
+        function Funcs:Set(txt) Box.Text = txt; if options.Flag then Library.Flags[options.Flag] = txt end; if options.Callback then options.Callback(txt) end end
+        if options.Flag then Library.Items[options.Flag] = Funcs end
+        Box.FocusLost:Connect(function() Funcs:Set(Box.Text) end)
         AddTooltip(Fr, options.Description); Register(options.Title, Fr)
+        return Funcs
     end
 
     function El:AddDropdown(options)
@@ -270,32 +316,57 @@ function Library:CreateSection(Parent, Title, ShowFunc)
         local Btn = Create("TextButton", {Parent = Fr, BackgroundTransparency = 1, Size = UDim2.new(1, 0, 0, 32), Text = "", AutoButtonColor = false, ZIndex = 21})
         Create("TextLabel", {Parent = Btn, BackgroundTransparency = 1, Position = UDim2.new(0, 10, 0, 0), Size = UDim2.new(0.6, 0, 1, 0), Font = Library.Theme.Font, Text = options.Title, TextColor3 = Library.Theme.Text, TextSize = 13, TextXAlignment = Enum.TextXAlignment.Left, ZIndex = 22})
         local Lbl = Create("TextLabel", {Parent = Btn, BackgroundTransparency = 1, Position = UDim2.new(0.6, 0, 0, 0), Size = UDim2.new(0.4, -10, 1, 0), Font = Library.Theme.FontBold, Text = tostring(Sel), TextColor3 = Library.Theme.Accent, TextSize = 13, TextXAlignment = Enum.TextXAlignment.Right, ZIndex = 22})
-        
-        -- DROPDOWN SEARCH
         local SearchBox = Create("TextBox", {Parent = Fr, BackgroundColor3 = Library.Theme.Background, Position = UDim2.new(0, 5, 0, 35), Size = UDim2.new(1, -10, 0, 20), Font = Library.Theme.Font, Text = "", PlaceholderText = "Search...", TextColor3 = Library.Theme.Text, TextSize = 12, ZIndex = 22, Visible = false}); AddCorner(SearchBox, 4)
         local Li = Create("Frame", {Parent = Fr, BackgroundColor3 = Library.Theme.Background, Position = UDim2.new(0, 5, 0, 60), Size = UDim2.new(1, -10, 0, 0), ZIndex = 21}); AddCorner(Li, 4); Create("UIListLayout", {Parent = Li, SortOrder = Enum.SortOrder.LayoutOrder, Padding = UDim.new(0, 2)})
-        
         Register(options.Title, Fr)
         local Funcs = {}
         function Funcs:Set(val) Sel = val; if options.Flag then Library.Flags[options.Flag] = Sel end; Lbl.Text = tostring(Sel); if options.Callback then options.Callback(Sel) end end
-        
-        local function UpdateList(filter)
-            for _, v in pairs(Li:GetChildren()) do if v:IsA("TextButton") then v:Destroy() end end
-            local Count = 0
-            for _, v in pairs(options.Values) do
-                if not filter or v:lower():find(filter:lower()) then
-                    Count = Count + 1
-                    local I = Create("TextButton", {Parent = Li, BackgroundTransparency = 1, Size = UDim2.new(1, 0, 0, 25), Font = Library.Theme.Font, Text = v, TextColor3 = (Sel == v) and Library.Theme.Accent or Library.Theme.TextDim, TextSize = 12, ZIndex = 22})
-                    I.MouseButton1Click:Connect(function() Funcs:Set(v); Exp = false; SearchBox.Visible = false; Tween(Fr, {Size = UDim2.new(1, 0, 0, 32)}) end)
-                end
-            end
-            local ListH = math.clamp(Count * 27, 0, 150)
-            Tween(Li, {Size = UDim2.new(1, -10, 0, ListH)})
-            Tween(Fr, {Size = UDim2.new(1, 0, 0, Exp and (ListH + 65) or 32)})
-        end
+        if options.Flag then Library.Items[options.Flag] = Funcs end
+        local function UpdateList(filter) for _, v in pairs(Li:GetChildren()) do if v:IsA("TextButton") then v:Destroy() end end
+            local Count = 0; for _, v in pairs(options.Values) do if not filter or v:lower():find(filter:lower()) then Count=Count+1; local I = Create("TextButton", {Parent = Li, BackgroundTransparency = 1, Size = UDim2.new(1, 0, 0, 25), Font = Library.Theme.Font, Text = v, TextColor3 = (Sel == v) and Library.Theme.Accent or Library.Theme.TextDim, TextSize = 12, ZIndex = 22}); I.MouseButton1Click:Connect(function() Funcs:Set(v); Exp = false; SearchBox.Visible = false; Tween(Fr, {Size = UDim2.new(1, 0, 0, 32)}) end) end end
+            local ListH = math.clamp(Count * 27, 0, 150); Tween(Li, {Size = UDim2.new(1, -10, 0, ListH)}); Tween(Fr, {Size = UDim2.new(1, 0, 0, Exp and (ListH + 65) or 32)}) end
         SearchBox:GetPropertyChangedSignal("Text"):Connect(function() UpdateList(SearchBox.Text) end)
         Btn.MouseButton1Click:Connect(function() Exp = not Exp; SearchBox.Visible = Exp; if Exp then UpdateList("") else Tween(Fr, {Size = UDim2.new(1, 0, 0, 32)}) end end)
         AddTooltip(Fr, options.Description)
+        return Funcs
+    end
+
+    function El:AddComboBox(options) return El:AddDropdown(options) end -- Alias
+
+    function El:AddRadioButton(options)
+        local Sel = options.Default or options.Options[1]
+        if options.Flag then Library.Flags[options.Flag] = Sel end
+        
+        local Fr = Create("Frame", {Parent = Container, BackgroundColor3 = Library.Theme.ElementBG, Size = UDim2.new(1, 0, 0, 0), AutomaticSize = Enum.AutomaticSize.Y, ZIndex = 7}); AddCorner(Fr, 4)
+        Create("UIPadding", {Parent = Fr, PaddingTop=UDim.new(0,8), PaddingBottom=UDim.new(0,8), PaddingLeft=UDim.new(0,8), PaddingRight=UDim.new(0,8)})
+        Create("TextLabel", {Parent = Fr, BackgroundTransparency = 1, Size = UDim2.new(1, 0, 0, 15), Font = Library.Theme.Font, Text = options.Title, TextColor3 = Library.Theme.Text, TextSize = 13, TextXAlignment = Enum.TextXAlignment.Left})
+        local List = Create("Frame", {Parent = Fr, BackgroundTransparency = 1, Position = UDim2.new(0,0,0,20), Size = UDim2.new(1,0,0,0), AutomaticSize = Enum.AutomaticSize.Y}); Create("UIListLayout", {Parent = List, Padding = UDim.new(0, 5)})
+        
+        local Funcs = {}
+        local Buttons = {}
+        
+        function Funcs:Set(val)
+            Sel = val; if options.Flag then Library.Flags[options.Flag] = Sel end
+            for v, btn in pairs(Buttons) do
+                local circle = btn:FindFirstChild("Circle")
+                if v == Sel then
+                    Tween(circle, {BackgroundColor3 = Library.Theme.Accent})
+                else
+                    Tween(circle, {BackgroundColor3 = Library.Theme.TextDim})
+                end
+            end
+            if options.Callback then options.Callback(Sel) end
+        end
+        if options.Flag then Library.Items[options.Flag] = Funcs end
+
+        for _, v in pairs(options.Options) do
+            local Btn = Create("TextButton", {Parent = List, BackgroundTransparency = 1, Size = UDim2.new(1, 0, 0, 20), Text = "", AutoButtonColor = false})
+            local Circle = Create("Frame", {Parent = Btn, Name = "Circle", BackgroundColor3 = (Sel == v and Library.Theme.Accent or Library.Theme.TextDim), Size = UDim2.new(0, 14, 0, 14), Position = UDim2.new(0, 0, 0.5, -7)}); AddCorner(Circle, 10)
+            Create("TextLabel", {Parent = Btn, BackgroundTransparency = 1, Position = UDim2.new(0, 20, 0, 0), Size = UDim2.new(1, -20, 1, 0), Text = v, TextColor3 = Library.Theme.Text, Font = Library.Theme.Font, TextSize = 12, TextXAlignment = Enum.TextXAlignment.Left})
+            Buttons[v] = Btn
+            Btn.MouseButton1Click:Connect(function() Funcs:Set(v) end)
+        end
+        Register(options.Title, Fr)
         return Funcs
     end
 
@@ -307,11 +378,15 @@ function Library:CreateSection(Parent, Title, ShowFunc)
         local Lbl = Create("TextLabel", {Parent = Btn, BackgroundTransparency = 1, Position = UDim2.new(0.4, 0, 0, 0), Size = UDim2.new(0.6, -10, 1, 0), Font = Library.Theme.FontBold, Text = "...", TextColor3 = Library.Theme.Accent, TextSize = 13, TextXAlignment = Enum.TextXAlignment.Right, ZIndex = 22})
         local Li = Create("Frame", {Parent = Fr, BackgroundColor3 = Library.Theme.Background, Position = UDim2.new(0, 5, 0, 35), Size = UDim2.new(1, -10, 0, 0), ZIndex = 21}); AddCorner(Li, 4); Create("UIListLayout", {Parent = Li, SortOrder = Enum.SortOrder.LayoutOrder, Padding = UDim.new(0, 2)})
         Register(options.Title, Fr)
+        local Funcs = {}
         local function UpdateText() local t = {}; for k, v in pairs(Selected) do if v then table.insert(t, k) end end; Lbl.Text = #t == 0 and "None" or #t == 1 and t[1] or #t .. " Selected" end; UpdateText()
+        function Funcs:Set(val) Selected = val; if options.Flag then Library.Flags[options.Flag] = Selected end; UpdateText(); if options.Callback then options.Callback(Selected) end end
+        if options.Flag then Library.Items[options.Flag] = Funcs end
         Btn.MouseButton1Click:Connect(function() Exp = not Exp; local H = Exp and math.clamp(#options.Values * 27, 0, 150) or 0
             if Exp then for _, v in pairs(Li:GetChildren()) do if v:IsA("TextButton") then v:Destroy() end end; for _, v in pairs(options.Values) do local I = Create("TextButton", {Parent = Li, BackgroundTransparency = 1, Size = UDim2.new(1, 0, 0, 25), Font = Library.Theme.Font, Text = v, TextColor3 = Selected[v] and Library.Theme.Accent or Library.Theme.TextDim, TextSize = 12, ZIndex = 22}); I.MouseButton1Click:Connect(function() Selected[v] = not Selected[v]; I.TextColor3 = Selected[v] and Library.Theme.Accent or Library.Theme.TextDim; if options.Flag then Library.Flags[options.Flag] = Selected end; UpdateText(); if options.Callback then options.Callback(Selected) end end) end end
             Tween(Li, {Size = UDim2.new(1, -10, 0, H)}); Tween(Fr, {Size = UDim2.new(1, 0, 0, Exp and H + 40 or 32)}) end)
         AddTooltip(Fr, options.Description)
+        return Funcs
     end
 
     function El:AddColorPicker(options)
@@ -342,6 +417,7 @@ function Library:CreateSection(Parent, Title, ShowFunc)
         
         local Funcs = {}
         function Funcs:Set(color, alpha) Col, Alp = color, alpha or Alp; if options.Flag then Library.Flags[options.Flag] = Col end; H,S,V = Color3.toHSV(Col); Prev.BackgroundColor3 = Col; Prev.BackgroundTransparency = Alp; SV.BackgroundColor3 = Color3.fromHSV(H,1,1); AG.Parent.BackgroundColor3 = Col; AG.Color = ColorSequence.new(Col); if options.Callback then options.Callback(Col, Alp) end end
+        if options.Flag then Library.Items[options.Flag] = Funcs end
         local function Upd() Col=Color3.fromHSV(H,S,V); Funcs:Set(Col, Alp) end
         local dS,dH,dA=false,false,false
         local function Input(i,m) if m=="SV" then local X=math.clamp(i.Position.X-SV.AbsolutePosition.X,0,SV.AbsoluteSize.X)/SV.AbsoluteSize.X; local Y=math.clamp(i.Position.Y-SV.AbsolutePosition.Y,0,SV.AbsoluteSize.Y)/SV.AbsoluteSize.Y; S,V=X,1-Y; SVM.Position=UDim2.new(X,0,Y,0) elseif m=="H" then local Y=math.clamp(i.Position.Y-HS.AbsolutePosition.Y,0,HS.AbsoluteSize.Y)/HS.AbsoluteSize.Y; H=1-Y; HHM.Position=UDim2.new(0,0,Y,0) elseif m=="A" then local Y=math.clamp(i.Position.Y-AS.AbsolutePosition.Y,0,AS.AbsoluteSize.Y)/AS.AbsoluteSize.Y; Alp=Y; AAM.Position=UDim2.new(0,0,Y,0) end; Upd() end
@@ -408,7 +484,7 @@ function Library:CreateSection(Parent, Title, ShowFunc)
 end
 
 function Library:Window(options)
-    local ScreenGui = Create("ScreenGui", {Name = "AuroraLib_v32", Parent = CoreGui, ZIndexBehavior = Enum.ZIndexBehavior.Sibling, DisplayOrder = 9999})
+    local ScreenGui = Create("ScreenGui", {Name = "AuroraLib_v33", Parent = CoreGui, ZIndexBehavior = Enum.ZIndexBehavior.Sibling, DisplayOrder = 9999})
     local Main = Create("Frame", {Parent = ScreenGui, BackgroundColor3 = Library.Theme.Background, Position = UDim2.new(0.5, -300, 0.5, -200), Size = UDim2.new(0, 600, 0, 400), ClipsDescendants = false, Visible = true}); AddCorner(Main, 8); AddStroke(Main, Library.Theme.Accent, 2)
     InitParticles(Main)
 
@@ -443,8 +519,7 @@ function Library:Window(options)
     Create("TextLabel", {Parent = Topbar, BackgroundTransparency = 1, Size = UDim2.new(1, 0, 1, 0), Position = UDim2.new(0, 20, 0, 0), Font = Library.Theme.FontBold, Text = options.Title or "Library", TextColor3 = Library.Theme.Text, TextSize = 16, TextXAlignment = Enum.TextXAlignment.Left, ZIndex = 3})
     
     local SearchOpen = false
-    -- FIXED SEARCH ICON (v32)
-    local SearchBtn = Create("ImageButton", {Parent = Topbar, BackgroundTransparency = 1, Position = UDim2.new(1, -35, 0, 8), Size = UDim2.new(0, 24, 0, 24), Image = "rbxassetid://3926305904", ImageColor3 = Library.Theme.Text, ZIndex = 4})
+    local SearchBtn = Create("ImageButton", {Parent = Topbar, BackgroundTransparency = 1, Position = UDim2.new(1, -35, 0, 8), Size = UDim2.new(0, 24, 0, 24), Image = "rbxassetid://6031154871", ImageColor3 = Library.Theme.Text, ZIndex = 4})
     local SearchBar = Create("TextBox", {Parent = Topbar, BackgroundColor3 = Library.Theme.ElementBG, BackgroundTransparency = 1, Position = UDim2.new(1, -35, 0, 5), Size = UDim2.new(0, 0, 0, 30), Font = Library.Theme.Font, Text = "", PlaceholderText = "Search...", TextColor3 = Library.Theme.Text, TextSize = 13, TextXAlignment = Enum.TextXAlignment.Left, Visible = false, ZIndex = 3, ClipsDescendants = true}); AddCorner(SearchBar, 4)
     local SearchList = Create("ScrollingFrame", {Parent = SearchBar, BackgroundColor3 = Library.Theme.ElementBG, Position = UDim2.new(0, 0, 1, 5), Size = UDim2.new(1, 0, 0, 0), Visible = false, ZIndex = 10, ScrollBarThickness = 2}); AddCorner(SearchList, 4); AddStroke(SearchList, Library.Theme.Border)
     Create("UIListLayout", {Parent = SearchList, SortOrder = Enum.SortOrder.LayoutOrder, Padding = UDim.new(0, 2)})
@@ -452,24 +527,15 @@ function Library:Window(options)
     local function PerformSearch(text)
         for _, v in pairs(SearchList:GetChildren()) do if v:IsA("TextButton") then v:Destroy() end end
         if text == "" then SearchList.Size = UDim2.new(1, 0, 0, 0); SearchList.Visible = false; return end
-        
         local count = 0
         for _, Item in pairs(Library.SearchElements) do
             if Item.Name:lower():find(text:lower()) then
                 count = count + 1
                 local Btn = Create("TextButton", {Parent = SearchList, BackgroundTransparency = 1, Size = UDim2.new(1, 0, 0, 25), Font = Library.Theme.Font, Text = "  " .. Item.Name, TextColor3 = Library.Theme.TextDim, TextSize = 12, TextXAlignment = Enum.TextXAlignment.Left, ZIndex = 11})
-                Btn.MouseButton1Click:Connect(function()
-                    Item.ShowCallback() -- Navigate to tab
-                    SearchOpen = false
-                    Tween(SearchBar, {Size = UDim2.new(0, 0, 0, 30), Position = UDim2.new(1, -35, 0, 5), BackgroundTransparency = 1})
-                    SearchList.Visible = false
-                    SearchBar.Text = ""
-                end)
+                Btn.MouseButton1Click:Connect(function() Item.ShowCallback(); SearchOpen = false; Tween(SearchBar, {Size = UDim2.new(0, 0, 0, 30), Position = UDim2.new(1, -35, 0, 5), BackgroundTransparency = 1}); SearchList.Visible = false; SearchBar.Text = "" end)
             end
         end
-        local h = math.clamp(count * 27, 0, 200)
-        SearchList.Visible = true
-        Tween(SearchList, {Size = UDim2.new(1, 0, 0, h)})
+        local h = math.clamp(count * 27, 0, 200); SearchList.Visible = true; Tween(SearchList, {Size = UDim2.new(1, 0, 0, h)})
     end
 
     SearchBtn.MouseButton1Click:Connect(function() SearchOpen = not SearchOpen; SearchBar.Visible = true; if SearchOpen then Tween(SearchBar, {Size = UDim2.new(0, 150, 0, 30), Position = UDim2.new(1, -190, 0, 5), BackgroundTransparency = 0}) else Tween(SearchBar, {Size = UDim2.new(0, 0, 0, 30), Position = UDim2.new(1, -35, 0, 5), BackgroundTransparency = 1}); SearchList.Visible = false end end)
@@ -497,14 +563,8 @@ function Library:Window(options)
         local Right = Create("Frame", {Parent = MainContainer, BackgroundTransparency = 1, Size = UDim2.new(0.48, 0, 1, 0), Position = UDim2.new(0.52, 0, 0, 0), AutomaticSize = Enum.AutomaticSize.Y}); Create("UIListLayout", {Parent = Right, SortOrder = Enum.SortOrder.LayoutOrder, Padding = UDim.new(0, 10)})
         local SubTabBar = Create("Frame", {Parent = Page, BackgroundTransparency = 1, Size = UDim2.new(1, 0, 0, 30), Visible = false, ZIndex = 4}); Create("UIListLayout", {Parent = SubTabBar, FillDirection = Enum.FillDirection.Horizontal, Padding = UDim.new(0, 5)})
         local SubPages = Create("Frame", {Parent = Page, BackgroundTransparency = 1, Size = UDim2.new(1, 0, 1, -40), Position = UDim2.new(0, 0, 0, 40), Visible = false, ZIndex = 4})
-        
-        local function Show() 
-            for _, v in pairs(PageArea:GetChildren()) do v.Visible = false end
-            for _, b in pairs(TabArea:GetChildren()) do if b:IsA("TextButton") then b.TextLabel.TextColor3 = Library.Theme.TextDim end end
-            Page.Visible = true; TabBtn.TextLabel.TextColor3 = Library.Theme.Text 
-        end
+        local function Show() for _, v in pairs(PageArea:GetChildren()) do v.Visible = false end; for _, b in pairs(TabArea:GetChildren()) do if b:IsA("TextButton") then b.TextLabel.TextColor3 = Library.Theme.TextDim end end; Page.Visible = true; TabBtn.TextLabel.TextColor3 = Library.Theme.Text end
         TabBtn.MouseButton1Click:Connect(Show); if FirstTab then Show(); FirstTab = false end
-
         local TabObj = {}
         local FirstSub = true
         function TabObj:AddSubTab(SubName)
@@ -513,14 +573,8 @@ function Library:Window(options)
             local SPage = Create("ScrollingFrame", {Parent = SubPages, BackgroundTransparency = 1, Size = UDim2.new(1,0,1,0), CanvasSize=UDim2.new(0,0,0,0), AutomaticCanvasSize=Enum.AutomaticSize.Y, ScrollBarThickness=2, ScrollBarImageColor3=Library.Theme.Accent, Visible=false, ZIndex=5})
             local SLeft = Create("Frame", {Parent = SPage, BackgroundTransparency = 1, Size = UDim2.new(0.48, 0, 1, 0), Position = UDim2.new(0, 0, 0, 0), AutomaticSize = Enum.AutomaticSize.Y}); Create("UIListLayout", {Parent = SLeft, SortOrder = Enum.SortOrder.LayoutOrder, Padding = UDim.new(0, 10)})
             local SRight = Create("Frame", {Parent = SPage, BackgroundTransparency = 1, Size = UDim2.new(0.48, 0, 1, 0), Position = UDim2.new(0.52, 0, 0, 0), AutomaticSize = Enum.AutomaticSize.Y}); Create("UIListLayout", {Parent = SRight, SortOrder = Enum.SortOrder.LayoutOrder, Padding = UDim.new(0, 10)})
-            
-            local function OpenSub() 
-                for _, v in pairs(SubPages:GetChildren()) do v.Visible = false end
-                for _, b in pairs(SubTabBar:GetChildren()) do if b:IsA("TextButton") then b.TextColor3 = Library.Theme.TextDim; b.BackgroundColor3 = Library.Theme.ElementBG end end
-                SPage.Visible = true; SBtn.TextColor3 = Library.Theme.Accent; SBtn.BackgroundColor3 = Library.Theme.SectionBG 
-            end
+            local function OpenSub() for _, v in pairs(SubPages:GetChildren()) do v.Visible = false end; for _, b in pairs(SubTabBar:GetChildren()) do if b:IsA("TextButton") then b.TextColor3 = Library.Theme.TextDim; b.BackgroundColor3 = Library.Theme.ElementBG end end; SPage.Visible = true; SBtn.TextColor3 = Library.Theme.Accent; SBtn.BackgroundColor3 = Library.Theme.SectionBG end
             SBtn.MouseButton1Click:Connect(OpenSub); if FirstSub then OpenSub(); FirstSub = false end
-            
             local SubObj = {}
             function SubObj:AddGroup(opt) 
                 local P = (opt.Side == "Right" and SRight) or SLeft
@@ -528,8 +582,7 @@ function Library:Window(options)
             end
             return SubObj
         end
-
-        function TabObj:AddGroup(opt)
+        function TabObj:AddGroup(opt) 
             local P = (opt.Side == "Right" and Right) or Left
             return Library:CreateSection(P, opt.Title, Show)
         end
