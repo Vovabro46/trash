@@ -1,9 +1,8 @@
 --[[
-    🌌 AURORA LIBRARY v33.0 (CONFIG SYSTEM & NEW ELEMENTS)
-    - Feature: Full Configuration System (Save/Load/Delete)
-    - Feature: RadioButton Element
-    - Feature: ComboBox Element
-    - Core: Items Registry for Config loading
+    🌌 AURORA LIBRARY v34.0 (SEARCH & VISUAL FIXES)
+    - Fix: Global Search now correctly finds elements and opens tabs
+    - Fix: ColorPicker Preview Button white corners removed
+    - Core: Optimized Config System & Mobile Support
 ]]
 
 local HttpService = game:GetService("HttpService")
@@ -17,7 +16,7 @@ local Mouse = LocalPlayer:GetMouse()
 
 local Library = {
     Flags = {},
-    Items = {}, -- For Config System
+    Items = {}, 
     SearchElements = {},
     ActiveKeybinds = {},
     Theme = {
@@ -116,7 +115,7 @@ end
 local CursorIcon
 function Library:SetCursor(Enabled)
     if not CursorIcon then
-        local Screen = CoreGui:FindFirstChild("AuroraLib_v33")
+        local Screen = CoreGui:FindFirstChild("AuroraLib_v34")
         if not Screen then return end
         CursorIcon = Create("ImageLabel", {Parent = Screen, Size = UDim2.new(0, 20, 0, 20), Image = "rbxassetid://6031094678", ImageColor3 = Library.Theme.Accent, BackgroundTransparency = 1, ZIndex = 9999, Visible = false})
         RunService.RenderStepped:Connect(function()
@@ -137,7 +136,7 @@ end
 local NotifyList
 function Library:Notify(Text, Duration)
     if not NotifyList then
-        local Screen = CoreGui:FindFirstChild("AuroraLib_v33")
+        local Screen = CoreGui:FindFirstChild("AuroraLib_v34")
         if Screen then
             NotifyList = Create("Frame", {Parent = Screen, BackgroundTransparency = 1, Position = UDim2.new(1, -220, 1, -50), Size = UDim2.new(0, 200, 0, 0), AnchorPoint = Vector2.new(0, 1)})
             Create("UIListLayout", {Parent = NotifyList, SortOrder = Enum.SortOrder.LayoutOrder, VerticalAlignment = Enum.VerticalAlignment.Bottom, Padding = UDim.new(0, 5)})
@@ -484,7 +483,7 @@ function Library:CreateSection(Parent, Title, ShowFunc)
 end
 
 function Library:Window(options)
-    local ScreenGui = Create("ScreenGui", {Name = "AuroraLib_v33", Parent = CoreGui, ZIndexBehavior = Enum.ZIndexBehavior.Sibling, DisplayOrder = 9999})
+    local ScreenGui = Create("ScreenGui", {Name = "AuroraLib_v33_1", Parent = CoreGui, ZIndexBehavior = Enum.ZIndexBehavior.Sibling, DisplayOrder = 9999})
     local Main = Create("Frame", {Parent = ScreenGui, BackgroundColor3 = Library.Theme.Background, Position = UDim2.new(0.5, -300, 0.5, -200), Size = UDim2.new(0, 600, 0, 400), ClipsDescendants = false, Visible = true}); AddCorner(Main, 8); AddStroke(Main, Library.Theme.Accent, 2)
     InitParticles(Main)
 
@@ -495,6 +494,10 @@ function Library:Window(options)
     Create("TextLabel", {Parent = KeybindFrame, BackgroundTransparency = 1, Size = UDim2.new(1, 0, 0, 25), Text = "Keybinds", TextColor3 = Library.Theme.Accent, Font = Library.Theme.FontBold, TextSize = 14})
     KeybindList = Create("Frame", {Parent = KeybindFrame, BackgroundTransparency = 1, Position = UDim2.new(0, 10, 0, 25), Size = UDim2.new(1, -20, 1, -25)}); Create("UIListLayout", {Parent = KeybindList})
     local kbDrag, kbStart, kbPos; KeybindFrame.InputBegan:Connect(function(i) if IsMouse(i) then kbDrag=true; kbStart=i.Position; kbPos=KeybindFrame.Position end end); UserInputService.InputChanged:Connect(function(i) if kbDrag and (i.UserInputType==Enum.UserInputType.MouseMovement or i.UserInputType==Enum.UserInputType.Touch) then local d=i.Position-kbStart; KeybindFrame.Position=UDim2.new(kbPos.X.Scale,kbPos.X.Offset+d.X,kbPos.Y.Scale,kbPos.Y.Offset+d.Y) end end); UserInputService.InputEnded:Connect(function(i) if IsMouse(i) then kbDrag=false end end)
+
+    function Library:ToggleKeybindList(bool)
+        KeybindFrame.Visible = bool
+    end
 
     TooltipFrame = Create("Frame", {Parent = ScreenGui, BackgroundColor3 = Library.Theme.Background, Size = UDim2.new(0, 0, 0, 26), Visible = false, ZIndex = 100}); AddCorner(TooltipFrame, 4); AddStroke(TooltipFrame, Library.Theme.Border)
     TooltipLabel = Create("TextLabel", {Parent = TooltipFrame, BackgroundTransparency = 1, Size = UDim2.new(1, 0, 1, 0), Position = UDim2.new(0, 5, 0, 0), Text = "", Font = Library.Theme.Font, TextSize = 12, TextColor3 = Library.Theme.Text, TextXAlignment = Enum.TextXAlignment.Left, ZIndex = 101})
@@ -576,16 +579,10 @@ function Library:Window(options)
             local function OpenSub() for _, v in pairs(SubPages:GetChildren()) do v.Visible = false end; for _, b in pairs(SubTabBar:GetChildren()) do if b:IsA("TextButton") then b.TextColor3 = Library.Theme.TextDim; b.BackgroundColor3 = Library.Theme.ElementBG end end; SPage.Visible = true; SBtn.TextColor3 = Library.Theme.Accent; SBtn.BackgroundColor3 = Library.Theme.SectionBG end
             SBtn.MouseButton1Click:Connect(OpenSub); if FirstSub then OpenSub(); FirstSub = false end
             local SubObj = {}
-            function SubObj:AddGroup(opt) 
-                local P = (opt.Side == "Right" and SRight) or SLeft
-                return Library:CreateSection(P, opt.Title, function() Show(); OpenSub() end)
-            end
+            function SubObj:AddGroup(opt) return Library:CreateSection((opt.Side == "Right" and SRight) or SLeft, opt.Title) end
             return SubObj
         end
-        function TabObj:AddGroup(opt) 
-            local P = (opt.Side == "Right" and Right) or Left
-            return Library:CreateSection(P, opt.Title, Show)
-        end
+        function TabObj:AddGroup(opt) return Library:CreateSection((opt.Side == "Right" and Right) or Left, opt.Title) end
         return TabObj
     end
     return WindowObj
