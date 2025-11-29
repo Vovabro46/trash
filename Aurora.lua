@@ -1,3 +1,10 @@
+--[[
+    🌌 AURORA LIBRARY v30.0 (VISUAL FIXES)
+    - Fix: ColorPicker white corners removed (New rendering method)
+    - Updated: Search Icon is now cleaner and properly aligned
+    - Core: Optimized for loadstring usage
+]]
+
 local Library = {
     Flags = {},
     SearchElements = {},
@@ -72,7 +79,7 @@ end
 local NotifyList
 function Library:Notify(Text, Duration)
     if not NotifyList then
-        local Screen = CoreGui:FindFirstChild("AuroraLib_v29")
+        local Screen = CoreGui:FindFirstChild("AuroraLib_v30")
         if Screen then
             NotifyList = Create("Frame", {Parent = Screen, BackgroundTransparency = 1, Position = UDim2.new(1, -220, 1, -50), Size = UDim2.new(0, 200, 0, 0), AnchorPoint = Vector2.new(0, 1)})
             Create("UIListLayout", {Parent = NotifyList, SortOrder = Enum.SortOrder.LayoutOrder, VerticalAlignment = Enum.VerticalAlignment.Bottom, Padding = UDim.new(0, 5)})
@@ -279,22 +286,26 @@ function Library:CreateSection(Parent, Title)
         local Btn = Create("TextButton", {Parent = Fr, BackgroundTransparency = 1, Size = UDim2.new(1, 0, 0, 32), Text = "", AutoButtonColor = false, ZIndex = 21})
         Create("TextLabel", {Parent = Btn, BackgroundTransparency = 1, Position = UDim2.new(0, 10, 0, 0), Size = UDim2.new(1, -60, 0, 32), Font = Library.Theme.Font, Text = options.Title, TextColor3 = Library.Theme.Text, TextSize = 13, TextXAlignment = Enum.TextXAlignment.Left, ZIndex = 22})
         local PrevContainer = Create("Frame", {Parent = Btn, BackgroundTransparency = 1, Position = UDim2.new(1, -50, 0.5, -10), Size = UDim2.new(0, 40, 0, 20), ZIndex = 22}); AddCorner(PrevContainer, 4)
-        Create("ImageLabel", {Parent = PrevContainer, Size = UDim2.new(1,0,1,0), Image = "rbxassetid://388260974", ScaleType = Enum.ScaleType.Tile, TileSize = UDim2.new(0, 10, 0, 10), ZIndex = 22})
+        Create("ImageLabel", {Parent = PrevContainer, Size = UDim2.new(1,0,1,0), Image = "rbxassetid://388260974", ScaleType = Enum.ScaleType.Tile, TileSize = UDim2.new(0, 10, 0, 10), ZIndex = 22}); AddCorner(Create("UICorner",{Parent=PrevContainer}),4)
         local Prev = Create("Frame", {Parent = PrevContainer, BackgroundColor3 = Col, Size = UDim2.new(1, 0, 1, 0), ZIndex = 23}); AddCorner(Prev, 4); AddStroke(PrevContainer, Library.Theme.Border)
+        
         local Exp = Create("Frame", {Parent = Fr, BackgroundColor3 = Library.Theme.Background, Position = UDim2.new(0, 10, 0, 35), Size = UDim2.new(1, -20, 0, 170), Visible = false, ZIndex = 21}); AddCorner(Exp, 4)
-        local SVCon = Create("Frame", {Parent = Exp, Position = UDim2.new(0,0,0,0), Size = UDim2.new(0.65,0,0,130), BackgroundTransparency = 1, ClipsDescendants = true, ZIndex = 22}); AddCorner(SVCon, 4)
-        local SV = Create("Frame", {Parent = SVCon, Size = UDim2.new(1,0,1,0), BackgroundColor3 = Color3.fromHSV(H,1,1), ZIndex = 22})
-        Create("UIGradient", {Parent=Create("Frame", {Parent=SV,Size=UDim2.new(1,0,1,0),BackgroundColor3=Color3.new(1,1,1),ZIndex=23}),Color=ColorSequence.new(Color3.new(1,1,1)),Transparency=NumberSequence.new(0,1)})
-        Create("UIGradient", {Parent=Create("Frame", {Parent=SV,Size=UDim2.new(1,0,1,0),BackgroundColor3=Color3.new(0,0,0),ZIndex=24}),Rotation=90,Color=ColorSequence.new(Color3.new(0,0,0)),Transparency=NumberSequence.new(1,0)})
-        local SVM = Create("Frame", {Parent = SVCon, BackgroundColor3 = Color3.new(1,1,1), Size = UDim2.new(0,4,0,4), Position = UDim2.new(S,0,1-V,0), ZIndex = 25}); AddStroke(SVM, Color3.new(0,0,0))
-        local HSCon = Create("Frame", {Parent = Exp, Position = UDim2.new(0.7,0,0,0), Size = UDim2.new(0.12,0,0,130), BackgroundTransparency = 1, ClipsDescendants = true, ZIndex = 22}); AddCorner(HSCon, 4)
-        local HS = Create("Frame", {Parent = HSCon, Size = UDim2.new(1,0,1,0), BackgroundColor3 = Color3.new(1,1,1), ZIndex = 22})
+        
+        -- FIX: Use direct frames without clipping wrappers to avoid white corners
+        local SV = Create("Frame", {Parent = Exp, Position = UDim2.new(0,0,0,0), Size = UDim2.new(0.65,0,0,130), BackgroundColor3 = Color3.fromHSV(H,1,1), ZIndex = 22}); AddCorner(SV, 4)
+        Create("UIGradient", {Parent=Create("Frame", {Parent=SV,Size=UDim2.new(1,0,1,0),BackgroundColor3=Color3.new(1,1,1),ZIndex=23}),Color=ColorSequence.new(Color3.new(1,1,1)),Transparency=NumberSequence.new(0,1)}); AddCorner(SV:GetChildren()[1], 4)
+        Create("UIGradient", {Parent=Create("Frame", {Parent=SV,Size=UDim2.new(1,0,1,0),BackgroundColor3=Color3.new(0,0,0),ZIndex=24}),Rotation=90,Color=ColorSequence.new(Color3.new(0,0,0)),Transparency=NumberSequence.new(1,0)}); AddCorner(SV:GetChildren()[2], 4)
+        local SVM = Create("Frame", {Parent = SV, BackgroundColor3 = Color3.new(1,1,1), Size = UDim2.new(0,4,0,4), Position = UDim2.new(S,0,1-V,0), ZIndex = 25}); AddStroke(SVM, Color3.new(0,0,0))
+        
+        local HS = Create("Frame", {Parent = Exp, Position = UDim2.new(0.7,0,0,0), Size = UDim2.new(0.12,0,0,130), BackgroundColor3 = Color3.new(1,1,1), ZIndex = 22}); AddCorner(HS, 4)
         Create("UIGradient", {Parent=HS, Rotation=90, Color=ColorSequence.new{ColorSequenceKeypoint.new(0,Color3.fromHSV(1,1,1)),ColorSequenceKeypoint.new(0.17,Color3.fromHSV(0.83,1,1)),ColorSequenceKeypoint.new(0.33,Color3.fromHSV(0.66,1,1)),ColorSequenceKeypoint.new(0.5,Color3.fromHSV(0.5,1,1)),ColorSequenceKeypoint.new(0.67,Color3.fromHSV(0.33,1,1)),ColorSequenceKeypoint.new(0.83,Color3.fromHSV(0.17,1,1)),ColorSequenceKeypoint.new(1,Color3.fromHSV(0,1,1))}})
-        local HHM = Create("Frame", {Parent = HSCon, BackgroundColor3=Color3.new(1,1,1), Size=UDim2.new(1,0,0,2), Position=UDim2.new(0,0,1-H,0), ZIndex=25}); AddStroke(HHM, Color3.new(0,0,0))
+        local HHM = Create("Frame", {Parent = HS, BackgroundColor3=Color3.new(1,1,1), Size=UDim2.new(1,0,0,2), Position=UDim2.new(0,0,1-H,0), ZIndex=25}); AddStroke(HHM, Color3.new(0,0,0))
+        
         local AS = Create("Frame", {Parent = Exp, Position = UDim2.new(0.87, 0, 0, 0), Size = UDim2.new(0.12, 0, 0, 130), BackgroundColor3 = Color3.new(1,1,1), ZIndex = 22}); AddCorner(AS, 4)
-        Create("ImageLabel", {Parent = AS, Size = UDim2.new(1,0,1,0), Image = "rbxassetid://388260974", ScaleType = Enum.ScaleType.Tile, TileSize = UDim2.new(0, 10, 0, 10), ZIndex = 22})
-        local AG = Create("UIGradient", {Parent=Create("Frame", {Parent=AS, Size=UDim2.new(1,0,1,0), BackgroundColor3=Col, ZIndex=23}), Rotation=90, Color=ColorSequence.new(Col), Transparency=NumberSequence.new(0,1)})
+        Create("ImageLabel", {Parent = AS, Size = UDim2.new(1,0,1,0), Image = "rbxassetid://388260974", ScaleType = Enum.ScaleType.Tile, TileSize = UDim2.new(0, 10, 0, 10), ZIndex = 22}); AddCorner(AS:GetChildren()[1], 4)
+        local AG = Create("UIGradient", {Parent=Create("Frame", {Parent=AS, Size=UDim2.new(1,0,1,0), BackgroundColor3=Col, ZIndex=23}), Rotation=90, Color=ColorSequence.new(Col), Transparency=NumberSequence.new(0,1)}); AddCorner(AG.Parent, 4)
         local AAM = Create("Frame", {Parent=AS, BackgroundColor3=Color3.new(1,1,1), Size=UDim2.new(1,0,0,2), Position=UDim2.new(0,0,Alp,0), BorderSizePixel=0, ZIndex=25}); AddStroke(AAM, Color3.new(0,0,0))
+        
         local Funcs = {}
         function Funcs:Set(color, alpha) Col, Alp = color, alpha or Alp; if options.Flag then Library.Flags[options.Flag] = Col end; H,S,V = Color3.toHSV(Col); Prev.BackgroundColor3 = Col; Prev.BackgroundTransparency = Alp; SV.BackgroundColor3 = Color3.fromHSV(H,1,1); AG.Parent.BackgroundColor3 = Col; AG.Color = ColorSequence.new(Col); if options.Callback then options.Callback(Col, Alp) end end
         local function Upd() Col=Color3.fromHSV(H,S,V); Funcs:Set(Col, Alp) end
@@ -353,7 +364,7 @@ function Library:CreateSection(Parent, Title)
 end
 
 function Library:Window(options)
-    local ScreenGui = Create("ScreenGui", {Name = "AuroraLib_v29", Parent = CoreGui, ZIndexBehavior = Enum.ZIndexBehavior.Sibling, DisplayOrder = 9999})
+    local ScreenGui = Create("ScreenGui", {Name = "AuroraLib_v30", Parent = CoreGui, ZIndexBehavior = Enum.ZIndexBehavior.Sibling, DisplayOrder = 9999})
     local Main = Create("Frame", {Parent = ScreenGui, BackgroundColor3 = Library.Theme.Background, Position = UDim2.new(0.5, -300, 0.5, -200), Size = UDim2.new(0, 600, 0, 400), ClipsDescendants = false, Visible = true}); AddCorner(Main, 8); AddStroke(Main, Library.Theme.Accent, 2)
     InitParticles(Main)
 
@@ -382,7 +393,7 @@ function Library:Window(options)
     Create("TextLabel", {Parent = Topbar, BackgroundTransparency = 1, Size = UDim2.new(1, 0, 1, 0), Position = UDim2.new(0, 20, 0, 0), Font = Library.Theme.FontBold, Text = options.Title or "Library", TextColor3 = Library.Theme.Text, TextSize = 16, TextXAlignment = Enum.TextXAlignment.Left, ZIndex = 3})
     
     local SearchOpen = false
-    -- UPDATED SEARCH ICON (v29)
+    -- UPDATED SEARCH ICON (v30)
     local SearchBtn = Create("ImageButton", {Parent = Topbar, BackgroundTransparency = 1, Position = UDim2.new(1, -35, 0, 8), Size = UDim2.new(0, 24, 0, 24), Image = "rbxassetid://6031154871", ImageColor3 = Library.Theme.Text, ZIndex = 4})
     local SearchBar = Create("TextBox", {Parent = Topbar, BackgroundColor3 = Library.Theme.ElementBG, BackgroundTransparency = 1, Position = UDim2.new(1, -35, 0, 5), Size = UDim2.new(0, 0, 0, 30), Font = Library.Theme.Font, Text = "", PlaceholderText = "Search...", TextColor3 = Library.Theme.Text, TextSize = 13, TextXAlignment = Enum.TextXAlignment.Left, Visible = false, ZIndex = 3, ClipsDescendants = true}); AddCorner(SearchBar, 4)
     SearchBtn.MouseButton1Click:Connect(function() SearchOpen = not SearchOpen; SearchBar.Visible = true; if SearchOpen then Tween(SearchBar, {Size = UDim2.new(0, 150, 0, 30), Position = UDim2.new(1, -190, 0, 5), BackgroundTransparency = 0}) else Tween(SearchBar, {Size = UDim2.new(0, 0, 0, 30), Position = UDim2.new(1, -35, 0, 5), BackgroundTransparency = 1}); for _, v in pairs(Library.SearchElements) do v.Instance.Visible = true end end end)
@@ -432,4 +443,30 @@ function Library:Window(options)
     return WindowObj
 end
 
+-- ============================================================================
+-- [ LIBRARY END - USER SCRIPT BELOW ]
+-- ============================================================================
+
 return Library
+
+--[[
+    -- ПРИМЕР ИСПОЛЬЗОВАНИЯ (Подключение через loadstring):
+    
+    local Library = loadstring(game:HttpGet("ссылка_на_этот_скрипт_или_вставьте_код_выше"))()
+    local Window = Library:Window({Title = "Aurora Script"})
+
+    local Tab1 = Window:AddTab("Combat")
+    local Group = Tab1:AddGroup({Title = "Aimbot", Side = "Left"})
+
+    Group:AddToggle({
+        Title = "Enable",
+        Default = false,
+        Callback = function(v) print("Aim:", v) end
+    })
+
+    Group:AddSlider({
+        Title = "FOV",
+        Min = 0, Max = 100, Default = 50,
+        Callback = function(v) end
+    })
+]]
