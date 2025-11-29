@@ -1,4 +1,4 @@
-return {
+local IconsLibrary {
 	["a-arrow-down"] = "rbxassetid://92867583610071",
 	["a-arrow-up"] = "rbxassetid://132318504999733",
 	["a-large-small"] = "rbxassetid://111491496660216",
