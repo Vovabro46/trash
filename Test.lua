@@ -27,6 +27,7 @@ local Library = {
     GlobalSettings = {
         Animations = true
     },
+    Icons = {},
     Theme = {
         Background     = Color3.fromRGB(15, 15, 15),
         Sidebar        = Color3.fromRGB(20, 20, 20),
@@ -173,6 +174,24 @@ local Library = {
         }
     }
 }
+
+--// ASSET LOADER //--
+function Library:GetAsset(Input)
+    if not Input or Input == "" then return "" end
+    if Library.Icons[Input] then return Library.Icons[Input] end
+    if string.find(tostring(Input), "rbxasset") then return Input end
+    if type(Input) == "number" or tonumber(Input) then return "rbxassetid://" .. tostring(Input) end
+    if string.find(tostring(Input), "http") then
+        if not (writefile and isfile and getcustomasset) then return "rbxassetid://0" end
+        local FileName = "RedOnyx_Img_" .. string.gsub(tostring(Input), "[^%w%d]", "") .. ".png"
+        if not isfile(FileName) then
+            local S, R = pcall(function() return game:HttpGet(Input) end)
+            if S then writefile(FileName, R) else return "rbxassetid://0" end
+        end
+        return getcustomasset(FileName)
+    end
+    return Input
+end
 
 --// THEME SYSTEM //--
 local ThemeObjects = {}
@@ -790,14 +809,14 @@ function Library:Window(TitleText)
         Title.ZIndex = 5
         Library:RegisterTheme(Title, "TextColor3", "TextDark")
 
-        local TabIcon
         if IconId then
+            local Asset = Library:GetAsset(IconId)
             TabIcon = Instance.new("ImageLabel", Btn)
             TabIcon.Name = "Icon"
             TabIcon.Size = UDim2.new(0, 20, 0, 20)
             TabIcon.Position = UDim2.new(0, 12, 0.5, -10) 
             TabIcon.BackgroundTransparency = 1
-            TabIcon.Image = "rbxassetid://" .. tostring(IconId)
+            TabIcon.Image = Asset
             TabIcon.ZIndex = 5 
             Library:RegisterTheme(TabIcon, "ImageColor3", "TextDark")
         end
@@ -971,12 +990,13 @@ function Library:Window(TitleText)
                 
                 local HeaderOffset = 10
                 if IconId then
+                    local Asset = Library:GetAsset(IconId)
                     HeaderOffset = 32
                     local GIcon = Instance.new("ImageLabel", Box)
                     GIcon.Size = UDim2.new(0, 16, 0, 16)
                     GIcon.Position = UDim2.new(0, 10, 0, 5)
                     GIcon.BackgroundTransparency = 1
-                    GIcon.Image = "rbxassetid://" .. tostring(IconId)
+                    GIcon.Image = Asset
                     Library:RegisterTheme(GIcon, "ImageColor3", "Accent")
                 end
 
