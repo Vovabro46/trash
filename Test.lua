@@ -483,13 +483,33 @@ function Library:Window(TitleText)
 
     CreateTooltipSystem(ScreenGui)
 
+    -- Auto-Size Logic for Mobile/PC
+    local VP = workspace.CurrentCamera.ViewportSize
+    local StartWidth = math.min(750, VP.X - 50)
+    local StartHeight = math.min(500, VP.Y - 50)
+    
+    -- Minimum constraints
+    if StartWidth < 350 then StartWidth = 350 end
+    if StartHeight < 250 then StartHeight = 250 end
+
     local MainFrame = Instance.new("Frame")
     MainFrame.Name = "MainFrame"
-    MainFrame.Size = UDim2.new(0, 750, 0, 500)
-    MainFrame.Position = UDim2.new(0.5, -375, 0.5, -250)
+    MainFrame.Size = UDim2.new(0, StartWidth, 0, StartHeight)
+    MainFrame.AnchorPoint = Vector2.new(0.5, 0.5) -- This centers the GUI regardless of screen size
+    MainFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
     MainFrame.BorderSizePixel = 0
     MainFrame.Parent = ScreenGui
     Library:RegisterTheme(MainFrame, "BackgroundColor3", "Background")
+
+    -- Listener to auto-resize if screen orientation changes (Mobile)
+    workspace.CurrentCamera:GetPropertyChangedSignal("ViewportSize"):Connect(function()
+        local NewVP = workspace.CurrentCamera.ViewportSize
+        local NewW = math.min(750, NewVP.X - 50)
+        local NewH = math.min(500, NewVP.Y - 50)
+        if NewW < 350 then NewW = 350 end
+        if NewH < 250 then NewH = 250 end
+        MainFrame.Size = UDim2.new(0, NewW, 0, NewH)
+    end)
 
     local MainStroke = Instance.new("UIStroke", MainFrame)
     MainStroke.Thickness = 1
