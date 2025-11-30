@@ -831,7 +831,7 @@ function Library:Window(TitleText)
         ContentArea.BackgroundTransparency = 1
         ContentArea.Parent = Page
 
-        --// ЛОГИКА СВАЙПОВ (SWIPE LOGIC) //--
+        --// ЛОГИКА СВАЙПОВ (ИСПРАВЛЕННАЯ) //--
         local SubTabsList = {} 
         local CurrentSubTabIndex = 1
 
@@ -856,29 +856,48 @@ function Library:Window(TitleText)
         end
 
         local SwipeStart = nil
-        ContentArea.InputBegan:Connect(function(input)
-            if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-                SwipeStart = input.Position
+        
+        -- Функция проверки, находится ли курсор внутри контента
+        local function IsInContentArea(InputPos)
+            if not ContentArea.Visible then return false end
+            local AbsPos = ContentArea.AbsolutePosition
+            local AbsSize = ContentArea.AbsoluteSize
+            return InputPos.X >= AbsPos.X and InputPos.X <= AbsPos.X + AbsSize.X
+               and InputPos.Y >= AbsPos.Y and InputPos.Y <= AbsPos.Y + AbsSize.Y
+        end
+
+        -- Используем глобальный сервис ввода, так как ScrollingFrame блокирует локальный ввод
+        UserInputService.InputBegan:Connect(function(input, gpe)
+            -- gpe (game processed event) игнорируем, так как нам нужно ловить нажатия поверх UI
+            if (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) then
+                if Page.Visible and IsInContentArea(input.Position) then
+                    SwipeStart = input.Position
+                end
             end
         end)
 
-        ContentArea.InputEnded:Connect(function(input)
-            if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-                if SwipeStart then
-                    local Delta = input.Position - SwipeStart
-                    local Threshold = 40 -- Чувствительность свайпа
-                    
-                    if math.abs(Delta.X) > Threshold and math.abs(Delta.Y) < Threshold then
-                        if Delta.X < 0 then
-                            SelectSubTab(CurrentSubTabIndex + 1) -- Свайп влево -> Вперед
-                        else
-                            SelectSubTab(CurrentSubTabIndex - 1) -- Свайп вправо -> Назад
-                        end
+        UserInputService.InputEnded:Connect(function(input)
+            if SwipeStart and (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) then
+                local EndPos = input.Position
+                local Delta = EndPos - SwipeStart
+                SwipeStart = nil -- Сброс
+                
+                -- Настройки чувствительности
+                local MinSwipeDistance = 50
+                local MaxVerticalVariance = 80 -- Чтобы не путать со скроллом вниз
+                
+                if math.abs(Delta.X) > MinSwipeDistance and math.abs(Delta.Y) < MaxVerticalVariance then
+                    if Delta.X < 0 then
+                        -- Свайп ВЛЕВО -> Вперед
+                        SelectSubTab(CurrentSubTabIndex + 1)
+                    else
+                        -- Свайп ВПРАВО -> Назад
+                        SelectSubTab(CurrentSubTabIndex - 1)
                     end
                 end
-                SwipeStart = nil
             end
         end)
+        --// КОНЕЦ ЛОГИКИ СВАЙПОВ //--
 
         if FirstTab then
             FirstTab = false
@@ -929,7 +948,6 @@ function Library:Window(TitleText)
             SubPage.Visible = false
             SubPage.Parent = ContentArea
             
-            -- Добавляем в список для свайпов
             local MyIndex = #SubTabsList + 1
             table.insert(SubTabsList, {Btn = SBtn, Page = SubPage})
 
