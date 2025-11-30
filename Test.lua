@@ -800,18 +800,20 @@ function Library:Window(TitleText)
         Ind.ZIndex = 5 
         Library:RegisterTheme(Ind, "BackgroundColor3", "Accent")
 
+        -- Основной контейнер страницы
         local Page = Instance.new("CanvasGroup")
         Page.Name = Name.."_Page"
         Page.Size = UDim2.new(1, 0, 1, 0)
         Page.BackgroundTransparency = 1
         Page.GroupTransparency = 1
         Page.Visible = false
-        Page.Parent = PagesArea
+        Page.Parent = PagesArea 
         
         local PageRef = Instance.new("ObjectValue", Btn)
         PageRef.Name = "PageRef"
         PageRef.Value = Page
 
+        -- Область для кнопок подвкладок (Сверху)
         local SubTabArea = Instance.new("Frame")
         SubTabArea.Name = "SubTabArea"
         SubTabArea.Size = UDim2.new(1, -20, 0, 30)
@@ -824,6 +826,7 @@ function Library:Window(TitleText)
         SubLayout.SortOrder = Enum.SortOrder.LayoutOrder
         SubLayout.Padding = UDim.new(0, 10)
         
+        -- Область контента (Снизу)
         local ContentArea = Instance.new("Frame")
         ContentArea.Name = "ContentArea"
         ContentArea.Size = UDim2.new(1, 0, 1, -40)
@@ -831,7 +834,7 @@ function Library:Window(TitleText)
         ContentArea.BackgroundTransparency = 1
         ContentArea.Parent = Page
 
-        --// ЛОГИКА СВАЙПОВ (ИСПРАВЛЕННАЯ) //--
+        --// ЛОГИКА ПЕРЕКЛЮЧЕНИЯ И СВАЙПОВ //--
         local SubTabsList = {} 
         local CurrentSubTabIndex = 1
 
@@ -840,7 +843,7 @@ function Library:Window(TitleText)
             CurrentSubTabIndex = Index
             local Target = SubTabsList[Index]
 
-            -- Скрыть все
+            -- Скрываем все страницы и деактивируем кнопки
             for _, v in pairs(ContentArea:GetChildren()) do 
                 if v:IsA("CanvasGroup") then v.Visible = false v.GroupTransparency = 1 end
             end
@@ -850,48 +853,54 @@ function Library:Window(TitleText)
                 end 
             end
             
-            -- Показать выбранное
+            -- Показываем нужную
             Library:FadeIn(Target.Page)
             TweenService:Create(Target.Btn, TweenInfo.new(0.2), {TextColor3 = Library.Theme.Accent}):Play()
         end
 
         local SwipeStart = nil
-        
-        -- Функция проверки, находится ли курсор внутри контента
-        local function IsInContentArea(InputPos)
-            if not ContentArea.Visible then return false end
-            local AbsPos = ContentArea.AbsolutePosition
-            local AbsSize = ContentArea.AbsoluteSize
-            return InputPos.X >= AbsPos.X and InputPos.X <= AbsPos.X + AbsSize.X
-               and InputPos.Y >= AbsPos.Y and InputPos.Y <= AbsPos.Y + AbsSize.Y
+
+        -- Проверка, находится ли курсор внутри всей страницы (включая верхние кнопки)
+        local function IsInputInPage(InputPos)
+            if not Page.Visible or not PagesArea.Visible then return false end
+            
+            -- Проверяем попадание в рамки PageArea (основного окна справа)
+            local AbsPos = PagesArea.AbsolutePosition
+            local AbsSize = PagesArea.AbsoluteSize
+            
+            return InputPos.X >= AbsPos.X and InputPos.X <= (AbsPos.X + AbsSize.X) 
+               and InputPos.Y >= AbsPos.Y and InputPos.Y <= (AbsPos.Y + AbsSize.Y)
         end
 
-        -- Используем глобальный сервис ввода, так как ScrollingFrame блокирует локальный ввод
-        UserInputService.InputBegan:Connect(function(input, gpe)
-            -- gpe (game processed event) игнорируем, так как нам нужно ловить нажатия поверх UI
+        -- Обработка начала нажатия
+        UserInputService.InputBegan:Connect(function(input)
             if (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) then
-                if Page.Visible and IsInContentArea(input.Position) then
+                -- Если нажали внутри области этой страницы
+                if IsInputInPage(input.Position) then
                     SwipeStart = input.Position
                 end
             end
         end)
 
+        -- Обработка конца нажатия (сам свайп)
         UserInputService.InputEnded:Connect(function(input)
             if SwipeStart and (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) then
-                local EndPos = input.Position
-                local Delta = EndPos - SwipeStart
-                SwipeStart = nil -- Сброс
+                local Delta = input.Position - SwipeStart
+                SwipeStart = nil 
                 
                 -- Настройки чувствительности
-                local MinSwipeDistance = 50
-                local MaxVerticalVariance = 80 -- Чтобы не путать со скроллом вниз
+                local MinSwipeDistance = 30 -- Минимальное расстояние (пиксели)
+                local MaxVerticalVariance = 100 -- Разрешенное отклонение по вертикали (чтобы не путать с кривым скроллом)
                 
-                if math.abs(Delta.X) > MinSwipeDistance and math.abs(Delta.Y) < MaxVerticalVariance then
+                -- Логика:
+                -- 1. Длина свайпа по X больше минимума
+                -- 2. Длина свайпа по X больше, чем по Y (значит это горизонтальное движение)
+                if math.abs(Delta.X) > MinSwipeDistance and math.abs(Delta.X) > math.abs(Delta.Y) then
                     if Delta.X < 0 then
-                        -- Свайп ВЛЕВО -> Вперед
+                        -- Свайп ВЛЕВО (палец влево) -> Следующая вкладка
                         SelectSubTab(CurrentSubTabIndex + 1)
                     else
-                        -- Свайп ВПРАВО -> Назад
+                        -- Свайп ВПРАВО (палец вправо) -> Предыдущая вкладка
                         SelectSubTab(CurrentSubTabIndex - 1)
                     end
                 end
@@ -948,6 +957,7 @@ function Library:Window(TitleText)
             SubPage.Visible = false
             SubPage.Parent = ContentArea
             
+            -- Регистрируем подвкладку в списке для свайпов
             local MyIndex = #SubTabsList + 1
             table.insert(SubTabsList, {Btn = SBtn, Page = SubPage})
 
