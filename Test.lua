@@ -50,17 +50,6 @@ local Library = {
             TextDark       = Color3.fromRGB(140, 140, 140),
             Header         = Color3.fromRGB(100, 100, 100)
         },
-        ["ImGui Classic"] = { -- Extracted from StyleColorsClassic() in imgui_draw.cpp
-            Background     = Color3.fromRGB(10, 10, 15),      -- WindowBg (darker blue-ish black)
-            Sidebar        = Color3.fromRGB(30, 30, 40),      -- Slightly lighter for contrast
-            Groupbox       = Color3.fromRGB(15, 15, 20),      -- ChildBg
-            ItemBackground = Color3.fromRGB(40, 40, 50),      -- FrameBg
-            Outline        = Color3.fromRGB(80, 80, 100),     -- Border
-            Accent         = Color3.fromRGB(82, 82, 161),     -- TitleBgActive (The iconic ImGui Blue/Purple)
-            Text           = Color3.fromRGB(230, 230, 230),   -- Text
-            TextDark       = Color3.fromRGB(153, 153, 153),   -- TextDisabled
-            Header         = Color3.fromRGB(68, 68, 138)      -- Header
-        },
         ["Light"] = {
             Background     = Color3.fromRGB(240, 240, 240),
             Sidebar        = Color3.fromRGB(225, 225, 225),
@@ -824,19 +813,72 @@ function Library:Window(TitleText)
         PageRef.Value = Page
 
         local SubTabArea = Instance.new("Frame")
+        SubTabArea.Name = "SubTabArea"
         SubTabArea.Size = UDim2.new(1, -20, 0, 30)
         SubTabArea.Position = UDim2.new(0, 10, 0, 10)
         SubTabArea.BackgroundTransparency = 1
         SubTabArea.Parent = Page
+        
         local SubLayout = Instance.new("UIListLayout", SubTabArea)
         SubLayout.FillDirection = Enum.FillDirection.Horizontal
         SubLayout.SortOrder = Enum.SortOrder.LayoutOrder
         SubLayout.Padding = UDim.new(0, 10)
+        
         local ContentArea = Instance.new("Frame")
+        ContentArea.Name = "ContentArea"
         ContentArea.Size = UDim2.new(1, 0, 1, -40)
         ContentArea.Position = UDim2.new(0, 0, 0, 40)
         ContentArea.BackgroundTransparency = 1
         ContentArea.Parent = Page
+
+        --// ЛОГИКА СВАЙПОВ (SWIPE LOGIC) //--
+        local SubTabsList = {} 
+        local CurrentSubTabIndex = 1
+
+        local function SelectSubTab(Index)
+            if Index < 1 or Index > #SubTabsList then return end
+            CurrentSubTabIndex = Index
+            local Target = SubTabsList[Index]
+
+            -- Скрыть все
+            for _, v in pairs(ContentArea:GetChildren()) do 
+                if v:IsA("CanvasGroup") then v.Visible = false v.GroupTransparency = 1 end
+            end
+            for _, v in pairs(SubTabArea:GetChildren()) do 
+                if v:IsA("TextButton") then 
+                    TweenService:Create(v, TweenInfo.new(0.2), {TextColor3 = Library.Theme.TextDark}):Play() 
+                end 
+            end
+            
+            -- Показать выбранное
+            Library:FadeIn(Target.Page)
+            TweenService:Create(Target.Btn, TweenInfo.new(0.2), {TextColor3 = Library.Theme.Accent}):Play()
+        end
+
+        local SwipeStart = nil
+        ContentArea.InputBegan:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                SwipeStart = input.Position
+            end
+        end)
+
+        ContentArea.InputEnded:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                if SwipeStart then
+                    local Delta = input.Position - SwipeStart
+                    local Threshold = 40 -- Чувствительность свайпа
+                    
+                    if math.abs(Delta.X) > Threshold and math.abs(Delta.Y) < Threshold then
+                        if Delta.X < 0 then
+                            SelectSubTab(CurrentSubTabIndex + 1) -- Свайп влево -> Вперед
+                        else
+                            SelectSubTab(CurrentSubTabIndex - 1) -- Свайп вправо -> Назад
+                        end
+                    end
+                end
+                SwipeStart = nil
+            end
+        end)
 
         if FirstTab then
             FirstTab = false
@@ -851,26 +893,16 @@ function Library:Window(TitleText)
                 if v:IsA("TextButton") then
                     local t = v:FindFirstChild("Title")
                     if t then TweenService:Create(t, TweenInfo.new(0.2), {TextColor3 = Library.Theme.TextDark}):Play() end
-                    
                     local ico = v:FindFirstChild("Icon")
                     if ico then TweenService:Create(ico, TweenInfo.new(0.2), {ImageColor3 = Library.Theme.TextDark}):Play() end
-                    
                     if v:FindFirstChild("ActiveIndicator") then v.ActiveIndicator.Visible = false end
                 end
             end
-            
             for _,v in pairs(PagesArea:GetChildren()) do 
-                if v:IsA("CanvasGroup") and v ~= Page then
-                    v.Visible = false 
-                    v.GroupTransparency = 1
-                end
+                if v:IsA("CanvasGroup") and v ~= Page then v.Visible = false v.GroupTransparency = 1 end
             end
-            
             TweenService:Create(Title, TweenInfo.new(0.2), {TextColor3 = Library.Theme.Text}):Play()
-            if TabIcon then 
-                TweenService:Create(TabIcon, TweenInfo.new(0.2), {ImageColor3 = Library.Theme.Text}):Play() 
-            end
-            
+            if TabIcon then TweenService:Create(TabIcon, TweenInfo.new(0.2), {ImageColor3 = Library.Theme.Text}):Play() end
             Ind.Visible = true
             Library:FadeIn(Page)
         end)
@@ -897,6 +929,10 @@ function Library:Window(TitleText)
             SubPage.Visible = false
             SubPage.Parent = ContentArea
             
+            -- Добавляем в список для свайпов
+            local MyIndex = #SubTabsList + 1
+            table.insert(SubTabsList, {Btn = SBtn, Page = SubPage})
+
             local LCol = Instance.new("ScrollingFrame")
             LCol.Name = "LeftColumn"
             LCol.Size = UDim2.new(0.5, -10, 1, -10)
@@ -925,7 +961,6 @@ function Library:Window(TitleText)
                 local l = Instance.new("UIListLayout", f)
                 l.Padding = UDim.new(0, 12)
                 l.SortOrder = Enum.SortOrder.LayoutOrder
-                
                 local p = Instance.new("UIPadding", f)
                 p.PaddingBottom = UDim.new(0, 10)
                 p.PaddingRight = UDim.new(0, 5)
@@ -943,14 +978,7 @@ function Library:Window(TitleText)
             end
 
             SBtn.MouseButton1Click:Connect(function()
-                for _, v in pairs(ContentArea:GetChildren()) do 
-                    if v:IsA("CanvasGroup") then v.Visible = false v.GroupTransparency = 1 end
-                end
-                for _, v in pairs(SubTabArea:GetChildren()) do 
-                    if v:IsA("TextButton") then TweenService:Create(v, TweenInfo.new(0.2), {TextColor3 = Library.Theme.TextDark}):Play() end 
-                end
-                Library:FadeIn(SubPage)
-                TweenService:Create(SBtn, TweenInfo.new(0.2), {TextColor3 = Library.Theme.Accent}):Play()
+                SelectSubTab(MyIndex)
             end)
 
             local SubFuncs = {}
@@ -1012,7 +1040,6 @@ function Library:Window(TitleText)
                     Box.Size=UDim2.new(1,0,0,L.AbsoluteContentSize.Y+45)
                 end)
                 
-
                 local function RegisterItem(ItemName, ItemObj)
                     if not Btn or not SBtn or not SubPage then return end 
                     table.insert(Library.Registry, {
@@ -1026,10 +1053,7 @@ function Library:Window(TitleText)
 
                 local ContainerStack = {C}
                 local NextItemOpenVal = nil
-
-                local function GetContainer()
-                    return ContainerStack[#ContainerStack]
-                end
+                local function GetContainer() return ContainerStack[#ContainerStack] end
 
                 local BoxFuncs = {}
                 
@@ -1892,6 +1916,7 @@ function Library:Window(TitleText)
                     RegisterItem(Text, F)
                 end
 
+                --// IMGUI WIDGETS TRANSLATION //--
 
                 -- [ImGui: ProgressBar]
                 function BoxFuncs:AddProgressBar(Config)
@@ -2107,9 +2132,10 @@ function Library:Window(TitleText)
                     RegisterItem(Text, F)
                 end
 
+                -- [ImGui: PlotHistogram]
                 function BoxFuncs:AddGraph(Config)
                     local Text = Config.Title or "Graph"
-                    local Values = Config.Values or {}
+                    local Values = Config.Values or {} -- Array of numbers 0-1 (or scaled)
                     local Height = Config.Height or 60
                     local Desc = Config.Description
 
@@ -2169,6 +2195,7 @@ function Library:Window(TitleText)
                             Bar.BorderSizePixel = 0
                             Library:RegisterTheme(Bar, "BackgroundColor3", "Accent")
                             
+                            -- Simple hover for value
                             local ValTip = Instance.new("TextLabel", Bar)
                             ValTip.Visible = false
                             ValTip.Size = UDim2.new(0, 50, 0, 15)
@@ -2190,6 +2217,7 @@ function Library:Window(TitleText)
                     end
 
                     UpdateGraph(Values)
+                    -- Allow updating via Items table
                     Library.Items[Text] = {Set = UpdateGraph}
 
                     RegisterItem(Text, F)
@@ -2206,11 +2234,13 @@ function Library:Window(TitleText)
                     local Height = Config.Height or 100
                     local Desc = Config.Description
 
+                    -- Контейнер для слайдера и подписи
                     local F = Instance.new("Frame", GetContainer())
-                    F.Size = UDim2.new(1, 0, 0, Height + 25)
+                    F.Size = UDim2.new(1, 0, 0, Height + 25) -- Высота слайдера + место под текст
                     F.BackgroundTransparency = 1
                     if Desc then AddTooltip(F, Desc) end
 
+                    -- Подпись сверху
                     local Lb = Instance.new("TextLabel", F)
                     Lb.Size = UDim2.new(1, 0, 0, 15)
                     Lb.BackgroundTransparency = 1
@@ -2220,6 +2250,7 @@ function Library:Window(TitleText)
                     Lb.TextXAlignment = Enum.TextXAlignment.Center
                     Library:RegisterTheme(Lb, "TextColor3", "Text")
 
+                    -- Фон слайдера (Вертикальная полоса)
                     local SliderBg = Instance.new("Frame", F)
                     SliderBg.Name = "SliderBackground"
                     SliderBg.Size = UDim2.new(0, 20, 0, Height)
@@ -2228,9 +2259,10 @@ function Library:Window(TitleText)
                     Library:RegisterTheme(SliderBg, "BackgroundColor3", "ItemBackground")
                     Instance.new("UICorner", SliderBg).CornerRadius = UDim.new(0, 4)
 
+                    -- Заполнение слайдера
                     local SliderFill = Instance.new("Frame", SliderBg)
                     SliderFill.Name = "SliderFill"
-                    SliderFill.AnchorPoint = Vector2.new(0, 1)
+                    SliderFill.AnchorPoint = Vector2.new(0, 1) -- Растет снизу вверх
                     SliderFill.Position = UDim2.new(0, 0, 1, 0)
                     SliderFill.Size = UDim2.new(1, 0, (Def - Min) / (Max - Min), 0)
                     SliderFill.BackgroundColor3 = Library.Theme.Accent
@@ -2238,9 +2270,10 @@ function Library:Window(TitleText)
                     Library:RegisterTheme(SliderFill, "BackgroundColor3", "Accent")
                     Instance.new("UICorner", SliderFill).CornerRadius = UDim.new(0, 4)
 
+                    -- Текст значения внутри слайдера (или рядом)
                     local ValText = Instance.new("TextLabel", SliderBg)
                     ValText.Size = UDim2.new(2, 0, 1, 0)
-                    ValText.Position = UDim2.new(-0.5, 0, 0, 0)
+                    ValText.Position = UDim2.new(-0.5, 0, 0, 0) -- По центру полоски
                     ValText.BackgroundTransparency = 1
                     ValText.Font = Enum.Font.GothamBold
                     ValText.TextSize = 10
@@ -2248,7 +2281,10 @@ function Library:Window(TitleText)
                     ValText.TextColor3 = Library.Theme.Text
                     ValText.TextStrokeTransparency = 0.5
                     ValText.ZIndex = 3
+                    -- Поворачиваем текст вертикально, если он длинный, или оставляем так
+                    -- ValText.Rotation = -90 
 
+                    -- Кнопка для перетаскивания
                     local Btn = Instance.new("TextButton", SliderBg)
                     Btn.Size = UDim2.new(1, 0, 1, 0)
                     Btn.BackgroundTransparency = 1
@@ -2256,11 +2292,13 @@ function Library:Window(TitleText)
 
                     local function Set(v)
                         v = math.clamp(v, Min, Max)
+                        -- Округление до 2 знаков
                         v = math.floor(v * 100) / 100
                         
                         Library.Flags[Flag] = v
                         ValText.Text = tostring(v)
                         
+                        -- Расчет процента заполнения (снизу вверх)
                         local percent = (v - Min) / (Max - Min)
                         TweenService:Create(SliderFill, TweenInfo.new(0.1), {Size = UDim2.new(1, 0, percent, 0)}):Play()
                         
@@ -2272,9 +2310,12 @@ function Library:Window(TitleText)
 
                     local dragging = false
                     local function UpdateInput(input)
+                        -- Y ось инвертирована в GUI (0 сверху), но нам нужно чтобы 0 был снизу для слайдера
+                        -- SliderBg.AbsolutePosition.Y + SliderBg.AbsoluteSize.Y = Низ слайдера
                         local bottomY = SliderBg.AbsolutePosition.Y + SliderBg.AbsoluteSize.Y
                         local mouseY = input.Position.Y
                         
+                        -- Дистанция от низа
                         local distFromBottom = bottomY - mouseY
                         local percent = math.clamp(distFromBottom / SliderBg.AbsoluteSize.Y, 0, 1)
                         
@@ -2304,6 +2345,8 @@ function Library:Window(TitleText)
                     RegisterItem(Text, F)
                 end
 
+                -- [ImGui: Selectable]
+                -- Полезно для создания списков, где можно выбрать элемент нажатием
                 function BoxFuncs:AddSelectable(Config)
                     local Text = Config.Title or "Selectable"
                     local Selected = Config.Default or false
@@ -2314,13 +2357,14 @@ function Library:Window(TitleText)
                     local F = Instance.new("TextButton", GetContainer())
                     F.Size = UDim2.new(1, 0, 0, 22)
                     F.BackgroundTransparency = Selected and 0 or 1
-                    F.BackgroundColor3 = Library.Theme.Accent
+                    F.BackgroundColor3 = Library.Theme.Accent -- Используем Accent для выделения
                     F.Text = ""
                     F.AutoButtonColor = false
                     Instance.new("UICorner", F).CornerRadius = UDim.new(0, 4)
                     
                     if Desc then AddTooltip(F, Desc) end
 
+                    -- Регистрируем тему, но с хитрой проверкой, чтобы менять цвет только если выбрано
                     Library:RegisterTheme(F, "BackgroundColor3", "Accent") 
 
                     local Lb = Instance.new("TextLabel", F)
@@ -2333,6 +2377,7 @@ function Library:Window(TitleText)
                     Lb.TextXAlignment = Enum.TextXAlignment.Left
                     Lb.TextColor3 = Selected and Library.Theme.Text or Library.Theme.TextDark
                     
+                    -- Анимация при наведении (как в ImGui Hovered)
                     local function UpdateVisuals(isHovered, isSelected)
                         if isSelected then
                             TweenService:Create(F, TweenInfo.new(0.2), {BackgroundTransparency = 0.4}):Play()
@@ -2358,6 +2403,7 @@ function Library:Window(TitleText)
                     Library.Items[Flag] = {Set = Set}
                     Library.Flags[Flag] = Selected
                     
+                    -- Инициализация цвета
                     UpdateVisuals(false, Selected)
 
                     F.MouseButton1Click:Connect(function()
