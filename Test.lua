@@ -485,8 +485,8 @@ function Library:Window(TitleText)
 
     -- Auto-Size Logic for Mobile/PC
     local VP = workspace.CurrentCamera.ViewportSize
-    local StartWidth = math.min(750, VP.X - 50)
-    local StartHeight = math.min(500, VP.Y - 50)
+    local StartWidth = math.min(480, VP.X - 50)
+    local StartHeight = math.min(360, VP.Y - 50)
     
     -- Minimum constraints
     if StartWidth < 350 then StartWidth = 350 end
@@ -495,7 +495,7 @@ function Library:Window(TitleText)
     local MainFrame = Instance.new("Frame")
     MainFrame.Name = "MainFrame"
     MainFrame.Size = UDim2.new(0, StartWidth, 0, StartHeight)
-    MainFrame.AnchorPoint = Vector2.new(0.5, 0.5) -- This centers the GUI regardless of screen size
+    MainFrame.AnchorPoint = Vector2.new(0.5, 0.5)
     MainFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
     MainFrame.BorderSizePixel = 0
     MainFrame.Parent = ScreenGui
@@ -504,8 +504,8 @@ function Library:Window(TitleText)
     -- Listener to auto-resize if screen orientation changes (Mobile)
     workspace.CurrentCamera:GetPropertyChangedSignal("ViewportSize"):Connect(function()
         local NewVP = workspace.CurrentCamera.ViewportSize
-        local NewW = math.min(750, NewVP.X - 50)
-        local NewH = math.min(500, NewVP.Y - 50)
+        local NewW = math.min(480, NewVP.X - 50)
+        local NewH = math.min(240, NewVP.Y - 50)
         if NewW < 350 then NewW = 350 end
         if NewH < 250 then NewH = 250 end
         MainFrame.Size = UDim2.new(0, NewW, 0, NewH)
