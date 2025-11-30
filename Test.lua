@@ -800,25 +800,30 @@ function Library:Window(TitleText)
         Ind.ZIndex = 5 
         Library:RegisterTheme(Ind, "BackgroundColor3", "Accent")
 
-        -- Основной контейнер страницы
+        -- [Страница]
         local Page = Instance.new("CanvasGroup")
         Page.Name = Name.."_Page"
         Page.Size = UDim2.new(1, 0, 1, 0)
         Page.BackgroundTransparency = 1
         Page.GroupTransparency = 1
         Page.Visible = false
-        Page.Parent = PagesArea 
+        Page.Parent = PagesArea
         
         local PageRef = Instance.new("ObjectValue", Btn)
         PageRef.Name = "PageRef"
         PageRef.Value = Page
 
-        -- Область для кнопок подвкладок (Сверху)
-        local SubTabArea = Instance.new("Frame")
+        -- [Верхняя панель подвкладок] 
+        -- Сделана ScrollingFrame, чтобы кнопки не обрезались, если их много
+        local SubTabArea = Instance.new("ScrollingFrame")
         SubTabArea.Name = "SubTabArea"
         SubTabArea.Size = UDim2.new(1, -20, 0, 30)
         SubTabArea.Position = UDim2.new(0, 10, 0, 10)
         SubTabArea.BackgroundTransparency = 1
+        SubTabArea.ScrollBarThickness = 0
+        SubTabArea.CanvasSize = UDim2.new(0, 0, 0, 0)
+        SubTabArea.AutomaticCanvasSize = Enum.AutomaticSize.X
+        SubTabArea.ScrollingDirection = Enum.ScrollingDirection.X
         SubTabArea.Parent = Page
         
         local SubLayout = Instance.new("UIListLayout", SubTabArea)
@@ -826,7 +831,7 @@ function Library:Window(TitleText)
         SubLayout.SortOrder = Enum.SortOrder.LayoutOrder
         SubLayout.Padding = UDim.new(0, 10)
         
-        -- Область контента (Снизу)
+        -- [Область контента]
         local ContentArea = Instance.new("Frame")
         ContentArea.Name = "ContentArea"
         ContentArea.Size = UDim2.new(1, 0, 1, -40)
@@ -834,7 +839,7 @@ function Library:Window(TitleText)
         ContentArea.BackgroundTransparency = 1
         ContentArea.Parent = Page
 
-        --// ЛОГИКА ПЕРЕКЛЮЧЕНИЯ И СВАЙПОВ //--
+        --// ЛОГИКА СВАЙПОВ (ФИНАЛЬНАЯ ВЕРСИЯ) //--
         local SubTabsList = {} 
         local CurrentSubTabIndex = 1
 
@@ -843,7 +848,6 @@ function Library:Window(TitleText)
             CurrentSubTabIndex = Index
             local Target = SubTabsList[Index]
 
-            -- Скрываем все страницы и деактивируем кнопки
             for _, v in pairs(ContentArea:GetChildren()) do 
                 if v:IsA("CanvasGroup") then v.Visible = false v.GroupTransparency = 1 end
             end
@@ -853,54 +857,51 @@ function Library:Window(TitleText)
                 end 
             end
             
-            -- Показываем нужную
             Library:FadeIn(Target.Page)
             TweenService:Create(Target.Btn, TweenInfo.new(0.2), {TextColor3 = Library.Theme.Accent}):Play()
         end
 
         local SwipeStart = nil
 
-        -- Проверка, находится ли курсор внутри всей страницы (включая верхние кнопки)
-        local function IsInputInPage(InputPos)
-            if not Page.Visible or not PagesArea.Visible then return false end
+        -- Функция проверяет, находится ли курсор/палец в правой части меню (где контент и подвкладки)
+        local function IsOverRightSide(InputPos)
+            -- MainFrame берется из замыкания функции Window
+            if not MainFrame or not MainFrame.Visible then return false end
             
-            -- Проверяем попадание в рамки PageArea (основного окна справа)
-            local AbsPos = PagesArea.AbsolutePosition
-            local AbsSize = PagesArea.AbsoluteSize
+            local MFPos = MainFrame.AbsolutePosition
+            local MFSize = MainFrame.AbsoluteSize
+            local SidebarWidth = 180
             
-            return InputPos.X >= AbsPos.X and InputPos.X <= (AbsPos.X + AbsSize.X) 
-               and InputPos.Y >= AbsPos.Y and InputPos.Y <= (AbsPos.Y + AbsSize.Y)
+            -- Проверяем: X больше чем (начало меню + ширина сайдбара) И внутри границ меню по Y
+            return InputPos.X > (MFPos.X + SidebarWidth) 
+               and InputPos.X < (MFPos.X + MFSize.X)
+               and InputPos.Y > MFPos.Y 
+               and InputPos.Y < (MFPos.Y + MFSize.Y)
         end
 
-        -- Обработка начала нажатия
         UserInputService.InputBegan:Connect(function(input)
             if (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) then
-                -- Если нажали внутри области этой страницы
-                if IsInputInPage(input.Position) then
+                -- Если эта страница активна и курсор в правой части меню
+                if Page.Visible and IsOverRightSide(input.Position) then
                     SwipeStart = input.Position
                 end
             end
         end)
 
-        -- Обработка конца нажатия (сам свайп)
         UserInputService.InputEnded:Connect(function(input)
             if SwipeStart and (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) then
                 local Delta = input.Position - SwipeStart
                 SwipeStart = nil 
                 
-                -- Настройки чувствительности
-                local MinSwipeDistance = 30 -- Минимальное расстояние (пиксели)
-                local MaxVerticalVariance = 100 -- Разрешенное отклонение по вертикали (чтобы не путать с кривым скроллом)
+                local MinSwipeDist = 30 -- Минимум пикселей для свайпа
                 
-                -- Логика:
-                -- 1. Длина свайпа по X больше минимума
-                -- 2. Длина свайпа по X больше, чем по Y (значит это горизонтальное движение)
-                if math.abs(Delta.X) > MinSwipeDistance and math.abs(Delta.X) > math.abs(Delta.Y) then
+                -- Проверка: Свайп должен быть горизонтальным (X > Y), чтобы не мешать скроллить вниз
+                if math.abs(Delta.X) > MinSwipeDist and math.abs(Delta.X) > math.abs(Delta.Y) then
                     if Delta.X < 0 then
-                        -- Свайп ВЛЕВО (палец влево) -> Следующая вкладка
+                        -- Свайп ВЛЕВО -> Следующая вкладка
                         SelectSubTab(CurrentSubTabIndex + 1)
                     else
-                        -- Свайп ВПРАВО (палец вправо) -> Предыдущая вкладка
+                        -- Свайп ВПРАВО -> Предыдущая вкладка
                         SelectSubTab(CurrentSubTabIndex - 1)
                     end
                 end
@@ -957,7 +958,6 @@ function Library:Window(TitleText)
             SubPage.Visible = false
             SubPage.Parent = ContentArea
             
-            -- Регистрируем подвкладку в списке для свайпов
             local MyIndex = #SubTabsList + 1
             table.insert(SubTabsList, {Btn = SBtn, Page = SubPage})
 
