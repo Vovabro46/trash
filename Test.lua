@@ -3362,14 +3362,35 @@ GIcon.Image = "rbxassetid://" .. tostring(RealIconId)
                     SV.InputBegan:Connect(function(i) if i.UserInputType==Enum.UserInputType.MouseButton1 or i.UserInputType==Enum.UserInputType.Touch then d2=true Hand(i,"S") end end)
                     UserInputService.InputEnded:Connect(function() d1=false d2=false end)
                     UserInputService.InputChanged:Connect(function(i) if d1 and (i.UserInputType==Enum.UserInputType.MouseMovement or i.UserInputType==Enum.UserInputType.Touch) then Hand(i,"H") elseif d2 and (i.UserInputType==Enum.UserInputType.MouseMovement or i.UserInputType==Enum.UserInputType.Touch) then Hand(i,"S") end end)
+                    
                     P.MouseButton1Click:Connect(function() 
-                        if Win.Visible then Win.Visible = false Library.ActivePicker = nil else
+                        if Win.Visible then 
+                            Win.Visible = false 
+                            Library.ActivePicker = nil 
+                        else
                             if Library.ActivePicker then Library.ActivePicker.Visible = false end
+                            
+                            -- Safe Position Logic
+                            local ButtonPos = P.AbsolutePosition
+                            local PickerSize = Win.AbsoluteSize
+                            local ScreenSize = ScreenGui.AbsoluteSize
+                            
+                            local XPos = ButtonPos.X - PickerSize.X - 10
+                            if XPos < 10 then -- If no space on left, go right
+                                XPos = ButtonPos.X + P.AbsoluteSize.X + 10
+                            end
+                            
+                            local YPos = ButtonPos.Y
+                            if (YPos + PickerSize.Y) > (ScreenSize.Y - 10) then
+                                YPos = ScreenSize.Y - PickerSize.Y - 10
+                            end
+                
                             Win.Visible = true
-                            Win.Position = UDim2.new(0, P.AbsolutePosition.X + 50, 0, P.AbsolutePosition.Y)
+                            Win.Position = UDim2.new(0, XPos, 0, YPos)
                             Library.ActivePicker = Win
                         end
                     end)
+                    
                     DropdownHolder.InputBegan:Connect(function(i) if i.UserInputType==Enum.UserInputType.MouseButton1 then Win.Visible=false if Library.ActivePicker==Win then Library.ActivePicker=nil end end end)
                 
                     RegisterItem(Text, F)
