@@ -1,3 +1,11 @@
+--[[ 
+    ETERNESUS UI REMASTERED v12.5 (PLATINUM + ICONS + PROFILE)
+    Language: LuaU
+    Added: 
+    1. Player Profile (Sidebar Bottom)
+    2. RadioButton Element
+]]
+
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
@@ -1535,4 +1543,4 @@ end
     return Window
 end
 
-return Lib
+return Library
