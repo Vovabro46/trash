@@ -1736,12 +1736,6 @@ end
         end
         return Tab
     end
-
-    Window:Notify({
-        Title = "Loaded!",
-        Content = "Welcome back, " .. LocalPlayer.DisplayName,
-        Duration = 5
-    })
     
     return Window
 end
