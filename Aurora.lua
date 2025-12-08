@@ -98,6 +98,99 @@ function Library:Window(name)
         ResetOnSpawn = false,
         ZIndexBehavior = Enum.ZIndexBehavior.Sibling
     })
+    
+    local NotifyContainer = Create("Frame", {
+        Parent = ScreenGui,
+        BackgroundTransparency = 1,
+        Size = UDim2.new(0, 300, 1, 0),
+        Position = UDim2.new(1, -320, 0, 0),
+        ZIndex = 100
+    })
+    local NotifyLayout = Create("UIListLayout", {
+        Parent = NotifyContainer,
+        SortOrder = Enum.SortOrder.LayoutOrder,
+        Padding = UDim.new(0, 10),
+        VerticalAlignment = Enum.VerticalAlignment.Bottom
+    })
+    Create("UIPadding", {Parent = NotifyContainer, PaddingBottom = UDim.new(0, 20)})
+
+    --// 2. WATERMARK
+    local WatermarkFrame = Create("Frame", {
+        Parent = ScreenGui,
+        BackgroundColor3 = Theme.Main,
+        Size = UDim2.new(0, 0, 0, 26), -- Auto sized
+        Position = UDim2.new(0, 20, 0, 20),
+        AutomaticSize = Enum.AutomaticSize.X,
+        Visible = true,
+        ZIndex = 90
+    })
+    Create("UICorner", {Parent = WatermarkFrame, CornerRadius = UDim.new(0, 4)})
+    Create("UIStroke", {Parent = WatermarkFrame, Color = Theme.Stroke, Thickness = 1})
+    
+    -- Watermark Top Line
+    local WMTop = Create("Frame", {
+        Parent = WatermarkFrame,
+        BackgroundColor3 = Theme.Accent,
+        Size = UDim2.new(1, 0, 0, 1),
+        BorderSizePixel = 0
+    })
+
+    local WMLayout = Create("UIListLayout", {
+        Parent = WatermarkFrame, 
+        FillDirection = Enum.FillDirection.Horizontal, 
+        VerticalAlignment = Enum.VerticalAlignment.Center,
+        Padding = UDim.new(0, 10)
+    })
+    Create("UIPadding", {Parent = WatermarkFrame, PaddingLeft = UDim.new(0, 10), PaddingRight = UDim.new(0, 10)})
+
+    -- Watermark Labels
+    local function CreateStat(text, val)
+        local L = Create("TextLabel", {
+            Parent = WatermarkFrame,
+            Text = text .. ": <font color='rgb("..math.floor(Theme.Accent.R*255)..","..math.floor(Theme.Accent.G*255)..","..math.floor(Theme.Accent.B*255)..")'>" .. val .. "</font>",
+            Font = Enum.Font.GothamBold,
+            TextSize = 12,
+            TextColor3 = Theme.TextMain,
+            BackgroundTransparency = 1,
+            AutomaticSize = Enum.AutomaticSize.XY,
+            RichText = true
+        })
+        return L
+    end
+
+    local WMTitle = Create("TextLabel", {
+        Parent = WatermarkFrame,
+        Text = name,
+        Font = Enum.Font.GothamBlack,
+        TextSize = 12,
+        TextColor3 = Theme.Accent,
+        BackgroundTransparency = 1,
+        AutomaticSize = Enum.AutomaticSize.XY
+    })
+    
+    local Sep1 = Create("Frame", {Parent = WatermarkFrame, BackgroundColor3 = Theme.Stroke, Size = UDim2.new(0, 1, 0, 14), BorderSizePixel = 0})
+    local FPSLabel = CreateStat("FPS", "60")
+    local Sep2 = Create("Frame", {Parent = WatermarkFrame, BackgroundColor3 = Theme.Stroke, Size = UDim2.new(0, 1, 0, 14), BorderSizePixel = 0})
+    local PingLabel = CreateStat("Ping", "0ms")
+    local Sep3 = Create("Frame", {Parent = WatermarkFrame, BackgroundColor3 = Theme.Stroke, Size = UDim2.new(0, 1, 0, 14), BorderSizePixel = 0})
+    local TimeLabel = CreateStat("Time", GetTime())
+
+    -- Watermark Logic
+    task.spawn(function()
+        local LastUpdate = 0
+        RunService.RenderStepped:Connect(function(dt)
+            if tick() - LastUpdate > 1 then
+                LastUpdate = tick()
+                local FPS = math.floor(1 / dt)
+                local Ping = math.floor(Stats.Network.ServerStatsItem["Data Ping"]:GetValueString():match("%d+"))
+                
+                FPSLabel.Text = "FPS: <font color='rgb("..math.floor(Theme.Accent.R*255)..","..math.floor(Theme.Accent.G*255)..","..math.floor(Theme.Accent.B*255)..")'>" .. FPS .. "</font>"
+                PingLabel.Text = "Ping: <font color='rgb("..math.floor(Theme.Accent.R*255)..","..math.floor(Theme.Accent.G*255)..","..math.floor(Theme.Accent.B*255)..")'>" .. Ping .. "ms</font>"
+                TimeLabel.Text = "Time: <font color='rgb("..math.floor(Theme.Accent.R*255)..","..math.floor(Theme.Accent.G*255)..","..math.floor(Theme.Accent.B*255)..")'>" .. GetTime() .. "</font>"
+            end
+        end)
+    end)
+    MakeDraggable(WatermarkFrame, WatermarkFrame)
 
     -- TOOLTIP SYSTEM
     local Tooltip = Create("Frame", {
@@ -384,6 +477,107 @@ function Library:Window(name)
         Size = UDim2.new(1, -200, 1, -20),
         ClipsDescendants = true
     })
+    
+    function Window:Notify(config)
+        local Title = config.Title or "Notification"
+        local Content = config.Content or "No content provided."
+        local Duration = config.Duration or 3
+        local Icon = config.Image or Icons.Bell or "6031091009"
+
+        local NFrame = Create("Frame", {
+            Parent = NotifyContainer,
+            BackgroundColor3 = Theme.Main,
+            Size = UDim2.new(1, 0, 0, 60),
+            Position = UDim2.new(1, 20, 0, 0), -- Start offscreen
+            BackgroundTransparency = 0.1
+        })
+        Create("UICorner", {Parent = NFrame, CornerRadius = UDim.new(0, 6)})
+        Create("UIStroke", {Parent = NFrame, Color = Theme.Stroke, Thickness = 1})
+        
+        -- Glow
+        Create("ImageLabel", {
+            Parent = NFrame,
+            Image = Theme.Glow,
+            ImageColor3 = Theme.Accent,
+            ImageTransparency = 0.8,
+            Position = UDim2.new(0, -10, 0, -10),
+            Size = UDim2.new(1, 20, 1, 20),
+            BackgroundTransparency = 1,
+            ZIndex = 0,
+            ScaleType = Enum.ScaleType.Slice,
+            SliceCenter = Rect.new(20,20,280,280)
+        })
+
+        local SideBar = Create("Frame", {
+            Parent = NFrame,
+            BackgroundColor3 = Theme.Accent,
+            Size = UDim2.new(0, 3, 1, -10),
+            Position = UDim2.new(0, 0, 0, 5)
+        })
+        Create("UICorner", {Parent = SideBar, CornerRadius = UDim.new(0, 4)})
+
+        local IconImg = Create("ImageLabel", {
+            Parent = NFrame,
+            Image = "rbxassetid://" .. Icon,
+            BackgroundTransparency = 1,
+            Size = UDim2.new(0, 20, 0, 20),
+            Position = UDim2.new(0, 12, 0, 10),
+            ImageColor3 = Theme.TextMain
+        })
+
+        local NTitle = Create("TextLabel", {
+            Parent = NFrame,
+            Text = Title,
+            Font = Enum.Font.GothamBold,
+            TextColor3 = Theme.TextMain,
+            TextSize = 13,
+            BackgroundTransparency = 1,
+            Size = UDim2.new(1, -50, 0, 20),
+            Position = UDim2.new(0, 40, 0, 10),
+            TextXAlignment = Enum.TextXAlignment.Left
+        })
+
+        local NDesc = Create("TextLabel", {
+            Parent = NFrame,
+            Text = Content,
+            Font = Enum.Font.Gotham,
+            TextColor3 = Theme.TextDim,
+            TextSize = 11,
+            BackgroundTransparency = 1,
+            Size = UDim2.new(1, -50, 0, 20),
+            Position = UDim2.new(0, 40, 0, 30),
+            TextXAlignment = Enum.TextXAlignment.Left,
+            TextTruncate = Enum.TextTruncate.AtEnd
+        })
+
+        local TimeBarBase = Create("Frame", {
+            Parent = NFrame,
+            BackgroundColor3 = Color3.fromRGB(40,40,45),
+            Size = UDim2.new(1, -10, 0, 2),
+            Position = UDim2.new(0, 5, 1, -3),
+            BorderSizePixel = 0
+        })
+        local TimeBar = Create("Frame", {
+            Parent = TimeBarBase,
+            BackgroundColor3 = Theme.Accent,
+            Size = UDim2.new(1, 0, 1, 0),
+            BorderSizePixel = 0
+        })
+
+        -- Animations
+        TweenService:Create(NFrame, TweenInfo.new(0.5, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {Position = UDim2.new(0, 0, 0, 0)}):Play()
+        TweenService:Create(TimeBar, TweenInfo.new(Duration, Enum.EasingStyle.Linear), {Size = UDim2.new(0, 0, 1, 0)}):Play()
+
+        task.delay(Duration, function()
+            TweenService:Create(NFrame, TweenInfo.new(0.5, Enum.EasingStyle.Quint, Enum.EasingDirection.In), {Position = UDim2.new(1, 20, 0, 0)}):Play()
+            wait(0.5)
+            NFrame:Destroy()
+        end)
+    end
+
+    function Window:SetWatermark(bool)
+        WatermarkFrame.Visible = bool
+    end
 
     local Tabs = {}
     local FirstTab = true
@@ -1535,179 +1729,6 @@ end
                 end)
                 Resize()
             end
-            
-            --// WATERMARK
-    function Library:Watermark(config)
-        local wmConfig = config or {}
-        local wmTitle = wmConfig.Title or "Library | Dev Build"
-        local wmEnabled = true
-
-        local WatermarkFrame = Create("Frame", {
-            Parent = (RunService:IsStudio() and Players.LocalPlayer:WaitForChild("PlayerGui")) or CoreGui:FindFirstChild(Config.Title or "UI Library"), -- Ищет ScreenGui
-            Name = "Watermark",
-            BackgroundColor3 = Theme.Background,
-            BorderSizePixel = 0,
-            Position = UDim2.new(0.01, 0, 0.01, 0), -- Верхний левый угол
-            Size = UDim2.new(0, 0, 0, 24), -- Авто-размер по X
-            AutomaticSize = Enum.AutomaticSize.X
-        })
-        -- Проверка, чтобы ватермарка попала в тот же ScreenGui
-        if not WatermarkFrame.Parent then 
-             -- Если не нашло GUI, создаем временно (или привязываем к существующему ScreenGui, если он есть в scope)
-             WatermarkFrame.Parent = CoreGui 
-        end
-        
-        Create("UICorner", {Parent = WatermarkFrame, CornerRadius = UDim.new(0, 4)})
-        Create("UIStroke", {Parent = WatermarkFrame, Color = Theme.Accent, Thickness = 1})
-
-        local WmText = Create("TextLabel", {
-            Parent = WatermarkFrame,
-            Text = wmTitle,
-            Font = Enum.Font.GothamMedium,
-            TextColor3 = Theme.TextMain,
-            TextSize = 12,
-            BackgroundTransparency = 1,
-            Size = UDim2.new(0, 0, 1, 0),
-            Position = UDim2.new(0, 0, 0, 0),
-            AutomaticSize = Enum.AutomaticSize.X
-        })
-        Create("UIPadding", {Parent = WatermarkFrame, PaddingLeft = UDim.new(0, 8), PaddingRight = UDim.new(0, 8)})
-
-        -- Логика обновления FPS и Пинга
-        Spawn(function()
-            while wmEnabled do
-                local ping = math.floor(game:GetService("Stats").Network.ServerStatsItem["Data Ping"]:GetValue())
-                local fps = math.floor(workspace:GetRealPhysicsFPS())
-                local time = os.date("%H:%M:%S")
-                
-                WmText.Text = string.format("%s | FPS: %d | Ping: %d ms | %s", wmTitle, fps, ping, time)
-                task.wait(1)
-            end
-        end)
-        
-        return {
-            Update = function(newTitle) wmTitle = newTitle end,
-            Toggle = function(state) WatermarkFrame.Visible = state end
-        }
-    end
-
-    --// NOTIFICATION SYSTEM
-    function Library:Notify(config)
-        local Title = config.Title or "Notification"
-        local Content = config.Content or "Text goes here"
-        local Duration = config.Duration or 3
-        local Image = config.Image or "rbxassetid://3944680095" -- Info icon
-
-        -- Контейнер для уведов (создается один раз)
-        local NotifyGui = CoreGui:FindFirstChild("NotifyGui")
-        if not NotifyGui then
-            NotifyGui = Create("ScreenGui", {
-                Parent = CoreGui,
-                Name = "NotifyGui",
-                ResetOnSpawn = false,
-                ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-            })
-        end
-
-        local NotifyContainer = NotifyGui:FindFirstChild("Container")
-        if not NotifyContainer then
-            NotifyContainer = Create("Frame", {
-                Parent = NotifyGui,
-                Name = "Container",
-                BackgroundTransparency = 1,
-                Position = UDim2.new(1, -220, 1, -20), -- Правый нижний угол
-                Size = UDim2.new(0, 200, 0, 0),
-                AnchorPoint = Vector2.new(1, 1)
-            })
-            Create("UIListLayout", {
-                Parent = NotifyContainer,
-                SortOrder = Enum.SortOrder.LayoutOrder,
-                Padding = UDim.new(0, 5),
-                VerticalAlignment = Enum.VerticalAlignment.Bottom
-            })
-        end
-
-        -- Сам фрейм уведомления
-        local NFrame = Create("Frame", {
-            Parent = NotifyContainer,
-            BackgroundColor3 = Theme.Background,
-            Size = UDim2.new(1, 0, 0, 0), -- Начинается с 0 высоты для анимации
-            AutomaticSize = Enum.AutomaticSize.Y,
-            ClipsDescendants = true,
-            BackgroundTransparency = 1
-        })
-        
-        local NStroke = Create("UIStroke", {Parent = NFrame, Color = Theme.Stroke, Thickness = 1, Transparency = 1})
-        Create("UICorner", {Parent = NFrame, CornerRadius = UDim.new(0, 4)})
-
-        local Icon = Create("ImageLabel", {
-            Parent = NFrame,
-            Image = Image,
-            BackgroundTransparency = 1,
-            Size = UDim2.new(0, 20, 0, 20),
-            Position = UDim2.new(0, 8, 0, 8),
-            ImageColor3 = Theme.Accent,
-            ImageTransparency = 1
-        })
-
-        local NTitle = Create("TextLabel", {
-            Parent = NFrame,
-            Text = Title,
-            Font = Enum.Font.GothamBold,
-            TextColor3 = Theme.TextMain,
-            TextSize = 13,
-            Size = UDim2.new(1, -40, 0, 20),
-            Position = UDim2.new(0, 36, 0, 4),
-            BackgroundTransparency = 1,
-            TextXAlignment = Enum.TextXAlignment.Left,
-            TextTransparency = 1
-        })
-
-        local NContent = Create("TextLabel", {
-            Parent = NFrame,
-            Text = Content,
-            Font = Enum.Font.Gotham,
-            TextColor3 = Theme.TextDim,
-            TextSize = 11,
-            Size = UDim2.new(1, -40, 0, 0),
-            Position = UDim2.new(0, 36, 0, 22),
-            BackgroundTransparency = 1,
-            TextXAlignment = Enum.TextXAlignment.Left,
-            TextTransparency = 1,
-            AutomaticSize = Enum.AutomaticSize.Y,
-            TextWrapped = true
-        })
-
-        Create("UIPadding", {Parent = NFrame, PaddingBottom = UDim.new(0, 8)})
-
-        -- Анимация появления
-        TweenService:Create(NFrame, TweenInfo.new(0.3), {BackgroundTransparency = 0.1}):Play()
-        TweenService:Create(NStroke, TweenInfo.new(0.3), {Transparency = 0}):Play()
-        TweenService:Create(Icon, TweenInfo.new(0.3), {ImageTransparency = 0}):Play()
-        TweenService:Create(NTitle, TweenInfo.new(0.3), {TextTransparency = 0}):Play()
-        TweenService:Create(NContent, TweenInfo.new(0.3), {TextTransparency = 0}):Play()
-        
-        -- Полоска времени
-        local Bar = Create("Frame", {
-            Parent = NFrame,
-            BackgroundColor3 = Theme.Accent,
-            Size = UDim2.new(0, 0, 0, 2),
-            Position = UDim2.new(0, 0, 1, -1),
-            BorderSizePixel = 0
-        })
-        TweenService:Create(Bar, TweenInfo.new(Duration), {Size = UDim2.new(1, 0, 0, 2)}):Play()
-
-        -- Удаление
-        task.delay(Duration, function()
-            TweenService:Create(NFrame, TweenInfo.new(0.3), {BackgroundTransparency = 1}):Play()
-            TweenService:Create(NStroke, TweenInfo.new(0.3), {Transparency = 1}):Play()
-            TweenService:Create(Icon, TweenInfo.new(0.3), {ImageTransparency = 1}):Play()
-            TweenService:Create(NTitle, TweenInfo.new(0.3), {TextTransparency = 1}):Play()
-            TweenService:Create(NContent, TweenInfo.new(0.3), {TextTransparency = 1}):Play()
-            wait(0.3)
-            NFrame:Destroy()
-        end)
-    end
 
             return Elements
         end
