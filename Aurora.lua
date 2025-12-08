@@ -33,7 +33,9 @@ local Icons = {
     Bug = "6031280887",
     Info = "6031280883",
     Lock = "6031090854",
-    List = "6031091000"
+    List = "6031091000",
+    Bell = "6031091009", -- New for Notifs
+    Clock = "6031280883" -- New for Watermark
 }
 
 --// THEME & CONFIG
