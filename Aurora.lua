@@ -33,9 +33,7 @@ local Icons = {
     Bug = "6031280887",
     Info = "6031280883",
     Lock = "6031090854",
-    List = "6031091000",
-    Bell = "6031091009", -- New for Notifs
-    Clock = "6031280883" -- New for Watermark
+    List = "6031091000"
 }
 
 --// THEME & CONFIG
@@ -115,84 +113,6 @@ function Library:Window(name)
         VerticalAlignment = Enum.VerticalAlignment.Bottom
     })
     Create("UIPadding", {Parent = NotifyContainer, PaddingBottom = UDim.new(0, 20)})
-
-    --// 2. WATERMARK
-    local WatermarkFrame = Create("Frame", {
-        Parent = ScreenGui,
-        BackgroundColor3 = Theme.Main,
-        Size = UDim2.new(0, 0, 0, 26), -- Auto sized
-        Position = UDim2.new(0, 20, 0, 20),
-        AutomaticSize = Enum.AutomaticSize.X,
-        Visible = true,
-        ZIndex = 90
-    })
-    Create("UICorner", {Parent = WatermarkFrame, CornerRadius = UDim.new(0, 4)})
-    Create("UIStroke", {Parent = WatermarkFrame, Color = Theme.Stroke, Thickness = 1})
-    
-    -- Watermark Top Line
-    local WMTop = Create("Frame", {
-        Parent = WatermarkFrame,
-        BackgroundColor3 = Theme.Accent,
-        Size = UDim2.new(1, 0, 0, 1),
-        BorderSizePixel = 0
-    })
-
-    local WMLayout = Create("UIListLayout", {
-        Parent = WatermarkFrame, 
-        FillDirection = Enum.FillDirection.Horizontal, 
-        VerticalAlignment = Enum.VerticalAlignment.Center,
-        Padding = UDim.new(0, 10)
-    })
-    Create("UIPadding", {Parent = WatermarkFrame, PaddingLeft = UDim.new(0, 10), PaddingRight = UDim.new(0, 10)})
-
-    -- Watermark Labels
-    local function CreateStat(text, val)
-        local L = Create("TextLabel", {
-            Parent = WatermarkFrame,
-            Text = text .. ": <font color='rgb("..math.floor(Theme.Accent.R*255)..","..math.floor(Theme.Accent.G*255)..","..math.floor(Theme.Accent.B*255)..")'>" .. val .. "</font>",
-            Font = Enum.Font.GothamBold,
-            TextSize = 12,
-            TextColor3 = Theme.TextMain,
-            BackgroundTransparency = 1,
-            AutomaticSize = Enum.AutomaticSize.XY,
-            RichText = true
-        })
-        return L
-    end
-
-    local WMTitle = Create("TextLabel", {
-        Parent = WatermarkFrame,
-        Text = name,
-        Font = Enum.Font.GothamBlack,
-        TextSize = 12,
-        TextColor3 = Theme.Accent,
-        BackgroundTransparency = 1,
-        AutomaticSize = Enum.AutomaticSize.XY
-    })
-    
-    local Sep1 = Create("Frame", {Parent = WatermarkFrame, BackgroundColor3 = Theme.Stroke, Size = UDim2.new(0, 1, 0, 14), BorderSizePixel = 0})
-    local FPSLabel = CreateStat("FPS", "60")
-    local Sep2 = Create("Frame", {Parent = WatermarkFrame, BackgroundColor3 = Theme.Stroke, Size = UDim2.new(0, 1, 0, 14), BorderSizePixel = 0})
-    local PingLabel = CreateStat("Ping", "0ms")
-    local Sep3 = Create("Frame", {Parent = WatermarkFrame, BackgroundColor3 = Theme.Stroke, Size = UDim2.new(0, 1, 0, 14), BorderSizePixel = 0})
-    local TimeLabel = CreateStat("Time", GetTime())
-
-    -- Watermark Logic
-    task.spawn(function()
-        local LastUpdate = 0
-        RunService.RenderStepped:Connect(function(dt)
-            if tick() - LastUpdate > 1 then
-                LastUpdate = tick()
-                local FPS = math.floor(1 / dt)
-                local Ping = math.floor(Stats.Network.ServerStatsItem["Data Ping"]:GetValueString():match("%d+"))
-                
-                FPSLabel.Text = "FPS: <font color='rgb("..math.floor(Theme.Accent.R*255)..","..math.floor(Theme.Accent.G*255)..","..math.floor(Theme.Accent.B*255)..")'>" .. FPS .. "</font>"
-                PingLabel.Text = "Ping: <font color='rgb("..math.floor(Theme.Accent.R*255)..","..math.floor(Theme.Accent.G*255)..","..math.floor(Theme.Accent.B*255)..")'>" .. Ping .. "ms</font>"
-                TimeLabel.Text = "Time: <font color='rgb("..math.floor(Theme.Accent.R*255)..","..math.floor(Theme.Accent.G*255)..","..math.floor(Theme.Accent.B*255)..")'>" .. GetTime() .. "</font>"
-            end
-        end)
-    end)
-    MakeDraggable(WatermarkFrame, WatermarkFrame)
 
     -- TOOLTIP SYSTEM
     local Tooltip = Create("Frame", {
@@ -575,10 +495,6 @@ function Library:Window(name)
             wait(0.5)
             NFrame:Destroy()
         end)
-    end
-
-    function Window:SetWatermark(bool)
-        WatermarkFrame.Visible = bool
     end
 
     local Tabs = {}
@@ -1736,7 +1652,6 @@ end
         end
         return Tab
     end
-    
     return Window
 end
 
