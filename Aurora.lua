@@ -1,9 +1,9 @@
 --[[ 
-    ETERNESUS UI REMASTERED v12.5 (PLATINUM + ICONS + PROFILE)
+    ETERNESUS UI REMASTERED v12.6 (PLATINUM + NOTIFICATIONS)
     Language: LuaU
     Added: 
-    1. Player Profile (Sidebar Bottom)
-    2. RadioButton Element
+    1. Premium Notification System (Animations, Timers, Gradients)
+    2. Integrated into Main GUI
 ]]
 
 local TweenService = game:GetService("TweenService")
@@ -13,12 +13,11 @@ local CoreGui = game:GetService("CoreGui")
 local Players = game:GetService("Players")
 local Workspace = game:GetService("Workspace")
 local LocalPlayer = Players.LocalPlayer
-local Mouse = LocalPlayer:GetMouse()
 local Camera = Workspace.CurrentCamera
 
 local Library = {}
 
---// ICON LIBRARY (Названия вместо цифр)
+--// ICON LIBRARY
 local Icons = {
     Home = "6031068428",
     Settings = "6031280882",
@@ -33,7 +32,12 @@ local Icons = {
     Bug = "6031280887",
     Info = "6031280883",
     Lock = "6031090854",
-    List = "6031091000"
+    List = "6031091000",
+    -- Notify Icons
+    Success = "6031094667",
+    Error = "6031094678",
+    Warning = "6031094670",
+    NotifyInfo = "6031094674"
 }
 
 --// THEME & CONFIG
@@ -42,6 +46,9 @@ local Theme = {
     Sidebar = Color3.fromRGB(25, 25, 30),
     Section = Color3.fromRGB(28, 28, 33),
     Accent = Color3.fromRGB(0, 255, 127),     -- Ядовитый Неон
+    Error = Color3.fromRGB(255, 65, 65),
+    Warning = Color3.fromRGB(255, 190, 40),
+    Info = Color3.fromRGB(60, 150, 255),
     TextMain = Color3.fromRGB(255, 255, 255),
     TextDim = Color3.fromRGB(145, 145, 155),
     Stroke = Color3.fromRGB(45, 45, 50),
@@ -99,7 +106,22 @@ function Library:Window(name)
         ZIndexBehavior = Enum.ZIndexBehavior.Sibling
     })
 
-    -- TOOLTIP SYSTEM
+    --// NOTIFICATION SYSTEM CONTAINER
+    local NotifyContainer = Create("Frame", {
+        Parent = ScreenGui,
+        BackgroundTransparency = 1,
+        Size = UDim2.new(0, 300, 1, -20),
+        Position = UDim2.new(1, -320, 0, 10),
+        ZIndex = 100
+    })
+    local NotifyList = Create("UIListLayout", {
+        Parent = NotifyContainer,
+        SortOrder = Enum.SortOrder.LayoutOrder,
+        Padding = UDim.new(0, 10),
+        VerticalAlignment = Enum.VerticalAlignment.Bottom
+    })
+
+    -- TOOLTIP SYSTEM (Оставляем как было)
     local Tooltip = Create("Frame", {
         Name = "Tooltip",
         Parent = ScreenGui,
@@ -107,7 +129,7 @@ function Library:Window(name)
         Size = UDim2.new(0, 0, 0, 24),
         AutomaticSize = Enum.AutomaticSize.X,
         Visible = false,
-        ZIndex = 100
+        ZIndex = 200
     })
     Create("UICorner", {Parent = Tooltip, CornerRadius = UDim.new(0, 4)})
     Create("UIStroke", {Parent = Tooltip, Color = Theme.Accent, Thickness = 1})
@@ -139,15 +161,11 @@ function Library:Window(name)
         end)
     end
 
-    -- Auto-Detect Screen Size
+    -- // MAIN GUI SETUP
     local Viewport = Camera.ViewportSize
     local StartSize = UDim2.new(0, 700, 0, 500)
-    
-    if Viewport.X < 800 then
-        StartSize = UDim2.new(0.7, 0, 0.6, 0)
-    end
+    if Viewport.X < 800 then StartSize = UDim2.new(0.7, 0, 0.6, 0) end
 
-    -- Main Frame
     local Main = Create("Frame", {
         Name = "Main",
         Parent = ScreenGui,
@@ -160,7 +178,6 @@ function Library:Window(name)
     Create("UICorner", {Parent = Main, CornerRadius = UDim.new(0, 8)})
     Create("UIStroke", {Parent = Main, Color = Theme.Stroke, Thickness = 1})
 
-    -- Glow
     local Glow = Create("ImageLabel", {
         Parent = Main,
         BackgroundTransparency = 1,
@@ -174,7 +191,6 @@ function Library:Window(name)
         SliceCenter = Rect.new(20, 20, 280, 280)
     })
 
-    -- Sidebar (Background only)
     local Sidebar = Create("Frame", {
         Parent = Main,
         BackgroundColor3 = Theme.Sidebar,
@@ -184,7 +200,6 @@ function Library:Window(name)
     Create("UICorner", {Parent = Sidebar, CornerRadius = UDim.new(0, 8)})
     Create("Frame", {Parent = Sidebar, BackgroundColor3 = Theme.Sidebar, Size = UDim2.new(0, 10, 1, 0), Position = UDim2.new(1, -10, 0, 0), BorderSizePixel = 0})
 
-    -- Title
     local Title = Create("TextLabel", {
         Parent = Main, 
         Text = name,
@@ -198,7 +213,6 @@ function Library:Window(name)
         TextXAlignment = Enum.TextXAlignment.Center
     })
 
-    -- Drag Area
     local TopbarArea = Create("Frame", {
         Parent = Main,
         BackgroundTransparency = 1,
@@ -207,7 +221,6 @@ function Library:Window(name)
     })
     MakeDraggable(TopbarArea, Main)
 
-    -- WINDOW CONTROLS
     local ControlHolder = Create("Frame", {
         Parent = Main,
         BackgroundTransparency = 1,
@@ -270,7 +283,6 @@ function Library:Window(name)
     CloseBtn.MouseEnter:Connect(function() CloseBtn.ImageColor3 = Color3.fromRGB(255, 80, 80) end)
     CloseBtn.MouseLeave:Connect(function() CloseBtn.ImageColor3 = Theme.TextDim end)
 
-    -- RESIZE HANDLE
     local ResizeHandle = Create("TextButton", {
         Parent = Main,
         BackgroundTransparency = 1,
@@ -312,7 +324,6 @@ function Library:Window(name)
         end
     end)
 
-    -- // PLAYER PROFILE (NEW)
     local ProfileFrame = Create("Frame", {
         Parent = Sidebar,
         BackgroundColor3 = Theme.Section,
@@ -328,11 +339,10 @@ function Library:Window(name)
         BackgroundTransparency = 1,
         Size = UDim2.new(0, 34, 0, 34),
         Position = UDim2.new(0, 8, 0, 8),
-        Image = "rbxassetid://0" -- Placeholder
+        Image = "rbxassetid://0"
     })
     Create("UICorner", {Parent = AvatarImg, CornerRadius = UDim.new(1, 0)})
     
-    -- Async load avatar
     task.spawn(function()
         local content = Players:GetUserThumbnailAsync(LocalPlayer.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size48x48)
         AvatarImg.Image = content
@@ -364,19 +374,17 @@ function Library:Window(name)
         TextTruncate = Enum.TextTruncate.AtEnd
     })
 
-    -- Tab Container (Уменьшили размер, чтобы вместить профиль)
     local TabContainer = Create("ScrollingFrame", {
         Parent = Sidebar,
         BackgroundTransparency = 1,
         Position = UDim2.new(0, 0, 0, 80),
-        Size = UDim2.new(1, 0, 1, -150), -- Изменено с -80 на -150
+        Size = UDim2.new(1, 0, 1, -150),
         ScrollBarThickness = 0,
         CanvasSize = UDim2.new(0,0,0,0),
         ZIndex = 2
     })
     local TabList = Create("UIListLayout", {Parent = TabContainer, SortOrder = Enum.SortOrder.LayoutOrder, Padding = UDim.new(0, 5)})
 
-    -- Content Area
     ContentArea = Create("Frame", {
         Parent = Main,
         BackgroundTransparency = 1,
@@ -385,15 +393,168 @@ function Library:Window(name)
         ClipsDescendants = true
     })
 
+    --// NOTIFICATION FUNCTION
+    function Window:Notify(config)
+        local Title = config.Title or "Notification"
+        local Content = config.Content or ""
+        local Time = config.Duration or 5
+        local Type = config.Type or "Info" -- Success, Error, Warning, Info
+        
+        -- Color Logic
+        local TypeColor = Theme.Accent
+        local IconID = Icons.NotifyInfo
+        
+        if Type == "Success" then 
+            TypeColor = Theme.Accent
+            IconID = Icons.Success
+        elseif Type == "Error" then 
+            TypeColor = Theme.Error
+            IconID = Icons.Error
+        elseif Type == "Warning" then 
+            TypeColor = Theme.Warning
+            IconID = Icons.Warning
+        elseif Type == "Info" then
+            TypeColor = Theme.Info
+            IconID = Icons.NotifyInfo
+        end
+
+        -- Sound
+        local Sound = Instance.new("Sound")
+        Sound.SoundId = "rbxassetid://4590662766" -- Pop Sound
+        Sound.Volume = 0.5
+        Sound.Parent = ScreenGui
+        Sound:Play()
+        Sound.Ended:Connect(function() Sound:Destroy() end)
+
+        -- GUI Creation
+        local NotifyFrame = Create("Frame", {
+            Parent = NotifyContainer,
+            BackgroundColor3 = Theme.Sidebar,
+            Size = UDim2.new(1, 0, 0, 60),
+            Position = UDim2.new(1, 320, 0, 0), -- Off screen start
+            BackgroundTransparency = 0.1
+        })
+        Create("UICorner", {Parent = NotifyFrame, CornerRadius = UDim.new(0, 6)})
+        
+        -- Premium Gradient Stroke
+        local Stroke = Create("UIStroke", {
+            Parent = NotifyFrame,
+            Color = Color3.new(1,1,1),
+            Thickness = 1.5
+        })
+        local StrokeGrad = Create("UIGradient", {
+            Parent = Stroke,
+            Color = ColorSequence.new{
+                ColorSequenceKeypoint.new(0, TypeColor),
+                ColorSequenceKeypoint.new(1, Theme.Sidebar)
+            },
+            Rotation = 45
+        })
+
+        -- Glow
+        local NGlow = Create("ImageLabel", {
+            Parent = NotifyFrame,
+            Image = Theme.Glow,
+            ImageColor3 = TypeColor,
+            ImageTransparency = 0.8,
+            Size = UDim2.new(1, 30, 1, 30),
+            Position = UDim2.new(0, -15, 0, -15),
+            BackgroundTransparency = 1,
+            SliceCenter = Rect.new(20, 20, 280, 280),
+            ScaleType = Enum.ScaleType.Slice,
+            ZIndex = 0
+        })
+
+        -- Icon Area
+        local IconBg = Create("Frame", {
+            Parent = NotifyFrame,
+            BackgroundColor3 = TypeColor,
+            BackgroundTransparency = 0.85,
+            Size = UDim2.new(0, 40, 0, 40),
+            Position = UDim2.new(0, 10, 0.5, -20)
+        })
+        Create("UICorner", {Parent = IconBg, CornerRadius = UDim.new(0, 8)})
+
+        local IconImg = Create("ImageLabel", {
+            Parent = IconBg,
+            Image = "rbxassetid://" .. IconID,
+            BackgroundTransparency = 1,
+            Size = UDim2.new(0, 24, 0, 24),
+            Position = UDim2.new(0.5, -12, 0.5, -12),
+            ImageColor3 = TypeColor
+        })
+
+        -- Texts
+        local TitleLbl = Create("TextLabel", {
+            Parent = NotifyFrame,
+            Text = Title,
+            Font = Enum.Font.GothamBold,
+            TextColor3 = Theme.TextMain,
+            TextSize = 14,
+            BackgroundTransparency = 1,
+            Size = UDim2.new(1, -60, 0, 20),
+            Position = UDim2.new(0, 60, 0, 8),
+            TextXAlignment = Enum.TextXAlignment.Left
+        })
+
+        local DescLbl = Create("TextLabel", {
+            Parent = NotifyFrame,
+            Text = Content,
+            Font = Enum.Font.Gotham,
+            TextColor3 = Theme.TextDim,
+            TextSize = 12,
+            BackgroundTransparency = 1,
+            Size = UDim2.new(1, -60, 0, 24),
+            Position = UDim2.new(0, 60, 0, 28),
+            TextXAlignment = Enum.TextXAlignment.Left,
+            TextTruncate = Enum.TextTruncate.AtEnd
+        })
+
+        -- Timer Bar
+        local TimerBarBg = Create("Frame", {
+            Parent = NotifyFrame,
+            BackgroundColor3 = Color3.fromRGB(40,40,45),
+            Size = UDim2.new(1, -20, 0, 2),
+            Position = UDim2.new(0, 10, 1, -2),
+            BorderSizePixel = 0,
+            BackgroundTransparency = 0.5
+        })
+        local TimerFill = Create("Frame", {
+            Parent = TimerBarBg,
+            BackgroundColor3 = TypeColor,
+            Size = UDim2.new(1, 0, 1, 0),
+            BorderSizePixel = 0
+        })
+        
+        -- Animation IN
+        TweenService:Create(NotifyFrame, TweenInfo.new(0.5, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Position = UDim2.new(0, 0, 0, 0)}):Play()
+        TweenService:Create(TimerFill, TweenInfo.new(Time, Enum.EasingStyle.Linear), {Size = UDim2.new(0, 0, 1, 0)}):Play()
+
+        -- Remove Logic
+        task.delay(Time, function()
+            -- Animation OUT
+            local OutTween = TweenService:Create(NotifyFrame, TweenInfo.new(0.4, Enum.EasingStyle.Back, Enum.EasingDirection.In), {
+                Position = UDim2.new(1, 50, 0, 0),
+                BackgroundTransparency = 1
+            })
+            OutTween:Play()
+            TweenService:Create(TitleLbl, TweenInfo.new(0.3), {TextTransparency = 1}):Play()
+            TweenService:Create(DescLbl, TweenInfo.new(0.3), {TextTransparency = 1}):Play()
+            TweenService:Create(IconImg, TweenInfo.new(0.3), {ImageTransparency = 1}):Play()
+            TweenService:Create(Stroke, TweenInfo.new(0.3), {Transparency = 1}):Play()
+            TweenService:Create(NGlow, TweenInfo.new(0.3), {ImageTransparency = 1}):Play()
+            
+            OutTween.Completed:Wait()
+            NotifyFrame:Destroy()
+        end)
+    end
+
     local Tabs = {}
     local FirstTab = true
     local CurrentTab = nil
 
     function Window:Tab(text, icon)
-        --// АВТОМАТИЧЕСКАЯ ЗАМЕНА ИКОНКИ ПО НАЗВАНИЮ
-        if icon and Icons[icon] then
-            icon = Icons[icon]
-        end
+        if icon and Icons[icon] then icon = Icons[icon] end
 
         local Tab = {}
         local TabBtn = Create("TextButton", {
@@ -629,56 +790,54 @@ function Library:Window(name)
             end
 
             --// PARAGRAPH
-            --// PARAGRAPH (ИСПРАВЛЕНО)
---// PARAGRAPH (ИСПРАВЛЕНО)
-function Elements:Paragraph(title, content)
-    local ParaFrame = Create("Frame", {
-        Parent = Container,
-        BackgroundTransparency = 1,
-        Size = UDim2.new(1, 0, 0, 0), 
-        AutomaticSize = Enum.AutomaticSize.Y
-    })
-    
-    Create("TextLabel", {
-        Parent = ParaFrame,
-        Text = title,
-        Font = Enum.Font.GothamBold,
-        TextColor3 = Theme.TextMain,
-        TextSize = 12,
-        Size = UDim2.new(1, 0, 0, 15),
-        BackgroundTransparency = 1,
-        TextXAlignment = Enum.TextXAlignment.Left
-    })
-    
-    local ContentFrame = Create("Frame", {
-        Parent = ParaFrame,
-        BackgroundTransparency = 1,
-        Size = UDim2.new(1, 0, 0, 0),
-        Position = UDim2.new(0, 0, 0, 18),
-        AutomaticSize = Enum.AutomaticSize.Y
-    })
-    
-    local ContentLabel = Create("TextLabel", {
-        Parent = ContentFrame,
-        Text = content,
-        Font = Enum.Font.Gotham,
-        TextColor3 = Theme.TextDim,
-        TextSize = 11,
-        Size = UDim2.new(1, 0, 0, 0),
-        BackgroundTransparency = 1,
-        TextXAlignment = Enum.TextXAlignment.Left,
-        TextWrapped = true,
-        AutomaticSize = Enum.AutomaticSize.Y,
-        TextYAlignment = Enum.TextYAlignment.Top
-    })
-    
-    Create("UIPadding", {
-        Parent = ParaFrame, 
-        PaddingBottom = UDim.new(0, 5)
-    })
-    
-    Resize()
-end
+            function Elements:Paragraph(title, content)
+                local ParaFrame = Create("Frame", {
+                    Parent = Container,
+                    BackgroundTransparency = 1,
+                    Size = UDim2.new(1, 0, 0, 0), 
+                    AutomaticSize = Enum.AutomaticSize.Y
+                })
+                
+                Create("TextLabel", {
+                    Parent = ParaFrame,
+                    Text = title,
+                    Font = Enum.Font.GothamBold,
+                    TextColor3 = Theme.TextMain,
+                    TextSize = 12,
+                    Size = UDim2.new(1, 0, 0, 15),
+                    BackgroundTransparency = 1,
+                    TextXAlignment = Enum.TextXAlignment.Left
+                })
+                
+                local ContentFrame = Create("Frame", {
+                    Parent = ParaFrame,
+                    BackgroundTransparency = 1,
+                    Size = UDim2.new(1, 0, 0, 0),
+                    Position = UDim2.new(0, 0, 0, 18),
+                    AutomaticSize = Enum.AutomaticSize.Y
+                })
+                
+                local ContentLabel = Create("TextLabel", {
+                    Parent = ContentFrame,
+                    Text = content,
+                    Font = Enum.Font.Gotham,
+                    TextColor3 = Theme.TextDim,
+                    TextSize = 11,
+                    Size = UDim2.new(1, 0, 0, 0),
+                    BackgroundTransparency = 1,
+                    TextXAlignment = Enum.TextXAlignment.Left,
+                    TextWrapped = true,
+                    AutomaticSize = Enum.AutomaticSize.Y,
+                    TextYAlignment = Enum.TextYAlignment.Top
+                })
+                
+                Create("UIPadding", {
+                    Parent = ParaFrame, 
+                    PaddingBottom = UDim.new(0, 5)
+                })
+                
+                Resize()
+            end
 
             --// CHECKBOX
             function Elements:Checkbox(text, default, callback, tooltip)
@@ -740,7 +899,7 @@ end
                 Resize()
             end
 
-            --// RADIO BUTTON (NEW)
+            --// RADIO BUTTON
             function Elements:RadioButton(text, options, default, callback)
                 local RadioFrame = Create("Frame", {
                     Parent = Container,
