@@ -98,21 +98,6 @@ function Library:Window(name)
         ResetOnSpawn = false,
         ZIndexBehavior = Enum.ZIndexBehavior.Sibling
     })
-    
-    local NotifyContainer = Create("Frame", {
-        Parent = ScreenGui,
-        BackgroundTransparency = 1,
-        Size = UDim2.new(0, 300, 1, 0),
-        Position = UDim2.new(1, -320, 0, 0),
-        ZIndex = 100
-    })
-    local NotifyLayout = Create("UIListLayout", {
-        Parent = NotifyContainer,
-        SortOrder = Enum.SortOrder.LayoutOrder,
-        Padding = UDim.new(0, 10),
-        VerticalAlignment = Enum.VerticalAlignment.Bottom
-    })
-    Create("UIPadding", {Parent = NotifyContainer, PaddingBottom = UDim.new(0, 20)})
 
     -- TOOLTIP SYSTEM
     local Tooltip = Create("Frame", {
@@ -399,103 +384,6 @@ function Library:Window(name)
         Size = UDim2.new(1, -200, 1, -20),
         ClipsDescendants = true
     })
-    
-    function Window:Notify(config)
-        local Title = config.Title or "Notification"
-        local Content = config.Content or "No content provided."
-        local Duration = config.Duration or 3
-        local Icon = config.Image or Icons.Bell or "6031091009"
-
-        local NFrame = Create("Frame", {
-            Parent = NotifyContainer,
-            BackgroundColor3 = Theme.Main,
-            Size = UDim2.new(1, 0, 0, 60),
-            Position = UDim2.new(1, 20, 0, 0), -- Start offscreen
-            BackgroundTransparency = 0.1
-        })
-        Create("UICorner", {Parent = NFrame, CornerRadius = UDim.new(0, 6)})
-        Create("UIStroke", {Parent = NFrame, Color = Theme.Stroke, Thickness = 1})
-        
-        -- Glow
-        Create("ImageLabel", {
-            Parent = NFrame,
-            Image = Theme.Glow,
-            ImageColor3 = Theme.Accent,
-            ImageTransparency = 0.8,
-            Position = UDim2.new(0, -10, 0, -10),
-            Size = UDim2.new(1, 20, 1, 20),
-            BackgroundTransparency = 1,
-            ZIndex = 0,
-            ScaleType = Enum.ScaleType.Slice,
-            SliceCenter = Rect.new(20,20,280,280)
-        })
-
-        local SideBar = Create("Frame", {
-            Parent = NFrame,
-            BackgroundColor3 = Theme.Accent,
-            Size = UDim2.new(0, 3, 1, -10),
-            Position = UDim2.new(0, 0, 0, 5)
-        })
-        Create("UICorner", {Parent = SideBar, CornerRadius = UDim.new(0, 4)})
-
-        local IconImg = Create("ImageLabel", {
-            Parent = NFrame,
-            Image = "rbxassetid://" .. Icon,
-            BackgroundTransparency = 1,
-            Size = UDim2.new(0, 20, 0, 20),
-            Position = UDim2.new(0, 12, 0, 10),
-            ImageColor3 = Theme.TextMain
-        })
-
-        local NTitle = Create("TextLabel", {
-            Parent = NFrame,
-            Text = Title,
-            Font = Enum.Font.GothamBold,
-            TextColor3 = Theme.TextMain,
-            TextSize = 13,
-            BackgroundTransparency = 1,
-            Size = UDim2.new(1, -50, 0, 20),
-            Position = UDim2.new(0, 40, 0, 10),
-            TextXAlignment = Enum.TextXAlignment.Left
-        })
-
-        local NDesc = Create("TextLabel", {
-            Parent = NFrame,
-            Text = Content,
-            Font = Enum.Font.Gotham,
-            TextColor3 = Theme.TextDim,
-            TextSize = 11,
-            BackgroundTransparency = 1,
-            Size = UDim2.new(1, -50, 0, 20),
-            Position = UDim2.new(0, 40, 0, 30),
-            TextXAlignment = Enum.TextXAlignment.Left,
-            TextTruncate = Enum.TextTruncate.AtEnd
-        })
-
-        local TimeBarBase = Create("Frame", {
-            Parent = NFrame,
-            BackgroundColor3 = Color3.fromRGB(40,40,45),
-            Size = UDim2.new(1, -10, 0, 2),
-            Position = UDim2.new(0, 5, 1, -3),
-            BorderSizePixel = 0
-        })
-        local TimeBar = Create("Frame", {
-            Parent = TimeBarBase,
-            BackgroundColor3 = Theme.Accent,
-            Size = UDim2.new(1, 0, 1, 0),
-            BorderSizePixel = 0
-        })
-
-        -- Animations
-        TweenService:Create(NFrame, TweenInfo.new(0.5, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {Position = UDim2.new(0, 0, 0, 0)}):Play()
-        TweenService:Create(TimeBar, TweenInfo.new(Duration, Enum.EasingStyle.Linear), {Size = UDim2.new(0, 0, 1, 0)}):Play()
-
-        task.delay(Duration, function()
-            TweenService:Create(NFrame, TweenInfo.new(0.5, Enum.EasingStyle.Quint, Enum.EasingDirection.In), {Position = UDim2.new(1, 20, 0, 0)}):Play()
-            wait(0.5)
-            NFrame:Destroy()
-        end)
-    end
 
     local Tabs = {}
     local FirstTab = true
