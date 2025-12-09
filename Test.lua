@@ -1672,7 +1672,7 @@ local Library = {
     ["zap-off"] = 81385483183652,
     ["zap"] = 130551565616516,
     ["zoom-in"] = 127956924984803,
-    ["zoom-out"] = 108334162607319
+    ["zoom-out"] = 108334162607319,
 },
     Theme = {
         Background     = Color3.fromRGB(15, 15, 15),
