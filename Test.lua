@@ -28,6 +28,7 @@ local Library = {
         Animations = true
     },
     Icons = {
+        local IconsLibrary = {
     ["a-arrow-down"] = 92867583610071,
     ["a-arrow-up"] = 132318504999733,
     ["a-large-small"] = 111491496660216,
@@ -1672,7 +1673,7 @@ local Library = {
     ["zap-off"] = 81385483183652,
     ["zap"] = 130551565616516,
     ["zoom-in"] = 127956924984803,
-    ["zoom-out"] = 108334162607319,
+    ["zoom-out"] = 108334162607319
 },
     Theme = {
         Background     = Color3.fromRGB(15, 15, 15),
@@ -3294,84 +3295,354 @@ GIcon.Image = "rbxassetid://" .. tostring(RealIconId)
                 
                 function BoxFuncs:AddColorPicker(Config)
                     local Text = Config.Title or "Color"
-                    local Def = Config.Default or Color3.new(1,1,1)
+                    local Default = Config.Default or Color3.new(1, 1, 1)
+                    local DefaultAlpha = Config.Transparency or 0 -- 0 is opaque (compatible with UI transparency logic usually 0=visible, but here 0=transparent? No, usually in pickers 1=Visible. Let's stick to 0=Invisible, 1=Opaque for internal logic, or inverted. 
+                    -- Standard Roblox Transparency: 0 = Visible, 1 = Invisible.
+                    -- Standard Color Pickers (Alpha): 1 = Visible, 0 = Invisible.
+                    -- Let's use Alpha (1 = Opaque). So default should be 1.
+                    local DefAlpha = Config.DefaultAlpha or 1
+
                     local Callback = Config.Callback or function() end
                     local Flag = Config.Flag or Text
                     local Desc = Config.Description
 
-                    local F=Instance.new("Frame", GetContainer())
-                    F.Size=UDim2.new(1,0,0,25)
-                    F.BackgroundTransparency=1
+                    -- Main Item Frame
+                    local F = Instance.new("Frame", GetContainer())
+                    F.Size = UDim2.new(1, 0, 0, 25)
+                    F.BackgroundTransparency = 1
                     if Desc then AddTooltip(F, Desc) end
 
-                    local Lb=Instance.new("TextLabel",F)
-                    Lb.Size=UDim2.new(0.7,0,1,0)
-                    Lb.BackgroundTransparency=1
-                    Lb.Text=Text
-                    Lb.Font=Enum.Font.Gotham
-                    Lb.TextSize=12
-                    Lb.TextXAlignment=Enum.TextXAlignment.Left
-                    Library:RegisterTheme(Lb,"TextColor3","Text")
-                    local P=Instance.new("TextButton",F)
-                    P.Size=UDim2.new(0,35,0,18)
-                    P.Position=UDim2.new(1,-35,0.5,-9)
-                    P.BackgroundColor3=Def
-                    P.Text=""
-                    Instance.new("UICorner",P).CornerRadius=UDim.new(0,4)
-                    
-                    local Win=Instance.new("Frame",ScreenGui)
-                    Win.Size=UDim2.new(0,200,0,190)
-                    Win.BackgroundColor3=Color3.fromRGB(25,25,25)
-                    Win.Visible=false
-                    Win.ZIndex=200 
-                    Instance.new("UIStroke",Win).Color=Library.Theme.Outline
-                    Instance.new("UICorner",Win).CornerRadius=UDim.new(0,4)
-                    local SV=Instance.new("ImageButton",Win)
-                    SV.Size=UDim2.new(0,180,0,130)
-                    SV.Position=UDim2.new(0,10,0,10)
-                    SV.BackgroundColor3=Def
-                    SV.Image="rbxassetid://4155801252"
-                    SV.ZIndex=201
-                    local H=Instance.new("ImageButton",Win)
-                    H.Size=UDim2.new(0,180,0,25)
-                    H.Position=UDim2.new(0,10,0,150)
-                    H.BackgroundColor3=Color3.new(1,1,1)
-                    H.Image=""
-                    H.ZIndex=201
-                    local Gr=Instance.new("UIGradient",H)
-                    Gr.Color=ColorSequence.new{ColorSequenceKeypoint.new(0,Color3.new(1,0,0)),ColorSequenceKeypoint.new(0.17,Color3.new(1,1,0)),ColorSequenceKeypoint.new(0.33,Color3.new(0,1,0)),ColorSequenceKeypoint.new(0.5,Color3.new(0,1,1)),ColorSequenceKeypoint.new(0.67,Color3.new(0,0,1)),ColorSequenceKeypoint.new(0.83,Color3.new(1,0,1)),ColorSequenceKeypoint.new(1,Color3.new(1,0,0))}
-                    
-                    local h,s,v = Def:ToHSV()
-                    local function Upd()
-                        local c=Color3.fromHSV(h,s,v)
-                        P.BackgroundColor3=c
-                        SV.BackgroundColor3=Color3.fromHSV(h,1,1)
-                        Library.Flags[Flag]={R=c.R,G=c.G,B=c.B}
-                        pcall(Callback,c)
-                    end
-                    Library.Items[Flag]={Set=function(t) if type(t)=="table" then local c=Color3.new(t.R,t.G,t.B) h,s,v=c:ToHSV() Upd() end end}
-                    Library.Flags[Flag]={R=Def.R,G=Def.G,B=Def.B}
+                    -- Label
+                    local Lb = Instance.new("TextLabel", F)
+                    Lb.Size = UDim2.new(0.7, 0, 1, 0)
+                    Lb.BackgroundTransparency = 1
+                    Lb.Text = Text
+                    Lb.Font = Enum.Font.Gotham
+                    Lb.TextSize = 12
+                    Lb.TextXAlignment = Enum.TextXAlignment.Left
+                    Library:RegisterTheme(Lb, "TextColor3", "Text")
 
-                    local d1,d2=false,false
-                    local function Hand(i,mode)
-                        if mode=="H" then h=math.clamp((i.Position.X-H.AbsolutePosition.X)/H.AbsoluteSize.X,0,1)
-                        else s=math.clamp((i.Position.X-SV.AbsolutePosition.X)/SV.AbsoluteSize.X,0,1) v=1-math.clamp((i.Position.Y-SV.AbsolutePosition.Y)/SV.AbsoluteSize.Y,0,1) end
-                        Upd()
+                    -- Preview Button (Small square in the menu)
+                    local P = Instance.new("TextButton", F)
+                    P.Size = UDim2.new(0, 35, 0, 18)
+                    P.Position = UDim2.new(1, -35, 0.5, -9)
+                    P.Text = ""
+                    P.BackgroundColor3 = Default
+                    P.AutoButtonColor = false
+                    Instance.new("UICorner", P).CornerRadius = UDim.new(0, 4)
+                    
+                    -- Alpha preview overlay for the button
+                    local PGradient = Instance.new("UIGradient", P)
+                    PGradient.Transparency = NumberSequence.new{
+                        NumberSequenceKeypoint.new(0, 1 - DefAlpha), 
+                        NumberSequenceKeypoint.new(1, 1 - DefAlpha)
+                    }
+
+                    --// PICKER WINDOW //--
+                    -- We parent this to ScreenGui to act as a Modal Overlay
+                    local Overlay = Instance.new("Frame")
+                    Overlay.Name = "ColorPickerOverlay"
+                    Overlay.Size = UDim2.new(1, 0, 1, 0)
+                    Overlay.Position = UDim2.new(0, 0, 0, 0)
+                    Overlay.BackgroundColor3 = Color3.new(0, 0, 0)
+                    Overlay.BackgroundTransparency = 1 -- Animate to 0.6
+                    Overlay.Visible = false
+                    Overlay.ZIndex = 5000
+                    Overlay.Parent = ScreenGui
+
+                    local Win = Instance.new("Frame", Overlay)
+                    Win.Name = "PickerWindow"
+                    Win.Size = UDim2.new(0, 260, 0, 310) -- Increased size for inputs
+                    Win.AnchorPoint = Vector2.new(0.5, 0.5)
+                    Win.Position = UDim2.new(0.5, 0, 0.5, 0) -- Centered
+                    Win.BackgroundColor3 = Library.Theme.Groupbox
+                    Library:RegisterTheme(Win, "BackgroundColor3", "Groupbox")
+                    Instance.new("UICorner", Win).CornerRadius = UDim.new(0, 6)
+                    Instance.new("UIStroke", Win).Color = Library.Theme.Outline
+                    Library:RegisterTheme(Instance.new("UIStroke", Win), "Color", "Outline")
+                    
+                    -- Title
+                    local Title = Instance.new("TextLabel", Win)
+                    Title.Size = UDim2.new(1, -20, 0, 30)
+                    Title.Position = UDim2.new(0, 10, 0, 0)
+                    Title.BackgroundTransparency = 1
+                    Title.Text = Text
+                    Title.Font = Enum.Font.GothamBold
+                    Title.TextColor3 = Library.Theme.Text
+                    Title.TextSize = 14
+                    Title.TextXAlignment = Enum.TextXAlignment.Left
+                    Library:RegisterTheme(Title, "TextColor3", "Text")
+
+                    -- Close Button
+                    local CloseBtn = Instance.new("TextButton", Win)
+                    CloseBtn.Size = UDim2.new(0, 25, 0, 25)
+                    CloseBtn.Position = UDim2.new(1, -30, 0, 2)
+                    CloseBtn.BackgroundTransparency = 1
+                    CloseBtn.Text = "X"
+                    CloseBtn.Font = Enum.Font.GothamBold
+                    CloseBtn.TextColor3 = Library.Theme.TextDark
+                    CloseBtn.TextSize = 14
+                    Library:RegisterTheme(CloseBtn, "TextColor3", "TextDark")
+
+                    -- Saturation/Value Picker (Main Square)
+                    local SV = Instance.new("ImageButton", Win)
+                    SV.Name = "SV"
+                    SV.Size = UDim2.new(0, 200, 0, 150)
+                    SV.Position = UDim2.new(0, 10, 0, 35)
+                    SV.BackgroundColor3 = Default
+                    SV.Image = "rbxassetid://4155801252" -- Saturation/Value gradient overlay
+                    SV.AutoButtonColor = false
+                    Instance.new("UICorner", SV).CornerRadius = UDim.new(0, 4)
+
+                    local SVCursor = Instance.new("Frame", SV)
+                    SVCursor.Size = UDim2.new(0, 8, 0, 8)
+                    SVCursor.AnchorPoint = Vector2.new(0.5, 0.5)
+                    SVCursor.BackgroundColor3 = Color3.new(1, 1, 1)
+                    SVCursor.BorderSizePixel = 0
+                    Instance.new("UICorner", SVCursor).CornerRadius = UDim.new(1, 0)
+                    Instance.new("UIStroke", SVCursor).Thickness = 1 
+
+                    -- Hue Slider (Right side vertical)
+                    local HueFrame = Instance.new("ImageButton", Win)
+                    HueFrame.Name = "Hue"
+                    HueFrame.Size = UDim2.new(0, 25, 0, 150)
+                    HueFrame.Position = UDim2.new(0, 220, 0, 35)
+                    HueFrame.BackgroundColor3 = Color3.new(1, 1, 1)
+                    HueFrame.Image = "rbxassetid://4276537338" -- White
+                    HueFrame.AutoButtonColor = false
+                    Instance.new("UICorner", HueFrame).CornerRadius = UDim.new(0, 4)
+                    
+                    local HueGradient = Instance.new("UIGradient", HueFrame)
+                    HueGradient.Rotation = 90
+                    HueGradient.Color = ColorSequence.new{
+                        ColorSequenceKeypoint.new(0, Color3.new(1,0,0)),
+                        ColorSequenceKeypoint.new(0.167, Color3.new(1,0,1)),
+                        ColorSequenceKeypoint.new(0.333, Color3.new(0,0,1)),
+                        ColorSequenceKeypoint.new(0.5, Color3.new(0,1,1)),
+                        ColorSequenceKeypoint.new(0.667, Color3.new(0,1,0)),
+                        ColorSequenceKeypoint.new(0.833, Color3.new(1,1,0)),
+                        ColorSequenceKeypoint.new(1, Color3.new(1,0,0))
+                    }
+
+                    local HueCursor = Instance.new("Frame", HueFrame)
+                    HueCursor.Size = UDim2.new(1, 0, 0, 4)
+                    HueCursor.BackgroundColor3 = Color3.new(1,1,1)
+                    HueCursor.BorderSizePixel = 0
+                    Instance.new("UIStroke", HueCursor).Thickness = 1
+
+                    -- Alpha Slider (Bottom horizontal)
+                    local AlphaFrame = Instance.new("ImageButton", Win)
+                    AlphaFrame.Name = "Alpha"
+                    AlphaFrame.Size = UDim2.new(0, 200, 0, 20)
+                    AlphaFrame.Position = UDim2.new(0, 10, 0, 195)
+                    AlphaFrame.BackgroundColor3 = Color3.new(1, 1, 1)
+                    AlphaFrame.Image = "rbxassetid://3887014957" -- Checkered background
+                    AlphaFrame.ScaleType = Enum.ScaleType.Tile
+                    AlphaFrame.TileSize = UDim2.new(0, 10, 0, 10)
+                    AlphaFrame.AutoButtonColor = false
+                    Instance.new("UICorner", AlphaFrame).CornerRadius = UDim.new(0, 4)
+
+                    local AlphaGradientFrame = Instance.new("Frame", AlphaFrame)
+                    AlphaGradientFrame.Size = UDim2.new(1, 0, 1, 0)
+                    AlphaGradientFrame.BackgroundColor3 = Color3.new(1, 1, 1)
+                    Instance.new("UICorner", AlphaGradientFrame).CornerRadius = UDim.new(0, 4)
+
+                    local AlphaGradient = Instance.new("UIGradient", AlphaGradientFrame)
+                    -- Gradient will be updated dynamically
+
+                    local AlphaCursor = Instance.new("Frame", AlphaFrame)
+                    AlphaCursor.Size = UDim2.new(0, 4, 1, 0)
+                    AlphaCursor.BackgroundColor3 = Color3.new(1,1,1)
+                    AlphaCursor.BorderSizePixel = 0
+                    Instance.new("UIStroke", AlphaCursor).Thickness = 1
+
+                    --// INPUTS SECTION //--
+                    local InputsHolder = Instance.new("Frame", Win)
+                    InputsHolder.Size = UDim2.new(1, -20, 0, 40)
+                    InputsHolder.Position = UDim2.new(0, 10, 0, 225)
+                    InputsHolder.BackgroundTransparency = 1
+
+                    local function CreateInput(Name, PosX, SizeX)
+                        local Box = Instance.new("TextBox", InputsHolder)
+                        Box.Name = Name
+                        Box.Size = UDim2.new(0, SizeX, 0, 25)
+                        Box.Position = UDim2.new(0, PosX, 0, 15)
+                        Box.BackgroundColor3 = Library.Theme.ItemBackground
+                        Box.TextColor3 = Library.Theme.Text
+                        Box.Font = Enum.Font.Gotham
+                        Box.TextSize = 12
+                        Box.Text = ""
+                        Box.ClearTextOnFocus = false
+                        Instance.new("UICorner", Box).CornerRadius = UDim.new(0, 4)
+                        Library:RegisterTheme(Box, "BackgroundColor3", "ItemBackground")
+                        Library:RegisterTheme(Box, "TextColor3", "Text")
+
+                        local Lbl = Instance.new("TextLabel", InputsHolder)
+                        Lbl.Size = UDim2.new(0, SizeX, 0, 15)
+                        Lbl.Position = UDim2.new(0, PosX, 0, 0)
+                        Lbl.BackgroundTransparency = 1
+                        Lbl.Text = Name
+                        Lbl.Font = Enum.Font.GothamBold
+                        Lbl.TextColor3 = Library.Theme.TextDark
+                        Lbl.TextSize = 10
+                        Library:RegisterTheme(Lbl, "TextColor3", "TextDark")
+                        return Box
                     end
-                    H.InputBegan:Connect(function(i) if i.UserInputType==Enum.UserInputType.MouseButton1 or i.UserInputType==Enum.UserInputType.Touch then d1=true Hand(i,"H") end end)
-                    SV.InputBegan:Connect(function(i) if i.UserInputType==Enum.UserInputType.MouseButton1 or i.UserInputType==Enum.UserInputType.Touch then d2=true Hand(i,"S") end end)
-                    UserInputService.InputEnded:Connect(function() d1=false d2=false end)
-                    UserInputService.InputChanged:Connect(function(i) if d1 and (i.UserInputType==Enum.UserInputType.MouseMovement or i.UserInputType==Enum.UserInputType.Touch) then Hand(i,"H") elseif d2 and (i.UserInputType==Enum.UserInputType.MouseMovement or i.UserInputType==Enum.UserInputType.Touch) then Hand(i,"S") end end)
-                    P.MouseButton1Click:Connect(function() 
-                        if Win.Visible then Win.Visible = false Library.ActivePicker = nil else
-                            if Library.ActivePicker then Library.ActivePicker.Visible = false end
-                            Win.Visible = true
-                            Win.Position = UDim2.new(0, P.AbsolutePosition.X + 50, 0, P.AbsolutePosition.Y)
-                            Library.ActivePicker = Win
+
+                    local RInput = CreateInput("R", 0, 40)
+                    local GInput = CreateInput("G", 45, 40)
+                    local BInput = CreateInput("B", 90, 40)
+                    local HexInput = CreateInput("Hex", 140, 70)
+                    local AlphaInput = CreateInput("A", 215, 25) -- Small alpha input
+
+                    --// LOGIC //--
+                    local h, s, v = Default:ToHSV()
+                    local a = DefAlpha
+                    local isInternalUpdate = false
+
+                    local function UpdateColor(newH, newS, newV, newA)
+                        h, s, v, a = newH or h, newS or s, newV or v, newA or a
+                        local CurrentColor = Color3.fromHSV(h, s, v)
+                        
+                        -- Update Flags
+                        Library.Flags[Flag] = {Color = CurrentColor, Transparency = a, R = CurrentColor.R, G = CurrentColor.G, B = CurrentColor.B, Alpha = a}
+                        
+                        -- Update Visuals
+                        P.BackgroundColor3 = CurrentColor
+                        PGradient.Transparency = NumberSequence.new{NumberSequenceKeypoint.new(0, 1-a), NumberSequenceKeypoint.new(1, 1-a)}
+                        
+                        SV.BackgroundColor3 = Color3.fromHSV(h, 1, 1)
+                        AlphaGradient.Color = ColorSequence.new{
+                            ColorSequenceKeypoint.new(0, Color3.new(1,1,1)), 
+                            ColorSequenceKeypoint.new(1, CurrentColor)
+                        } -- Fade from white to color or transparent to color? 
+                        -- Better: Fade from (Color, transp=1) to (Color, transp=0) visually? 
+                        -- Actually simpler: Gradient color should be CurrentColor, Transparency sequence from 1 to 0.
+                        AlphaGradient.Color = ColorSequence.new(CurrentColor)
+                        AlphaGradient.Transparency = NumberSequence.new{NumberSequenceKeypoint.new(0, 1), NumberSequenceKeypoint.new(1, 0)}
+
+                        -- Cursors
+                        SVCursor.Position = UDim2.new(s, 0, 1 - v, 0)
+                        HueCursor.Position = UDim2.new(0, 0, 1 - h, 0) -- HSV H goes 0-1
+                        HueCursor.BackgroundColor3 = Color3.fromHSV(h, 1, 1)
+                        AlphaCursor.Position = UDim2.new(a, 0, 0, 0)
+
+                        -- Inputs
+                        if not isInternalUpdate then
+                            isInternalUpdate = true
+                            RInput.Text = math.floor(CurrentColor.R * 255)
+                            GInput.Text = math.floor(CurrentColor.G * 255)
+                            BInput.Text = math.floor(CurrentColor.B * 255)
+                            AlphaInput.Text = math.floor(a * 100)
+                            HexInput.Text = "#" .. CurrentColor:ToHex():upper()
+                            isInternalUpdate = false
+                        end
+
+                        pcall(Callback, CurrentColor, a)
+                    end
+
+                    -- Initial Update
+                    UpdateColor(h, s, v, a)
+
+                    --// INPUT EVENT HANDLERS //--
+                    local draggingSV, draggingHue, draggingAlpha = false, false, false
+
+                    local function UpdateFromSV(input)
+                        local relativeX = math.clamp((input.Position.X - SV.AbsolutePosition.X) / SV.AbsoluteSize.X, 0, 1)
+                        local relativeY = math.clamp((input.Position.Y - SV.AbsolutePosition.Y) / SV.AbsoluteSize.Y, 0, 1)
+                        UpdateColor(nil, relativeX, 1 - relativeY, nil)
+                    end
+
+                    local function UpdateFromHue(input)
+                        local relativeY = math.clamp((input.Position.Y - HueFrame.AbsolutePosition.Y) / HueFrame.AbsoluteSize.Y, 0, 1)
+                        UpdateColor(1 - relativeY, nil, nil, nil)
+                    end
+
+                    local function UpdateFromAlpha(input)
+                        local relativeX = math.clamp((input.Position.X - AlphaFrame.AbsolutePosition.X) / AlphaFrame.AbsoluteSize.X, 0, 1)
+                        UpdateColor(nil, nil, nil, relativeX)
+                    end
+
+                    SV.InputBegan:Connect(function(i) if i.UserInputType == Enum.UserInputType.MouseButton1 or i.UserInputType == Enum.UserInputType.Touch then draggingSV = true UpdateFromSV(i) end end)
+                    HueFrame.InputBegan:Connect(function(i) if i.UserInputType == Enum.UserInputType.MouseButton1 or i.UserInputType == Enum.UserInputType.Touch then draggingHue = true UpdateFromHue(i) end end)
+                    AlphaFrame.InputBegan:Connect(function(i) if i.UserInputType == Enum.UserInputType.MouseButton1 or i.UserInputType == Enum.UserInputType.Touch then draggingAlpha = true UpdateFromAlpha(i) end end)
+
+                    UserInputService.InputChanged:Connect(function(i)
+                        if i.UserInputType == Enum.UserInputType.MouseMovement or i.UserInputType == Enum.UserInputType.Touch then
+                            if draggingSV then UpdateFromSV(i) end
+                            if draggingHue then UpdateFromHue(i) end
+                            if draggingAlpha then UpdateFromAlpha(i) end
                         end
                     end)
-                    DropdownHolder.InputBegan:Connect(function(i) if i.UserInputType==Enum.UserInputType.MouseButton1 then Win.Visible=false if Library.ActivePicker==Win then Library.ActivePicker=nil end end end)
-                
+
+                    UserInputService.InputEnded:Connect(function(i)
+                        if i.UserInputType == Enum.UserInputType.MouseButton1 or i.UserInputType == Enum.UserInputType.Touch then
+                            draggingSV, draggingHue, draggingAlpha = false, false, false
+                        end
+                    end)
+
+                    -- Text Input Logic
+                    local function HandleRGB()
+                        if isInternalUpdate then return end
+                        local r = tonumber(RInput.Text) or 0
+                        local g = tonumber(GInput.Text) or 0
+                        local b = tonumber(BInput.Text) or 0
+                        local newC = Color3.fromRGB(math.clamp(r,0,255), math.clamp(g,0,255), math.clamp(b,0,255))
+                        local nH, nS, nV = newC:ToHSV()
+                        UpdateColor(nH, nS, nV, nil)
+                    end
+
+                    RInput.FocusLost:Connect(HandleRGB)
+                    GInput.FocusLost:Connect(HandleRGB)
+                    BInput.FocusLost:Connect(HandleRGB)
+
+                    AlphaInput.FocusLost:Connect(function()
+                        if isInternalUpdate then return end
+                        local nA = tonumber(AlphaInput.Text)
+                        if nA then 
+                            UpdateColor(nil, nil, nil, math.clamp(nA/100, 0, 1))
+                        end
+                    end)
+
+                    HexInput.FocusLost:Connect(function()
+                        if isInternalUpdate then return end
+                        local hex = HexInput.Text:gsub("#", "")
+                        local s, e = pcall(function() return Color3.fromHex(hex) end)
+                        if s and e then
+                            local nH, nS, nV = e:ToHSV()
+                            UpdateColor(nH, nS, nV, nil)
+                        end
+                    end)
+
+                    -- Toggle Logic
+                    P.MouseButton1Click:Connect(function()
+                        Overlay.Visible = true
+                        TweenService:Create(Overlay, TweenInfo.new(0.2), {BackgroundTransparency = 0.6}):Play()
+                        Library.ActivePicker = Overlay
+                    end)
+
+                    local function ClosePicker()
+                        TweenService:Create(Overlay, TweenInfo.new(0.2), {BackgroundTransparency = 1}):Play()
+                        task.wait(0.2)
+                        Overlay.Visible = false
+                        if Library.ActivePicker == Overlay then Library.ActivePicker = nil end
+                    end
+
+                    CloseBtn.MouseButton1Click:Connect(ClosePicker)
+                    
+                    -- Close if clicked outside window
+                    Overlay.InputBegan:Connect(function(i)
+                        if i.UserInputType == Enum.UserInputType.MouseButton1 or i.UserInputType == Enum.UserInputType.Touch then
+                            -- Check if click is inside Win
+                            local mPos = i.Position
+                            local wPos = Win.AbsolutePosition
+                            local wSize = Win.AbsoluteSize
+                            if mPos.X < wPos.X or mPos.X > wPos.X + wSize.X or mPos.Y < wPos.Y or mPos.Y > wPos.Y + wSize.Y then
+                                ClosePicker()
+                            end
+                        end
+                    end)
+
                     RegisterItem(Text, F)
                 end
 
