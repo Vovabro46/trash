@@ -2048,22 +2048,44 @@ function Library:GetConfigs()
 end
 
 local function MakeDraggable(dragFrame, moveFrame)
-    local dragging, dragInput, dragStart, startPos
+    local dragging = false
+    local dragInput = nil
+    local dragStart = nil
+    local startPos = nil
+
+    -- Начало перетаскивания
     dragFrame.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
             dragging = true
             dragStart = input.Position
             startPos = moveFrame.Position
-            input.Changed:Connect(function() if input.UserInputState == Enum.UserInputState.End then dragging = false end end)
+            
+            -- Запоминаем конкретный ввод (для телефона это важно)
+            input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then
+                    dragging = false
+                end
+            end)
         end
     end)
+
+    -- Отслеживание ввода
     dragFrame.InputChanged:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then dragInput = input end
+        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+            dragInput = input
+        end
     end)
+
+    -- Глобальное перемещение
     UserInputService.InputChanged:Connect(function(input)
         if input == dragInput and dragging then
             local delta = input.Position - dragStart
-            moveFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+            moveFrame.Position = UDim2.new(
+                startPos.X.Scale, 
+                startPos.X.Offset + delta.X, 
+                startPos.Y.Scale, 
+                startPos.Y.Offset + delta.Y
+            )
         end
     end)
 end
@@ -3300,11 +3322,9 @@ GIcon.Image = "rbxassetid://" .. tostring(RealIconId)
                     local Flag = Config.Flag or Text
                     local Desc = Config.Description
 
-                    -- Получаем контейнер. Если его нет, функция безопасно завершится, не ломая все меню.
                     local ParentContainer = GetContainer()
                     if not ParentContainer then return end
 
-                    -- Кнопка в списке функций
                     local F = Instance.new("Frame", ParentContainer)
                     F.Size = UDim2.new(1, 0, 0, 25)
                     F.BackgroundTransparency = 1
@@ -3327,7 +3347,6 @@ GIcon.Image = "rbxassetid://" .. tostring(RealIconId)
                     P.AutoButtonColor = false
                     Instance.new("UICorner", P).CornerRadius = UDim.new(0, 4)
                     
-                    -- Индикатор прозрачности на кнопке (шахматка)
                     local PAlphaCheck = Instance.new("ImageLabel", P)
                     PAlphaCheck.Size = UDim2.new(1, 0, 1, 0)
                     PAlphaCheck.BackgroundTransparency = 1
@@ -3337,30 +3356,22 @@ GIcon.Image = "rbxassetid://" .. tostring(RealIconId)
                     PAlphaCheck.ZIndex = 1
                     Instance.new("UICorner", PAlphaCheck).CornerRadius = UDim.new(0, 4)
 
-                    -- Данные цвета
                     local h, s, v = Def:ToHSV()
                     local alpha = DefAlpha
                     local CurrentColor = Def
-
-                    -- Сохраняем начальное значение
                     Library.Flags[Flag] = {R = Def.R, G = Def.G, B = Def.B, Alpha = alpha}
 
-                    --// ОКНО ВЫБОРА ЦВЕТА (Color Picker Window) //--
+                    --// WINDOW //--
                     local PickerFrame = Instance.new("Frame")
                     PickerFrame.Name = "ColorPicker"
                     PickerFrame.Size = UDim2.new(0, 260, 0, 330)
-                    PickerFrame.AnchorPoint = Vector2.new(0.5, 0.5) -- Точка привязки по центру
-                    PickerFrame.Position = UDim2.new(0.5, 0, 0.5, 0) -- Позиция по центру экрана (для мобилок)
+                    PickerFrame.AnchorPoint = Vector2.new(0.5, 0.5)
+                    PickerFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
                     PickerFrame.BackgroundColor3 = Library.Theme.Background
                     PickerFrame.Visible = false
-                    PickerFrame.ZIndex = 10000 -- Поверх всего
+                    PickerFrame.ZIndex = 10000
                     
-                    -- Родитель - ScreenGui (переменная из начала скрипта), чтобы окно было поверх скроллов
-                    if ScreenGui then
-                        PickerFrame.Parent = ScreenGui 
-                    else
-                        PickerFrame.Parent = F -- Запасной вариант, если ScreenGui не найден
-                    end
+                    if ScreenGui then PickerFrame.Parent = ScreenGui else PickerFrame.Parent = F end
                     
                     Instance.new("UICorner", PickerFrame).CornerRadius = UDim.new(0, 6)
                     local PStroke = Instance.new("UIStroke", PickerFrame)
@@ -3369,10 +3380,8 @@ GIcon.Image = "rbxassetid://" .. tostring(RealIconId)
                     Library:RegisterTheme(PickerFrame, "BackgroundColor3", "Background")
                     Library:RegisterTheme(PStroke, "Color", "Outline")
                     
-                    -- Делаем окно перетаскиваемым
                     if MakeDraggable then MakeDraggable(PickerFrame, PickerFrame) end
 
-                    -- Кнопка закрытия (X)
                     local CloseBtn = Instance.new("TextButton", PickerFrame)
                     CloseBtn.Size = UDim2.new(0, 25, 0, 25)
                     CloseBtn.Position = UDim2.new(1, -30, 0, 5)
@@ -3397,7 +3406,7 @@ GIcon.Image = "rbxassetid://" .. tostring(RealIconId)
                     PickerTitle.ZIndex = 10002
                     Library:RegisterTheme(PickerTitle, "TextColor3", "Text")
 
-                    -- ОБЛАСТЬ НАСЫЩЕННОСТИ (SV Area)
+                    --// AREAS //--
                     local SVArea = Instance.new("ImageButton", PickerFrame)
                     SVArea.Size = UDim2.new(1, -20, 0, 140)
                     SVArea.Position = UDim2.new(0, 10, 0, 35)
@@ -3416,24 +3425,18 @@ GIcon.Image = "rbxassetid://" .. tostring(RealIconId)
                     Instance.new("UICorner", SVCursor).CornerRadius = UDim.new(1, 0)
                     Instance.new("UIStroke", SVCursor).Thickness = 1 
 
-                    -- СЛАЙДЕР ОТТЕНКА (HUE)
                     local HueSlider = Instance.new("ImageButton", PickerFrame)
                     HueSlider.Size = UDim2.new(1, -20, 0, 16)
                     HueSlider.Position = UDim2.new(0, 10, 0, 185)
                     HueSlider.ZIndex = 10002
                     Instance.new("UICorner", HueSlider).CornerRadius = UDim.new(0, 4)
-                    
                     local HueGrad = Instance.new("UIGradient", HueSlider)
                     HueGrad.Color = ColorSequence.new{
-                        ColorSequenceKeypoint.new(0, Color3.new(1,0,0)),
-                        ColorSequenceKeypoint.new(0.167, Color3.new(1,1,0)),
-                        ColorSequenceKeypoint.new(0.333, Color3.new(0,1,0)),
-                        ColorSequenceKeypoint.new(0.5, Color3.new(0,1,1)),
-                        ColorSequenceKeypoint.new(0.667, Color3.new(0,0,1)),
-                        ColorSequenceKeypoint.new(0.833, Color3.new(1,0,1)),
+                        ColorSequenceKeypoint.new(0, Color3.new(1,0,0)), ColorSequenceKeypoint.new(0.167, Color3.new(1,1,0)),
+                        ColorSequenceKeypoint.new(0.333, Color3.new(0,1,0)), ColorSequenceKeypoint.new(0.5, Color3.new(0,1,1)),
+                        ColorSequenceKeypoint.new(0.667, Color3.new(0,0,1)), ColorSequenceKeypoint.new(0.833, Color3.new(1,0,1)),
                         ColorSequenceKeypoint.new(1, Color3.new(1,0,0))
                     }
-
                     local HueCursor = Instance.new("Frame", HueSlider)
                     HueCursor.Size = UDim2.new(0, 4, 1, 2)
                     HueCursor.Position = UDim2.new(h, -2, 0, -1)
@@ -3442,7 +3445,6 @@ GIcon.Image = "rbxassetid://" .. tostring(RealIconId)
                     HueCursor.ZIndex = 10003
                     Instance.new("UIStroke", HueCursor).Thickness = 1
 
-                    -- СЛАЙДЕР ПРОЗРАЧНОСТИ (ALPHA)
                     local AlphaSlider = Instance.new("ImageButton", PickerFrame)
                     AlphaSlider.Size = UDim2.new(1, -20, 0, 16)
                     AlphaSlider.Position = UDim2.new(0, 10, 0, 210)
@@ -3452,16 +3454,13 @@ GIcon.Image = "rbxassetid://" .. tostring(RealIconId)
                     AlphaSlider.TileSize = UDim2.new(0, 8, 0, 8)
                     AlphaSlider.ZIndex = 10002
                     Instance.new("UICorner", AlphaSlider).CornerRadius = UDim.new(0, 4)
-
                     local AlphaGradientFrame = Instance.new("Frame", AlphaSlider)
                     AlphaGradientFrame.Size = UDim2.new(1, 0, 1, 0)
                     AlphaGradientFrame.BackgroundColor3 = Color3.new(1, 1, 1)
                     AlphaGradientFrame.ZIndex = 10003
                     Instance.new("UICorner", AlphaGradientFrame).CornerRadius = UDim.new(0, 4)
-                    
                     local AlphaGrad = Instance.new("UIGradient", AlphaGradientFrame)
                     AlphaGrad.Transparency = NumberSequence.new(0, 1)
-
                     local AlphaCursor = Instance.new("Frame", AlphaSlider)
                     AlphaCursor.Size = UDim2.new(0, 4, 1, 2)
                     AlphaCursor.Position = UDim2.new(1 - alpha, -2, 0, -1) 
@@ -3470,13 +3469,11 @@ GIcon.Image = "rbxassetid://" .. tostring(RealIconId)
                     AlphaCursor.ZIndex = 10004
                     Instance.new("UIStroke", AlphaCursor).Thickness = 1
 
-                    -- ПОЛЯ ВВОДА ЦИФР
                     local InputsFrame = Instance.new("Frame", PickerFrame)
                     InputsFrame.Size = UDim2.new(1, -20, 0, 30)
                     InputsFrame.Position = UDim2.new(0, 10, 0, 240)
                     InputsFrame.BackgroundTransparency = 1
                     InputsFrame.ZIndex = 10002
-                    
                     local InputLayout = Instance.new("UIListLayout", InputsFrame)
                     InputLayout.FillDirection = Enum.FillDirection.Horizontal
                     InputLayout.Padding = UDim.new(0, 5)
@@ -3487,7 +3484,6 @@ GIcon.Image = "rbxassetid://" .. tostring(RealIconId)
                         Box.BackgroundColor3 = Library.Theme.ItemBackground
                         Library:RegisterTheme(Box, "BackgroundColor3", "ItemBackground")
                         Instance.new("UICorner", Box).CornerRadius = UDim.new(0, 4)
-                        
                         local TB = Instance.new("TextBox", Box)
                         TB.Size = UDim2.new(1, 0, 1, 0)
                         TB.BackgroundTransparency = 1
@@ -3500,23 +3496,19 @@ GIcon.Image = "rbxassetid://" .. tostring(RealIconId)
                         Library:RegisterTheme(TB, "TextColor3", "Text")
                         return TB
                     end
-
                     local RInput = CreateInput("R", "R")
                     local GInput = CreateInput("G", "G")
                     local BInput = CreateInput("B", "B")
                     local HexInput = CreateInput("Hex", "Hex")
 
-                    -- ЛОГИКА ОБНОВЛЕНИЯ
+                    --// LOGIC //--
                     local function UpdatePalette()
                         local Color = Color3.fromHSV(h, s, v)
                         CurrentColor = Color
-                        
                         P.BackgroundColor3 = Color
                         P.BackgroundTransparency = 1 - alpha 
-                        
                         SVArea.BackgroundColor3 = Color3.fromHSV(h, 1, 1)
                         AlphaGradientFrame.BackgroundColor3 = Color
-                        
                         SVCursor.Position = UDim2.new(s, 0, 1 - v, 0)
                         HueCursor.Position = UDim2.new(h, -2, 0, -1)
                         AlphaCursor.Position = UDim2.new(1 - alpha, -2, 0, -1)
@@ -3530,63 +3522,54 @@ GIcon.Image = "rbxassetid://" .. tostring(RealIconId)
                         pcall(Callback, Color, alpha)
                     end
 
-                    local draggingSV, draggingHue, draggingAlpha = false, false, false
+                    -- Helper to handle specific inputs
+                    local function HandleInput(GUIObject, LogicFunc)
+                        local dragging = false
+                        local dragInput = nil
 
-                    local function UpdateFromSV(input)
+                        GUIObject.InputBegan:Connect(function(input)
+                            if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                                dragging = true
+                                dragInput = input
+                                LogicFunc(input)
+                            end
+                        end)
+
+                        UserInputService.InputChanged:Connect(function(input)
+                            if dragging and input == dragInput then
+                                LogicFunc(input)
+                            end
+                        end)
+
+                        UserInputService.InputEnded:Connect(function(input)
+                            if input == dragInput then
+                                dragging = false
+                                dragInput = nil
+                            end
+                        end)
+                    end
+
+                    HandleInput(SVArea, function(input)
                         local rPos = input.Position - SVArea.AbsolutePosition
                         s = math.clamp(rPos.X / SVArea.AbsoluteSize.X, 0, 1)
                         v = 1 - math.clamp(rPos.Y / SVArea.AbsoluteSize.Y, 0, 1)
                         UpdatePalette()
-                    end
+                    end)
 
-                    local function UpdateFromHue(input)
+                    HandleInput(HueSlider, function(input)
                         local rPos = input.Position - HueSlider.AbsolutePosition
                         h = math.clamp(rPos.X / HueSlider.AbsoluteSize.X, 0, 1)
                         UpdatePalette()
-                    end
+                    end)
 
-                    local function UpdateFromAlpha(input)
+                    HandleInput(AlphaSlider, function(input)
                         local rPos = input.Position - AlphaSlider.AbsolutePosition
                         local val = math.clamp(rPos.X / AlphaSlider.AbsoluteSize.X, 0, 1)
                         alpha = 1 - val 
                         UpdatePalette()
-                    end
-
-                    SVArea.InputBegan:Connect(function(input)
-                        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-                            draggingSV = true
-                            UpdateFromSV(input)
-                        end
                     end)
 
-                    HueSlider.InputBegan:Connect(function(input)
-                        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-                            draggingHue = true
-                            UpdateFromHue(input)
-                        end
-                    end)
-
-                    AlphaSlider.InputBegan:Connect(function(input)
-                        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-                            draggingAlpha = true
-                            UpdateFromAlpha(input)
-                        end
-                    end)
-
-                    UserInputService.InputChanged:Connect(function(input)
-                        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
-                            if draggingSV then UpdateFromSV(input) end
-                            if draggingHue then UpdateFromHue(input) end
-                            if draggingAlpha then UpdateFromAlpha(input) end
-                        end
-                    end)
-
-                    UserInputService.InputEnded:Connect(function(input)
-                        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-                            draggingSV, draggingHue, draggingAlpha = false, false, false
-                        end
-                    end)
-
+                    -- Textbox Logic
                     local function SetFromRGB()
                         local r = tonumber(RInput.Text) or 0
                         local g = tonumber(GInput.Text) or 0
@@ -3595,11 +3578,9 @@ GIcon.Image = "rbxassetid://" .. tostring(RealIconId)
                         h, s, v = c:ToHSV()
                         UpdatePalette()
                     end
-
                     RInput.FocusLost:Connect(SetFromRGB)
                     GInput.FocusLost:Connect(SetFromRGB)
                     BInput.FocusLost:Connect(SetFromRGB)
-
                     HexInput.FocusLost:Connect(function()
                         local success, c = pcall(function() return Color3.fromHex(HexInput.Text) end)
                         if success and c then
@@ -3614,7 +3595,6 @@ GIcon.Image = "rbxassetid://" .. tostring(RealIconId)
 
                     P.MouseButton1Click:Connect(function()
                         PickerFrame.Visible = not PickerFrame.Visible
-                        -- Скрываем другие пикеры, если есть
                         if PickerFrame.Visible and ScreenGui then
                             for _, v in pairs(ScreenGui:GetChildren()) do
                                 if v.Name == "ColorPicker" and v ~= PickerFrame then v.Visible = false end
