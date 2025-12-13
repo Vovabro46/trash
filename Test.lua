@@ -1810,7 +1810,6 @@ local Library = {
     }
 }
 
---// THEME SYSTEM //--
 local ThemeObjects = {}
 function Library:RegisterTheme(Obj, Prop, Key)
     if not ThemeObjects[Key] then ThemeObjects[Key] = {} end
@@ -1860,7 +1859,6 @@ function Library:FadeIn(Object, Time)
     end
 end
 
---// TOOLTIP SYSTEM //
 local TooltipObj = nil
 local function CreateTooltipSystem(ScreenGui)
     local Tooltip = Instance.new("TextLabel")
@@ -1910,7 +1908,6 @@ local function AddTooltip(HoverObject, Text)
     end)
 end
 
---// NOTIFICATIONS //--
 function Library:InitNotifications(ScreenGui)
     local Holder = Instance.new("Frame")
     Holder.Name = "Notifications"
@@ -1992,7 +1989,6 @@ function Library:Notify(Title, Content, Duration)
     end)
 end
 
---// CONFIG SYSTEM //--
 function Library:InitConfig()
     if writefile and readfile and makefolder and listfiles then
         if not isfolder(Library.ConfigFolder) then makefolder(Library.ConfigFolder) end
@@ -2068,7 +2064,6 @@ local function MakeDraggable(dragFrame, moveFrame)
     end)
 end
 
---// WATERMARK //--
 function Library:Watermark(Name)
     Library.WatermarkSettings.Text = Name
     local ScreenGui = Instance.new("ScreenGui")
@@ -2120,7 +2115,6 @@ function Library:Watermark(Name)
     Library.WatermarkObj = ScreenGui
 end
 
---// MAIN WINDOW //--
 function Library:Window(TitleText)
     local ScreenGui = Instance.new("ScreenGui")
     ScreenGui.Name = "RedOnyx"
@@ -2130,12 +2124,10 @@ function Library:Window(TitleText)
 
     CreateTooltipSystem(ScreenGui)
 
-    -- Auto-Size Logic for Mobile/PC
     local VP = workspace.CurrentCamera.ViewportSize
     local StartWidth = math.min(480, VP.X - 50)
     local StartHeight = math.min(360, VP.Y - 50)
     
-    -- Minimum constraints
     if StartWidth < 350 then StartWidth = 350 end
     if StartHeight < 250 then StartHeight = 250 end
 
@@ -2148,7 +2140,6 @@ function Library:Window(TitleText)
     MainFrame.Parent = ScreenGui
     Library:RegisterTheme(MainFrame, "BackgroundColor3", "Background")
 
-    -- Listener to auto-resize if screen orientation changes (Mobile)
     workspace.CurrentCamera:GetPropertyChangedSignal("ViewportSize"):Connect(function()
         local NewVP = workspace.CurrentCamera.ViewportSize
         local NewW = math.min(480, NewVP.X - 50)
@@ -2163,7 +2154,6 @@ function Library:Window(TitleText)
     Library:RegisterTheme(MainStroke, "Color", "Outline")
     Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0, 4)
     
-    --// RESIZER HANDLE //--
     local Resizer = Instance.new("TextButton")
     Resizer.Name = "Resizer"
     Resizer.Size = UDim2.new(0, 30, 0, 30)
@@ -2217,7 +2207,6 @@ function Library:Window(TitleText)
         end
     end)
 
-    --// SIDEBAR //--
     local Sidebar = Instance.new("Frame")
     Sidebar.Name = "Sidebar"
     Sidebar.Size = UDim2.new(0, 180, 1, 0)
@@ -2237,7 +2226,6 @@ function Library:Window(TitleText)
     Logo.ZIndex = 5 
     Library:RegisterTheme(Logo, "TextColor3", "Accent")
 
-    --// SEARCH BAR //--
     local SearchBar = Instance.new("TextBox")
     SearchBar.Name = "SearchBar"
     SearchBar.Size = UDim2.new(1, -20, 0, 30)
@@ -2260,7 +2248,6 @@ function Library:Window(TitleText)
    
     Library:RegisterTheme(SearchBar, "BackgroundColor3", "ItemBackground")
 
-    --// TAB CONTAINER //--
     local TabContainer = Instance.new("ScrollingFrame")
     TabContainer.Name = "TabContainer"
     TabContainer.Size = UDim2.new(1, 0, 1, -95)
@@ -2274,7 +2261,6 @@ function Library:Window(TitleText)
     TabLayout.Padding = UDim.new(0, 2)
     TabLayout.SortOrder = Enum.SortOrder.LayoutOrder
 
-    --// SEARCH RESULTS //--
     local SearchResults = Instance.new("ScrollingFrame")
     SearchResults.Name = "SearchResults"
     SearchResults.Size = UDim2.new(1, 0, 1, -95)
@@ -2322,7 +2308,6 @@ function Library:Window(TitleText)
     DropdownHolder.ZIndex = 100
     DropdownHolder.Parent = ScreenGui 
 
-    --// SEARCH LOGIC //--
     SearchBar:GetPropertyChangedSignal("Text"):Connect(function()
         local Input = SearchBar.Text:lower()
         if #Input == 0 then
@@ -2468,7 +2453,6 @@ TabIcon.Image = "rbxassetid://" .. tostring(RealIconId)
         Ind.ZIndex = 5 
         Library:RegisterTheme(Ind, "BackgroundColor3", "Accent")
 
-        -- [Страница]
         local Page = Instance.new("CanvasGroup")
         Page.Name = Name.."_Page"
         Page.Size = UDim2.new(1, 0, 1, 0)
@@ -2481,8 +2465,6 @@ TabIcon.Image = "rbxassetid://" .. tostring(RealIconId)
         PageRef.Name = "PageRef"
         PageRef.Value = Page
 
-        -- [Верхняя панель подвкладок] 
-        -- Сделана ScrollingFrame, чтобы кнопки не обрезались, если их много
         local SubTabArea = Instance.new("ScrollingFrame")
         SubTabArea.Name = "SubTabArea"
         SubTabArea.Size = UDim2.new(1, -20, 0, 30)
@@ -2499,7 +2481,6 @@ TabIcon.Image = "rbxassetid://" .. tostring(RealIconId)
         SubLayout.SortOrder = Enum.SortOrder.LayoutOrder
         SubLayout.Padding = UDim.new(0, 10)
         
-        -- [Область контента]
         local ContentArea = Instance.new("Frame")
         ContentArea.Name = "ContentArea"
         ContentArea.Size = UDim2.new(1, 0, 1, -40)
@@ -2507,7 +2488,6 @@ TabIcon.Image = "rbxassetid://" .. tostring(RealIconId)
         ContentArea.BackgroundTransparency = 1
         ContentArea.Parent = Page
 
-        --// ЛОГИКА СВАЙПОВ (ФИНАЛЬНАЯ ВЕРСИЯ) //--
         local SubTabsList = {} 
         local CurrentSubTabIndex = 1
 
@@ -2531,16 +2511,13 @@ TabIcon.Image = "rbxassetid://" .. tostring(RealIconId)
 
         local SwipeStart = nil
 
-        -- Функция проверяет, находится ли курсор/палец в правой части меню (где контент и подвкладки)
         local function IsOverRightSide(InputPos)
-            -- MainFrame берется из замыкания функции Window
             if not MainFrame or not MainFrame.Visible then return false end
             
             local MFPos = MainFrame.AbsolutePosition
             local MFSize = MainFrame.AbsoluteSize
             local SidebarWidth = 180
             
-            -- Проверяем: X больше чем (начало меню + ширина сайдбара) И внутри границ меню по Y
             return InputPos.X > (MFPos.X + SidebarWidth) 
                and InputPos.X < (MFPos.X + MFSize.X)
                and InputPos.Y > MFPos.Y 
@@ -2549,7 +2526,6 @@ TabIcon.Image = "rbxassetid://" .. tostring(RealIconId)
 
         UserInputService.InputBegan:Connect(function(input)
             if (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) then
-                -- Если эта страница активна и курсор в правой части меню
                 if Page.Visible and IsOverRightSide(input.Position) then
                     SwipeStart = input.Position
                 end
@@ -2561,21 +2537,17 @@ TabIcon.Image = "rbxassetid://" .. tostring(RealIconId)
                 local Delta = input.Position - SwipeStart
                 SwipeStart = nil 
                 
-                local MinSwipeDist = 30 -- Минимум пикселей для свайпа
+                local MinSwipeDist = 30
                 
-                -- Проверка: Свайп должен быть горизонтальным (X > Y), чтобы не мешать скроллить вниз
                 if math.abs(Delta.X) > MinSwipeDist and math.abs(Delta.X) > math.abs(Delta.Y) then
                     if Delta.X < 0 then
-                        -- Свайп ВЛЕВО -> Следующая вкладка
                         SelectSubTab(CurrentSubTabIndex + 1)
                     else
-                        -- Свайп ВПРАВО -> Предыдущая вкладка
                         SelectSubTab(CurrentSubTabIndex - 1)
                     end
                 end
             end
         end)
-        --// КОНЕЦ ЛОГИКИ СВАЙПОВ //--
 
         if FirstTab then
             FirstTab = false
@@ -3066,7 +3038,6 @@ GIcon.Image = "rbxassetid://" .. tostring(RealIconId)
                     RegisterItem(Head, F)
                 end
 
-                -- // TOGGLE //
                 function BoxFuncs:AddToggle(Config)
                     local Text = Config.Title or "Toggle"
                     local Default = Config.Default or false
@@ -3124,7 +3095,6 @@ GIcon.Image = "rbxassetid://" .. tostring(RealIconId)
                     RegisterItem(Text, F)
                 end
 
-                -- // CHECKBOX //
                 function BoxFuncs:AddCheckbox(Config)
                     local Text = Config.Title or "Checkbox"
                     local Default = Config.Default or false
@@ -3613,9 +3583,6 @@ GIcon.Image = "rbxassetid://" .. tostring(RealIconId)
                     RegisterItem(Text, F)
                 end
 
-                --// IMGUI WIDGETS TRANSLATION //--
-
-                -- [ImGui: ProgressBar]
                 function BoxFuncs:AddProgressBar(Config)
                     local Text = Config.Title or "Progress"
                     local Default = Config.Default or 0
@@ -3832,7 +3799,7 @@ GIcon.Image = "rbxassetid://" .. tostring(RealIconId)
                 -- [ImGui: PlotHistogram]
                 function BoxFuncs:AddGraph(Config)
                     local Text = Config.Title or "Graph"
-                    local Values = Config.Values or {} -- Array of numbers 0-1 (or scaled)
+                    local Values = Config.Values or {}
                     local Height = Config.Height or 60
                     local Desc = Config.Description
 
@@ -3892,7 +3859,6 @@ GIcon.Image = "rbxassetid://" .. tostring(RealIconId)
                             Bar.BorderSizePixel = 0
                             Library:RegisterTheme(Bar, "BackgroundColor3", "Accent")
                             
-                            -- Simple hover for value
                             local ValTip = Instance.new("TextLabel", Bar)
                             ValTip.Visible = false
                             ValTip.Size = UDim2.new(0, 50, 0, 15)
@@ -3914,13 +3880,11 @@ GIcon.Image = "rbxassetid://" .. tostring(RealIconId)
                     end
 
                     UpdateGraph(Values)
-                    -- Allow updating via Items table
                     Library.Items[Text] = {Set = UpdateGraph}
 
                     RegisterItem(Text, F)
                 end
 
-                -- [ImGui: VSliderFloat / VSliderInt]
                 function BoxFuncs:AddVerticalSlider(Config)
                     local Text = Config.Title or "V.Slider"
                     local Min = Config.Min or 0
@@ -3931,13 +3895,11 @@ GIcon.Image = "rbxassetid://" .. tostring(RealIconId)
                     local Height = Config.Height or 100
                     local Desc = Config.Description
 
-                    -- Контейнер для слайдера и подписи
                     local F = Instance.new("Frame", GetContainer())
-                    F.Size = UDim2.new(1, 0, 0, Height + 25) -- Высота слайдера + место под текст
+                    F.Size = UDim2.new(1, 0, 0, Height + 25)
                     F.BackgroundTransparency = 1
                     if Desc then AddTooltip(F, Desc) end
 
-                    -- Подпись сверху
                     local Lb = Instance.new("TextLabel", F)
                     Lb.Size = UDim2.new(1, 0, 0, 15)
                     Lb.BackgroundTransparency = 1
@@ -3947,7 +3909,6 @@ GIcon.Image = "rbxassetid://" .. tostring(RealIconId)
                     Lb.TextXAlignment = Enum.TextXAlignment.Center
                     Library:RegisterTheme(Lb, "TextColor3", "Text")
 
-                    -- Фон слайдера (Вертикальная полоса)
                     local SliderBg = Instance.new("Frame", F)
                     SliderBg.Name = "SliderBackground"
                     SliderBg.Size = UDim2.new(0, 20, 0, Height)
@@ -3956,10 +3917,9 @@ GIcon.Image = "rbxassetid://" .. tostring(RealIconId)
                     Library:RegisterTheme(SliderBg, "BackgroundColor3", "ItemBackground")
                     Instance.new("UICorner", SliderBg).CornerRadius = UDim.new(0, 4)
 
-                    -- Заполнение слайдера
                     local SliderFill = Instance.new("Frame", SliderBg)
                     SliderFill.Name = "SliderFill"
-                    SliderFill.AnchorPoint = Vector2.new(0, 1) -- Растет снизу вверх
+                    SliderFill.AnchorPoint = Vector2.new(0, 1)
                     SliderFill.Position = UDim2.new(0, 0, 1, 0)
                     SliderFill.Size = UDim2.new(1, 0, (Def - Min) / (Max - Min), 0)
                     SliderFill.BackgroundColor3 = Library.Theme.Accent
@@ -3967,10 +3927,9 @@ GIcon.Image = "rbxassetid://" .. tostring(RealIconId)
                     Library:RegisterTheme(SliderFill, "BackgroundColor3", "Accent")
                     Instance.new("UICorner", SliderFill).CornerRadius = UDim.new(0, 4)
 
-                    -- Текст значения внутри слайдера (или рядом)
                     local ValText = Instance.new("TextLabel", SliderBg)
                     ValText.Size = UDim2.new(2, 0, 1, 0)
-                    ValText.Position = UDim2.new(-0.5, 0, 0, 0) -- По центру полоски
+                    ValText.Position = UDim2.new(-0.5, 0, 0, 0)
                     ValText.BackgroundTransparency = 1
                     ValText.Font = Enum.Font.GothamBold
                     ValText.TextSize = 10
@@ -3978,10 +3937,7 @@ GIcon.Image = "rbxassetid://" .. tostring(RealIconId)
                     ValText.TextColor3 = Library.Theme.Text
                     ValText.TextStrokeTransparency = 0.5
                     ValText.ZIndex = 3
-                    -- Поворачиваем текст вертикально, если он длинный, или оставляем так
-                    -- ValText.Rotation = -90 
-
-                    -- Кнопка для перетаскивания
+                    
                     local Btn = Instance.new("TextButton", SliderBg)
                     Btn.Size = UDim2.new(1, 0, 1, 0)
                     Btn.BackgroundTransparency = 1
@@ -3989,13 +3945,11 @@ GIcon.Image = "rbxassetid://" .. tostring(RealIconId)
 
                     local function Set(v)
                         v = math.clamp(v, Min, Max)
-                        -- Округление до 2 знаков
                         v = math.floor(v * 100) / 100
                         
                         Library.Flags[Flag] = v
                         ValText.Text = tostring(v)
                         
-                        -- Расчет процента заполнения (снизу вверх)
                         local percent = (v - Min) / (Max - Min)
                         TweenService:Create(SliderFill, TweenInfo.new(0.1), {Size = UDim2.new(1, 0, percent, 0)}):Play()
                         
@@ -4007,12 +3961,9 @@ GIcon.Image = "rbxassetid://" .. tostring(RealIconId)
 
                     local dragging = false
                     local function UpdateInput(input)
-                        -- Y ось инвертирована в GUI (0 сверху), но нам нужно чтобы 0 был снизу для слайдера
-                        -- SliderBg.AbsolutePosition.Y + SliderBg.AbsoluteSize.Y = Низ слайдера
                         local bottomY = SliderBg.AbsolutePosition.Y + SliderBg.AbsoluteSize.Y
                         local mouseY = input.Position.Y
                         
-                        -- Дистанция от низа
                         local distFromBottom = bottomY - mouseY
                         local percent = math.clamp(distFromBottom / SliderBg.AbsoluteSize.Y, 0, 1)
                         
@@ -4043,7 +3994,6 @@ GIcon.Image = "rbxassetid://" .. tostring(RealIconId)
                 end
 
                 -- [ImGui: Selectable]
-                -- Полезно для создания списков, где можно выбрать элемент нажатием
                 function BoxFuncs:AddSelectable(Config)
                     local Text = Config.Title or "Selectable"
                     local Selected = Config.Default or false
@@ -4054,14 +4004,13 @@ GIcon.Image = "rbxassetid://" .. tostring(RealIconId)
                     local F = Instance.new("TextButton", GetContainer())
                     F.Size = UDim2.new(1, 0, 0, 22)
                     F.BackgroundTransparency = Selected and 0 or 1
-                    F.BackgroundColor3 = Library.Theme.Accent -- Используем Accent для выделения
+                    F.BackgroundColor3 = Library.Theme.Accent
                     F.Text = ""
                     F.AutoButtonColor = false
                     Instance.new("UICorner", F).CornerRadius = UDim.new(0, 4)
                     
                     if Desc then AddTooltip(F, Desc) end
 
-                    -- Регистрируем тему, но с хитрой проверкой, чтобы менять цвет только если выбрано
                     Library:RegisterTheme(F, "BackgroundColor3", "Accent") 
 
                     local Lb = Instance.new("TextLabel", F)
@@ -4074,7 +4023,6 @@ GIcon.Image = "rbxassetid://" .. tostring(RealIconId)
                     Lb.TextXAlignment = Enum.TextXAlignment.Left
                     Lb.TextColor3 = Selected and Library.Theme.Text or Library.Theme.TextDark
                     
-                    -- Анимация при наведении (как в ImGui Hovered)
                     local function UpdateVisuals(isHovered, isSelected)
                         if isSelected then
                             TweenService:Create(F, TweenInfo.new(0.2), {BackgroundTransparency = 0.4}):Play()
@@ -4100,7 +4048,6 @@ GIcon.Image = "rbxassetid://" .. tostring(RealIconId)
                     Library.Items[Flag] = {Set = Set}
                     Library.Flags[Flag] = Selected
                     
-                    -- Инициализация цвета
                     UpdateVisuals(false, Selected)
 
                     F.MouseButton1Click:Connect(function()
