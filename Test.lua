@@ -3992,6 +3992,128 @@ GIcon.Image = "rbxassetid://" .. tostring(RealIconId)
 
                     RegisterItem(Text, F)
                 end
+                
+                --// EXTENSION: KEYBIND LIST //--
+function Library:InitKeybindList()
+    local ScreenGui = Library.WatermarkObj and Library.WatermarkObj.Parent or CoreGui
+    
+    local KeybindFrame = Instance.new("Frame")
+    KeybindFrame.Name = "KeybindList"
+    KeybindFrame.Size = UDim2.new(0, 150, 0, 22)
+    KeybindFrame.Position = UDim2.new(0.01, 0, 0.4, 0) -- Позиция слева
+    KeybindFrame.BackgroundColor3 = Library.Theme.Background
+    KeybindFrame.Visible = false -- Скрыто по умолчанию, пока нет активных биндов
+    KeybindFrame.Parent = ScreenGui.Parent:FindFirstChild("RedOnyx") or ScreenGui
+    
+    Instance.new("UICorner", KeybindFrame).CornerRadius = UDim.new(0, 4)
+    
+    -- Обводка и шапка
+    local Stroke = Instance.new("UIStroke", KeybindFrame)
+    Stroke.Thickness = 1
+    Stroke.Color = Library.Theme.Outline
+    Library:RegisterTheme(Stroke, "Color", "Outline")
+    Library:RegisterTheme(KeybindFrame, "BackgroundColor3", "Background")
+
+    local TopLine = Instance.new("Frame", KeybindFrame)
+    TopLine.Size = UDim2.new(1, 0, 0, 2)
+    TopLine.BorderSizePixel = 0
+    TopLine.BackgroundColor3 = Library.Theme.Accent
+    TopLine.Parent = KeybindFrame
+    Library:RegisterTheme(TopLine, "BackgroundColor3", "Accent")
+
+    local Title = Instance.new("TextLabel", KeybindFrame)
+    Title.Size = UDim2.new(1, 0, 1, 0)
+    Title.BackgroundTransparency = 1
+    Title.Text = "Keybinds"
+    Title.Font = Enum.Font.GothamBold
+    Title.TextSize = 12
+    Title.TextColor3 = Library.Theme.Text
+    Title.Parent = KeybindFrame
+    Library:RegisterTheme(Title, "TextColor3", "Text")
+
+    -- Контейнер для списка
+    local ListHolder = Instance.new("Frame", KeybindFrame)
+    ListHolder.Name = "Holder"
+    ListHolder.Size = UDim2.new(1, 0, 0, 0)
+    ListHolder.Position = UDim2.new(0, 0, 1, 2)
+    ListHolder.BackgroundTransparency = 1
+    ListHolder.Parent = KeybindFrame
+
+    local UIList = Instance.new("UIListLayout", ListHolder)
+    UIList.SortOrder = Enum.SortOrder.LayoutOrder
+    UIList.Padding = UDim.new(0, 2)
+
+    -- Функция обновления списка (вызывать в RenderStepped)
+    local function UpdateList()
+        -- Очищаем старые
+        for _, v in pairs(ListHolder:GetChildren()) do
+            if v:IsA("Frame") then v:Destroy() end
+        end
+
+        local ActiveCount = 0
+        
+        -- Проверяем все флаги
+        for Flag, Value in pairs(Library.Flags) do
+            -- Показываем, если это boolean true (Toggle) или если это зажатая клавиша (тут нужна доп. логика для Keybinds Held, но для Toggles сработает)
+            if Value == true and Flag ~= "WatermarkToggle" and Flag ~= "MenuToggleKey" then
+                ActiveCount = ActiveCount + 1
+                
+                local ItemFrame = Instance.new("Frame", ListHolder)
+                ItemFrame.Size = UDim2.new(1, 0, 0, 18)
+                ItemFrame.BackgroundColor3 = Library.Theme.Groupbox -- Немного светлее фона
+                ItemFrame.BackgroundTransparency = 0.5
+                Instance.new("UICorner", ItemFrame).CornerRadius = UDim.new(0, 3)
+
+                local Lb = Instance.new("TextLabel", ItemFrame)
+                Lb.Size = UDim2.new(1, -10, 1, 0)
+                Lb.Position = UDim2.new(0, 5, 0, 0)
+                Lb.BackgroundTransparency = 1
+                Lb.Text = tostring(Flag) -- Или искать красивое имя из Registry
+                Lb.Font = Enum.Font.Gotham
+                Lb.TextSize = 11
+                Lb.TextColor3 = Library.Theme.Text
+                Lb.TextXAlignment = Enum.TextXAlignment.Left
+                
+                local State = Instance.new("TextLabel", ItemFrame)
+                State.Size = UDim2.new(1, -5, 1, 0)
+                State.BackgroundTransparency = 1
+                State.Text = "[ON]"
+                State.Font = Enum.Font.GothamBold
+                State.TextSize = 10
+                State.TextColor3 = Library.Theme.Accent
+                State.TextXAlignment = Enum.TextXAlignment.Right
+            end
+        end
+
+        KeybindFrame.Visible = (ActiveCount > 0)
+        -- Ресайз самого списка нет, но визуально это выглядит как выпадающий список
+    end
+
+    -- Перетаскивание
+    local dragging, dragInput, dragStart, startPos
+    KeybindFrame.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            dragging = true
+            dragStart = input.Position
+            startPos = KeybindFrame.Position
+        end
+    end)
+    KeybindFrame.InputChanged:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseMovement then dragInput = input end
+    end)
+    UserInputService.InputChanged:Connect(function(input)
+        if input == dragInput and dragging then
+            local delta = input.Position - dragStart
+            KeybindFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+        end
+    end)
+    UserInputService.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then dragging = false end
+    end)
+
+    -- Запуск цикла обновления
+    RunService.RenderStepped:Connect(UpdateList)
+end
 
                 -- [ImGui: Selectable]
                 function BoxFuncs:AddSelectable(Config)
