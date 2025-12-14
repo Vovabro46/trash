@@ -4560,3 +4560,5 @@ end
     end
     return WindowFuncs
 end
+
+return Library
