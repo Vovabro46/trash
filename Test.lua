@@ -2142,109 +2142,148 @@ function Library:Window(TitleText, KeySettings)
     if KeySettings and KeySettings.Enabled then
         local ValidKey = KeySettings.Key or "Key"
         local Link = KeySettings.Link or "https://discord.gg/"
-        local SiteName = KeySettings.SiteName or "Key Link"
+        local Site = KeySettings.SiteName or "Discord"
+        local SaveKey = KeySettings.SaveKey or false
+        local FileName = "RedOnyx_Key.txt"
         local Verified = false
+        local SavedKey = ""
+        if SaveKey and isfile and isfile(FileName) then SavedKey = readfile(FileName) end
 
-        local KeyFrame = Instance.new("Frame")
+        local KeyFrame = Instance.new("Frame", ScreenGui)
         KeyFrame.Size = UDim2.new(1, 0, 1, 0)
-        KeyFrame.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
-        KeyFrame.Parent = ScreenGui
+        KeyFrame.BackgroundTransparency = 1 -- NO BACKGROUND (Corrected)
         KeyFrame.ZIndex = 10000
 
-        local KeyBox = Instance.new("Frame")
-        KeyBox.Size = UDim2.new(0, 350, 0, 180)
+        local KeyBox = Instance.new("Frame", KeyFrame)
+        KeyBox.Size = UDim2.new(0, 380, 0, 210)
         KeyBox.AnchorPoint = Vector2.new(0.5, 0.5)
         KeyBox.Position = UDim2.new(0.5, 0, 0.5, 0)
         KeyBox.BackgroundColor3 = Library.Theme.Background
-        KeyBox.Parent = KeyFrame
         Instance.new("UICorner", KeyBox).CornerRadius = UDim.new(0, 6)
         Instance.new("UIStroke", KeyBox).Color = Library.Theme.Outline
         
+        -- Shadow for KeyBox (since background is transparent)
+        local Shadow = Instance.new("ImageLabel", KeyBox)
+        Shadow.ZIndex = -1
+        Shadow.BackgroundTransparency = 1
+        Shadow.Image = "rbxassetid://6015897843"
+        Shadow.ImageTransparency = 0.5
+        Shadow.ImageColor3 = Color3.new(0,0,0)
+        Shadow.Size = UDim2.new(1, 40, 1, 40)
+        Shadow.Position = UDim2.new(0, -20, 0, -20)
+        Shadow.SliceCenter = Rect.new(49, 49, 450, 450)
+        Shadow.ScaleType = Enum.ScaleType.Slice
+
         local KTitle = Instance.new("TextLabel", KeyBox)
         KTitle.Size = UDim2.new(1, 0, 0, 40)
         KTitle.BackgroundTransparency = 1
-        KTitle.Text = "Key System required"
+        KTitle.Text = "Authentication"
         KTitle.Font = Enum.Font.GothamBold
         KTitle.TextColor3 = Library.Theme.Accent
         KTitle.TextSize = 18
-        KTitle.Parent = KeyBox
+        
+        local KDesc = Instance.new("TextLabel", KeyBox)
+        KDesc.Size = UDim2.new(1, 0, 0, 20)
+        KDesc.Position = UDim2.new(0, 0, 0, 35)
+        KDesc.BackgroundTransparency = 1
+        KDesc.Text = "Join " .. Site .. " to get key"
+        KDesc.Font = Enum.Font.Gotham
+        KDesc.TextColor3 = Library.Theme.TextDark
+        KDesc.TextSize = 12
 
         local KInput = Instance.new("TextBox", KeyBox)
-        KInput.Size = UDim2.new(0.8, 0, 0, 35)
-        KInput.Position = UDim2.new(0.1, 0, 0.3, 0)
+        KInput.Size = UDim2.new(0.85, 0, 0, 35)
+        KInput.Position = UDim2.new(0.075, 0, 0.35, 0)
         KInput.BackgroundColor3 = Library.Theme.ItemBackground
         KInput.TextColor3 = Library.Theme.Text
-        KInput.PlaceholderText = "Enter Key..."
-        KInput.Text = ""
+        KInput.PlaceholderText = "Paste Key..."
+        KInput.Text = SavedKey
         KInput.Font = Enum.Font.Gotham
         KInput.TextSize = 14
-        KInput.Parent = KeyBox
         Instance.new("UICorner", KInput).CornerRadius = UDim.new(0, 4)
 
+        local RememberBtn = Instance.new("TextButton", KeyBox)
+        RememberBtn.Size = UDim2.new(0, 100, 0, 20)
+        RememberBtn.Position = UDim2.new(0.075, 0, 0.55, 0)
+        RememberBtn.BackgroundTransparency = 1
+        RememberBtn.Text = ""
+        local RemBox = Instance.new("Frame", RememberBtn)
+        RemBox.Size = UDim2.new(0, 14, 0, 14)
+        RemBox.Position = UDim2.new(0,0,0.5,-7)
+        RemBox.BackgroundColor3 = Library.Theme.ItemBackground
+        Instance.new("UICorner", RemBox).CornerRadius = UDim.new(0,3)
+        local RemCheck = Instance.new("Frame", RemBox)
+        RemCheck.Size = UDim2.new(0,8,0,8)
+        RemCheck.Position = UDim2.new(0.5,-4,0.5,-4)
+        RemCheck.BackgroundColor3 = Library.Theme.Accent
+        RemCheck.Visible = (SavedKey ~= "")
+        Instance.new("UICorner", RemCheck).CornerRadius = UDim.new(0,2)
+        local RemLabel = Instance.new("TextLabel", RememberBtn)
+        RemLabel.Size = UDim2.new(1, -20, 1, 0)
+        RemLabel.Position = UDim2.new(0, 20, 0, 0)
+        RemLabel.BackgroundTransparency = 1
+        RemLabel.Text = "Remember Key"
+        RemLabel.TextColor3 = Library.Theme.TextDark
+        RemLabel.TextXAlignment = Enum.TextXAlignment.Left
+        RemLabel.Font = Enum.Font.Gotham
+        RemLabel.TextSize = 12
+        local IsRemembering = (SavedKey ~= "")
+        RememberBtn.MouseButton1Click:Connect(function() IsRemembering = not IsRemembering RemCheck.Visible = IsRemembering end)
+
         local KCheck = Instance.new("TextButton", KeyBox)
-        KCheck.Size = UDim2.new(0.35, 0, 0, 30)
-        KCheck.Position = UDim2.new(0.1, 0, 0.6, 0)
+        KCheck.Size = UDim2.new(0.4, 0, 0, 32)
+        KCheck.Position = UDim2.new(0.075, 0, 0.7, 0)
         KCheck.BackgroundColor3 = Library.Theme.Accent
-        KCheck.Text = "Check Key"
+        KCheck.Text = "Login"
         KCheck.TextColor3 = Library.Theme.Text
         KCheck.Font = Enum.Font.GothamBold
-        KCheck.TextSize = 12
-        KCheck.Parent = KeyBox
+        KCheck.TextSize = 13
         Instance.new("UICorner", KCheck).CornerRadius = UDim.new(0, 4)
 
         local KLink = Instance.new("TextButton", KeyBox)
-        KLink.Size = UDim2.new(0.35, 0, 0, 30)
-        KLink.Position = UDim2.new(0.55, 0, 0.6, 0)
+        KLink.Size = UDim2.new(0.4, 0, 0, 32)
+        KLink.Position = UDim2.new(0.525, 0, 0.7, 0)
         KLink.BackgroundColor3 = Library.Theme.Sidebar
         KLink.Text = "Get Key"
         KLink.TextColor3 = Library.Theme.Text
         KLink.Font = Enum.Font.GothamBold
-        KLink.TextSize = 12
-        KLink.Parent = KeyBox
+        KLink.TextSize = 13
         Instance.new("UICorner", KLink).CornerRadius = UDim.new(0, 4)
 
         local KStatus = Instance.new("TextLabel", KeyBox)
         KStatus.Size = UDim2.new(1, 0, 0, 20)
-        KStatus.Position = UDim2.new(0, 0, 0.85, 0)
+        KStatus.Position = UDim2.new(0, 0, 0.9, 0)
         KStatus.BackgroundTransparency = 1
         KStatus.Text = ""
         KStatus.Font = Enum.Font.Gotham
         KStatus.TextSize = 12
         KStatus.TextColor3 = Library.Theme.TextDark
-        KStatus.Parent = KeyBox
 
-        KLink.MouseButton1Click:Connect(function()
-            setclipboard(Link)
-            KStatus.Text = "Link copied to clipboard!"
-            KStatus.TextColor3 = Color3.fromRGB(0, 255, 150)
-        end)
-
+        KLink.MouseButton1Click:Connect(function() setclipboard(Link) KStatus.Text = "Copied to clipboard!" KStatus.TextColor3 = Color3.fromRGB(0, 255, 150) end)
         KCheck.MouseButton1Click:Connect(function()
             if KInput.Text == ValidKey then
-                KStatus.Text = "Key Valid! Loading..."
+                KStatus.Text = "Success!"
                 KStatus.TextColor3 = Color3.fromRGB(0, 255, 100)
+                if IsRemembering and writefile then writefile(FileName, ValidKey) elseif writefile and isfile(FileName) then delfile(FileName) end
                 wait(0.5)
-                TweenService:Create(KeyFrame, TweenInfo.new(0.5), {BackgroundTransparency = 1}):Play()
-                TweenService:Create(KeyBox, TweenInfo.new(0.5), {Position = UDim2.new(0.5, 0, 1.5, 0)}):Play()
+                TweenService:Create(KeyBox, TweenInfo.new(0.5, Enum.EasingStyle.Back, Enum.EasingDirection.In), {Position = UDim2.new(0.5, 0, 1.5, 0)}):Play()
                 wait(0.5)
                 KeyFrame:Destroy()
                 Verified = true
             else
-                KStatus.Text = "Invalid Key!"
+                KStatus.Text = "Invalid Key"
                 KStatus.TextColor3 = Color3.fromRGB(255, 50, 50)
                 KInput.Text = ""
             end
         end)
-
-        -- Блокируем поток (yield), пока не введен ключ
         repeat task.wait(0.1) until Verified
     end
 
     CreateTooltipSystem(ScreenGui)
 
-    -- Auto-Size Logic for Mobile/PC
+    -- Auto-Size Logic
     local VP = workspace.CurrentCamera.ViewportSize
-    local StartWidth = math.min(550, VP.X - 20) -- Чуть шире для удобства
+    local StartWidth = math.min(550, VP.X - 20)
     local StartHeight = math.min(400, VP.Y - 50)
     
     if StartWidth < 350 then StartWidth = 350 end
@@ -2261,18 +2300,19 @@ function Library:Window(TitleText, KeySettings)
 
     workspace.CurrentCamera:GetPropertyChangedSignal("ViewportSize"):Connect(function()
         local NewVP = workspace.CurrentCamera.ViewportSize
-        local NewW = math.min(480, NewVP.X - 50)
-        local NewH = math.min(240, NewVP.Y - 50)
-        if NewW < 350 then NewW = 350 end
-        if NewH < 250 then NewH = 250 end
+        local NewW = math.min(550, NewVP.X - 20)
+        local NewH = math.min(400, NewVP.Y - 50)
         MainFrame.Size = UDim2.new(0, NewW, 0, NewH)
     end)
-
+    
+    
+    
     local MainStroke = Instance.new("UIStroke", MainFrame)
     MainStroke.Thickness = 1
     Library:RegisterTheme(MainStroke, "Color", "Outline")
     Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0, 4)
     
+    --// RESIZER HANDLE //--
     local Resizer = Instance.new("TextButton")
     Resizer.Name = "Resizer"
     Resizer.Size = UDim2.new(0, 30, 0, 30)
@@ -2770,14 +2810,18 @@ TabIcon.Image = "rbxassetid://" .. tostring(RealIconId)
 
             local SubFuncs = {}
             
-            function SubFuncs:Groupbox(Name, Side, IconId)
+            function SubFuncs:Groupbox(Name, Side, IconId, Collapsible)
                 local P = (Side=="Right") and RCol or LCol
-                local Box = Instance.new("Frame")
+                
+                local Box = Instance.new("Frame", P)
                 Box.Size = UDim2.new(1,0,0,100)
-                Box.Parent = P
+                -- ВАЖНО: Включаем обрезку содержимого, чтобы при сворачивании функции исчезали
+                Box.ClipsDescendants = true 
+                
                 Library:RegisterTheme(Box,"BackgroundColor3","Groupbox")
                 Instance.new("UICorner",Box).CornerRadius=UDim.new(0,4)
-                local S=Instance.new("UIStroke",Box)
+                
+                local S=Instance.new("UIStroke",Box) 
                 S.Thickness=1
                 Library:RegisterTheme(S,"Color","Outline")
                 
@@ -2792,11 +2836,11 @@ TabIcon.Image = "rbxassetid://" .. tostring(RealIconId)
                     GIcon.Position = UDim2.new(0, 10, 0, 5)
                     GIcon.BackgroundTransparency = 1
                     local RealIconId = Library.Icons[IconId] or IconId
-GIcon.Image = "rbxassetid://" .. tostring(RealIconId)
+                    GIcon.Image = "rbxassetid://" .. tostring(RealIconId)
                     Library:RegisterTheme(GIcon, "ImageColor3", "Accent")
                 end
 
-                local H=Instance.new("TextLabel")
+                local H=Instance.new("TextLabel", Box)
                 H.Size=UDim2.new(1,-20,0,25)
                 H.Position=UDim2.new(0, HeaderOffset, 0, 0)
                 H.BackgroundTransparency=1
@@ -2804,28 +2848,58 @@ GIcon.Image = "rbxassetid://" .. tostring(RealIconId)
                 H.Font=Enum.Font.GothamBold
                 H.TextSize=13
                 H.TextXAlignment=Enum.TextXAlignment.Left
-                H.Parent=Box
                 Library:RegisterTheme(H,"TextColor3","Accent")
 
-                local C=Instance.new("Frame")
+                -- ЛОГИКА СВОРАЧИВАНИЯ
+                local ContentHeight = 0
+                local IsOpen = true
+                
+                local C=Instance.new("Frame", Box)
                 C.Name = "MainContent"
                 C.Size=UDim2.new(1,0,0,0)
                 C.Position=UDim2.new(0,0,0,30)
                 C.BackgroundTransparency=1
-                C.Parent=Box
                 
-                local L=Instance.new("UIListLayout",C)
-                L.SortOrder=Enum.SortOrder.LayoutOrder
+                if Collapsible then
+                    local Arrow = Instance.new("ImageButton", Box)
+                    Arrow.Size = UDim2.new(0, 14, 0, 14)
+                    Arrow.Position = UDim2.new(1, -20, 0, 6)
+                    Arrow.BackgroundTransparency = 1
+                    Arrow.Image = "rbxassetid://122444883127455" -- Стрелка
+                    Library:RegisterTheme(Arrow, "ImageColor3", "TextDark")
+                    
+                    Arrow.MouseButton1Click:Connect(function()
+                        IsOpen = not IsOpen
+                        if IsOpen then
+                            -- РАЗВЕРНУТЬ: Возвращаем полный размер
+                            TweenService:Create(Box, TweenInfo.new(0.3, Enum.EasingStyle.Quart), {Size = UDim2.new(1,0,0, ContentHeight + 45)}):Play()
+                            TweenService:Create(Arrow, TweenInfo.new(0.3), {Rotation = 0}):Play()
+                        else
+                            -- СВЕРНУТЬ: Уменьшаем высоту до шапки (35px)
+                            -- Благодаря ClipsDescendants = true, контент обрежется визуально
+                            TweenService:Create(Box, TweenInfo.new(0.3, Enum.EasingStyle.Quart), {Size = UDim2.new(1,0,0, 35)}):Play()
+                            TweenService:Create(Arrow, TweenInfo.new(0.3), {Rotation = 180}):Play()
+                        end
+                    end)
+                end
+
+                local L=Instance.new("UIListLayout",C) 
+                L.SortOrder=Enum.SortOrder.LayoutOrder 
                 L.Padding=UDim.new(0,12)
                 
-                local Pa=Instance.new("UIPadding",C)
-                Pa.PaddingLeft=UDim.new(0,10)
-                Pa.PaddingRight=UDim.new(0,10)
-                Pa.PaddingBottom=UDim.new(0,10)
+                local Pa=Instance.new("UIPadding",C) 
+                Pa.PaddingLeft=UDim.new(0,10) 
+                Pa.PaddingRight=UDim.new(0,10) 
+                Pa.PaddingBottom=UDim.new(0,10) 
                 Pa.PaddingTop=UDim.new(0,5)
                 
                 L:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-                    Box.Size=UDim2.new(1,0,0,L.AbsoluteContentSize.Y+45)
+                    ContentHeight = L.AbsoluteContentSize.Y
+                    -- Обновляем размер только если коробка открыта
+                    if IsOpen then 
+                        Box.Size=UDim2.new(1,0,0, ContentHeight + 45) 
+                    end
+                    C.Size = UDim2.new(1, 0, 0, ContentHeight + 10)
                 end)
                 
                 local function RegisterItem(ItemName, ItemObj)
@@ -3384,83 +3458,263 @@ GIcon.Image = "rbxassetid://" .. tostring(RealIconId)
                 function BoxFuncs:AddColorPicker(Config)
                     local Text = Config.Title or "Color"
                     local Def = Config.Default or Color3.new(1,1,1)
+                    local DefAlpha = Config.Transparency or 0
                     local Callback = Config.Callback or function() end
                     local Flag = Config.Flag or Text
                     local Desc = Config.Description
 
-                    local F=Instance.new("Frame", GetContainer())
-                    F.Size=UDim2.new(1,0,0,25)
-                    F.BackgroundTransparency=1
+                    local F = Instance.new("Frame", GetContainer())
+                    F.Size = UDim2.new(1, 0, 0, 25)
+                    F.BackgroundTransparency = 1
                     if Desc then AddTooltip(F, Desc) end
 
-                    local Lb=Instance.new("TextLabel",F)
-                    Lb.Size=UDim2.new(0.7,0,1,0)
-                    Lb.BackgroundTransparency=1
-                    Lb.Text=Text
-                    Lb.Font=Enum.Font.Gotham
-                    Lb.TextSize=12
-                    Lb.TextXAlignment=Enum.TextXAlignment.Left
-                    Library:RegisterTheme(Lb,"TextColor3","Text")
-                    local P=Instance.new("TextButton",F)
-                    P.Size=UDim2.new(0,35,0,18)
-                    P.Position=UDim2.new(1,-35,0.5,-9)
-                    P.BackgroundColor3=Def
-                    P.Text=""
-                    Instance.new("UICorner",P).CornerRadius=UDim.new(0,4)
-                    
-                    local Win=Instance.new("Frame",ScreenGui)
-                    Win.Size=UDim2.new(0,200,0,190)
-                    Win.BackgroundColor3=Color3.fromRGB(25,25,25)
-                    Win.Visible=false
-                    Win.ZIndex=200 
-                    Instance.new("UIStroke",Win).Color=Library.Theme.Outline
-                    Instance.new("UICorner",Win).CornerRadius=UDim.new(0,4)
-                    local SV=Instance.new("ImageButton",Win)
-                    SV.Size=UDim2.new(0,180,0,130)
-                    SV.Position=UDim2.new(0,10,0,10)
-                    SV.BackgroundColor3=Def
-                    SV.Image="rbxassetid://4155801252"
-                    SV.ZIndex=201
-                    local H=Instance.new("ImageButton",Win)
-                    H.Size=UDim2.new(0,180,0,25)
-                    H.Position=UDim2.new(0,10,0,150)
-                    H.BackgroundColor3=Color3.new(1,1,1)
-                    H.Image=""
-                    H.ZIndex=201
-                    local Gr=Instance.new("UIGradient",H)
-                    Gr.Color=ColorSequence.new{ColorSequenceKeypoint.new(0,Color3.new(1,0,0)),ColorSequenceKeypoint.new(0.17,Color3.new(1,1,0)),ColorSequenceKeypoint.new(0.33,Color3.new(0,1,0)),ColorSequenceKeypoint.new(0.5,Color3.new(0,1,1)),ColorSequenceKeypoint.new(0.67,Color3.new(0,0,1)),ColorSequenceKeypoint.new(0.83,Color3.new(1,0,1)),ColorSequenceKeypoint.new(1,Color3.new(1,0,0))}
-                    
-                    local h,s,v = Def:ToHSV()
-                    local function Upd()
-                        local c=Color3.fromHSV(h,s,v)
-                        P.BackgroundColor3=c
-                        SV.BackgroundColor3=Color3.fromHSV(h,1,1)
-                        Library.Flags[Flag]={R=c.R,G=c.G,B=c.B}
-                        pcall(Callback,c)
-                    end
-                    Library.Items[Flag]={Set=function(t) if type(t)=="table" then local c=Color3.new(t.R,t.G,t.B) h,s,v=c:ToHSV() Upd() end end}
-                    Library.Flags[Flag]={R=Def.R,G=Def.G,B=Def.B}
+                    local Lb = Instance.new("TextLabel", F)
+                    Lb.Size = UDim2.new(0.6, 0, 1, 0)
+                    Lb.BackgroundTransparency = 1
+                    Lb.Text = Text
+                    Lb.Font = Enum.Font.Gotham
+                    Lb.TextSize = 12
+                    Lb.TextXAlignment = Enum.TextXAlignment.Left
+                    Library:RegisterTheme(Lb, "TextColor3", "Text")
 
-                    local d1,d2=false,false
-                    local function Hand(i,mode)
-                        if mode=="H" then h=math.clamp((i.Position.X-H.AbsolutePosition.X)/H.AbsoluteSize.X,0,1)
-                        else s=math.clamp((i.Position.X-SV.AbsolutePosition.X)/SV.AbsoluteSize.X,0,1) v=1-math.clamp((i.Position.Y-SV.AbsolutePosition.Y)/SV.AbsoluteSize.Y,0,1) end
-                        Upd()
+                    local P = Instance.new("TextButton", F)
+                    P.Size = UDim2.new(0, 40, 0, 16)
+                    P.Position = UDim2.new(1, -45, 0.5, -8)
+                    P.BackgroundColor3 = Def
+                    P.Text = ""
+                    P.AutoButtonColor = false
+                    Instance.new("UICorner", P).CornerRadius = UDim.new(0, 4)
+                    
+                    local PCheckers = Instance.new("ImageLabel", P)
+                    PCheckers.Size = UDim2.new(1,0,1,0)
+                    PCheckers.BackgroundTransparency = 1
+                    PCheckers.Image = "rbxassetid://3887014957"
+                    PCheckers.ImageTransparency = 0.5
+                    PCheckers.ScaleType = Enum.ScaleType.Tile
+                    PCheckers.TileSize = UDim2.new(0, 10, 0, 10)
+                    PCheckers.ZIndex = 0
+
+                    local Win = Instance.new("Frame", ScreenGui)
+                    Win.Name = "ColorPickerWin"
+                    Win.Size = UDim2.new(0, 220, 0, 230) -- КОМПАКТНЫЙ РАЗМЕР
+                    Win.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+                    Win.Visible = false
+                    Win.ZIndex = 200
+                    Instance.new("UIStroke", Win).Color = Library.Theme.Outline
+                    Instance.new("UICorner", Win).CornerRadius = UDim.new(0, 6)
+                    
+                    -- SV Square (100px height)
+                    local SV = Instance.new("ImageButton", Win)
+                    SV.Size = UDim2.new(1, -20, 0, 100)
+                    SV.Position = UDim2.new(0, 10, 0, 10)
+                    SV.BackgroundColor3 = Color3.fromHSV(0, 1, 1) 
+                    SV.Image = "rbxassetid://4155801252"
+                    SV.ZIndex = 205
+                    Instance.new("UICorner", SV).CornerRadius = UDim.new(0, 4)
+
+                    local PickerDot = Instance.new("Frame", SV)
+                    PickerDot.Size = UDim2.new(0, 6, 0, 6)
+                    PickerDot.BackgroundColor3 = Color3.new(1,1,1)
+                    PickerDot.ZIndex = 206
+                    PickerDot.AnchorPoint = Vector2.new(0.5, 0.5)
+                    Instance.new("UICorner", PickerDot).CornerRadius = UDim.new(1,0)
+                    Instance.new("UIStroke", PickerDot).Thickness = 1
+
+                    -- Bars (10px height)
+                    local HueFrame = Instance.new("ImageButton", Win)
+                    HueFrame.Size = UDim2.new(1, -20, 0, 10)
+                    HueFrame.Position = UDim2.new(0, 10, 0, 115)
+                    HueFrame.BackgroundColor3 = Color3.new(1,1,1)
+                    HueFrame.Image = ""
+                    HueFrame.ZIndex = 205
+                    Instance.new("UICorner", HueFrame).CornerRadius = UDim.new(0, 2)
+                    local HueGrad = Instance.new("UIGradient", HueFrame)
+                    HueGrad.Color = ColorSequence.new{
+                        ColorSequenceKeypoint.new(0.00, Color3.fromRGB(255, 0, 0)),
+                        ColorSequenceKeypoint.new(0.17, Color3.fromRGB(255, 255, 0)),
+                        ColorSequenceKeypoint.new(0.33, Color3.fromRGB(0, 255, 0)),
+                        ColorSequenceKeypoint.new(0.50, Color3.fromRGB(0, 255, 255)),
+                        ColorSequenceKeypoint.new(0.67, Color3.fromRGB(0, 0, 255)),
+                        ColorSequenceKeypoint.new(0.83, Color3.fromRGB(255, 0, 255)),
+                        ColorSequenceKeypoint.new(1.00, Color3.fromRGB(255, 0, 0))
+                    }
+                    local HueSlide = Instance.new("Frame", HueFrame)
+                    HueSlide.Size = UDim2.new(0, 3, 1, 0)
+                    HueSlide.BackgroundColor3 = Color3.new(1,1,1)
+                    HueSlide.BorderColor3 = Color3.new(0,0,0)
+                    HueSlide.BorderSizePixel = 1
+                    HueSlide.ZIndex = 206
+                    HueSlide.AnchorPoint = Vector2.new(0.5, 0)
+
+                    local AlphaFrame = Instance.new("ImageButton", Win)
+                    AlphaFrame.Size = UDim2.new(1, -20, 0, 10)
+                    AlphaFrame.Position = UDim2.new(0, 10, 0, 130)
+                    AlphaFrame.BackgroundColor3 = Color3.new(1,1,1)
+                    AlphaFrame.Image = ""
+                    AlphaFrame.ZIndex = 205
+                    Instance.new("UICorner", AlphaFrame).CornerRadius = UDim.new(0, 2)
+                    local AlphaCheck = PCheckers:Clone()
+                    AlphaCheck.Parent = AlphaFrame
+                    AlphaCheck.ImageTransparency = 0
+                    AlphaCheck.ZIndex = 204
+                    local AlphaOverlay = Instance.new("Frame", AlphaFrame)
+                    AlphaOverlay.Size = UDim2.new(1,0,1,0)
+                    AlphaOverlay.BackgroundColor3 = Def
+                    AlphaOverlay.BorderSizePixel = 0
+                    AlphaOverlay.ZIndex = 205
+                    Instance.new("UICorner", AlphaOverlay).CornerRadius = UDim.new(0, 2)
+                    local AlphaGrad = Instance.new("UIGradient", AlphaOverlay)
+                    AlphaGrad.Transparency = NumberSequence.new{NumberSequenceKeypoint.new(0, 1), NumberSequenceKeypoint.new(1, 0)}
+                    local AlphaSlide = Instance.new("Frame", AlphaFrame)
+                    AlphaSlide.Size = UDim2.new(0, 3, 1, 0)
+                    AlphaSlide.BackgroundColor3 = Color3.new(1,1,1)
+                    AlphaSlide.BorderColor3 = Color3.new(0,0,0)
+                    AlphaSlide.BorderSizePixel = 1
+                    AlphaSlide.ZIndex = 206
+                    AlphaSlide.AnchorPoint = Vector2.new(0.5, 0)
+
+                    -- Compact Inputs
+                    local InputContainer = Instance.new("Frame", Win)
+                    InputContainer.Size = UDim2.new(1, -20, 0, 75)
+                    InputContainer.Position = UDim2.new(0, 10, 0, 150)
+                    InputContainer.BackgroundTransparency = 1
+                    InputContainer.ZIndex = 210
+
+                    local HexBox = Instance.new("TextBox", InputContainer)
+                    HexBox.Size = UDim2.new(1, 0, 0, 20)
+                    HexBox.Position = UDim2.new(0, 0, 0, 0)
+                    HexBox.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+                    HexBox.TextColor3 = Color3.new(1,1,1)
+                    HexBox.Text = Library:ToHex(Def)
+                    HexBox.Font = Enum.Font.Code
+                    HexBox.TextSize = 12
+                    HexBox.PlaceholderText = "#HEX"
+                    HexBox.ZIndex = 211
+                    Instance.new("UICorner", HexBox).CornerRadius = UDim.new(0, 4)
+                    Instance.new("UIStroke", HexBox).Color = Color3.fromRGB(60,60,60)
+
+                    local RBox, GBox, BBox, ABox
+                    local function CreateBox(ID, XOffset)
+                        local Box = Instance.new("TextBox", InputContainer)
+                        Box.Size = UDim2.new(0.22, 0, 0, 20)
+                        Box.Position = UDim2.new(XOffset, 0, 0, 25)
+                        Box.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+                        Box.TextColor3 = Color3.new(1,1,1)
+                        Box.Text = "0"
+                        Box.Font = Enum.Font.Code
+                        Box.TextSize = 12
+                        Box.ZIndex = 211
+                        Box.PlaceholderText = ID
+                        Instance.new("UICorner", Box).CornerRadius = UDim.new(0, 4)
+                        Instance.new("UIStroke", Box).Color = Color3.fromRGB(60,60,60)
+                        return Box
                     end
-                    H.InputBegan:Connect(function(i) if i.UserInputType==Enum.UserInputType.MouseButton1 or i.UserInputType==Enum.UserInputType.Touch then d1=true Hand(i,"H") end end)
-                    SV.InputBegan:Connect(function(i) if i.UserInputType==Enum.UserInputType.MouseButton1 or i.UserInputType==Enum.UserInputType.Touch then d2=true Hand(i,"S") end end)
-                    UserInputService.InputEnded:Connect(function() d1=false d2=false end)
-                    UserInputService.InputChanged:Connect(function(i) if d1 and (i.UserInputType==Enum.UserInputType.MouseMovement or i.UserInputType==Enum.UserInputType.Touch) then Hand(i,"H") elseif d2 and (i.UserInputType==Enum.UserInputType.MouseMovement or i.UserInputType==Enum.UserInputType.Touch) then Hand(i,"S") end end)
-                    P.MouseButton1Click:Connect(function() 
+                    RBox = CreateBox("R", 0)
+                    GBox = CreateBox("G", 0.26)
+                    BBox = CreateBox("B", 0.52)
+                    ABox = CreateBox("A", 0.78)
+                    
+                    -- Logic (копируем из предыдущего ответа, она рабочая)
+                    local ColorH, ColorS, ColorV = Def:ToHSV()
+                    local Alpha = DefAlpha
+                    local Updating = false
+                    
+                    local function UpdateVisuals()
+                        local CurrentColor = Color3.fromHSV(ColorH, ColorS, ColorV)
+                        P.BackgroundColor3 = CurrentColor
+                        P.BackgroundTransparency = 1 - Alpha
+                        SV.BackgroundColor3 = Color3.fromHSV(ColorH, 1, 1)
+                        AlphaOverlay.BackgroundColor3 = CurrentColor
+                        PickerDot.Position = UDim2.new(ColorS, 0, 1 - ColorV, 0)
+                        HueSlide.Position = UDim2.new(ColorH, 0, 0, 0)
+                        AlphaSlide.Position = UDim2.new(Alpha, 0, 0, 0)
+                        if not Updating then
+                            Updating = true
+                            HexBox.Text = Library:ToHex(CurrentColor)
+                            RBox.Text = tostring(math.floor(CurrentColor.R * 255))
+                            GBox.Text = tostring(math.floor(CurrentColor.G * 255))
+                            BBox.Text = tostring(math.floor(CurrentColor.B * 255))
+                            ABox.Text = tostring(math.floor(Alpha * 255))
+                            Updating = false
+                        end
+                        Library.Flags[Flag] = {R = CurrentColor.R, G = CurrentColor.G, B = CurrentColor.B, Alpha = Alpha, Hex = HexBox.Text}
+                        pcall(Callback, CurrentColor, Alpha)
+                    end
+                    
+                    -- ... (Event Handlers для Inputs и Drags - те же самые, что в прошлом ответе, просто скопируй)
+                    local function UpdateFromInputs()
+                        if Updating then return end
+                        Updating = true
+                        local R = math.clamp(tonumber(RBox.Text) or 0, 0, 255)
+                        local G = math.clamp(tonumber(GBox.Text) or 0, 0, 255)
+                        local B = math.clamp(tonumber(BBox.Text) or 0, 0, 255)
+                        local A = math.clamp(tonumber(ABox.Text) or 255, 0, 255)
+                        Alpha = A / 255
+                        local NewCol = Color3.fromRGB(R, G, B)
+                        ColorH, ColorS, ColorV = NewCol:ToHSV()
+                        UpdateVisuals()
+                        Updating = false
+                    end
+
+                    local function UpdateFromHex()
+                        if Updating then return end
+                        Updating = true
+                        local NewCol = Library:FromHex(HexBox.Text)
+                        if NewCol then
+                            ColorH, ColorS, ColorV = NewCol:ToHSV()
+                            UpdateVisuals()
+                        end
+                        Updating = false
+                    end
+
+                    RBox.FocusLost:Connect(UpdateFromInputs)
+                    GBox.FocusLost:Connect(UpdateFromInputs)
+                    BBox.FocusLost:Connect(UpdateFromInputs)
+                    ABox.FocusLost:Connect(UpdateFromInputs)
+                    HexBox.FocusLost:Connect(UpdateFromHex)
+
+                    local function HandleInput(Input, Mode)
+                        if Mode == "SV" then
+                            local X = math.clamp((Input.Position.X - SV.AbsolutePosition.X) / SV.AbsoluteSize.X, 0, 1)
+                            local Y = math.clamp((Input.Position.Y - SV.AbsolutePosition.Y) / SV.AbsoluteSize.Y, 0, 1)
+                            ColorS = X
+                            ColorV = 1 - Y
+                        elseif Mode == "Hue" then
+                            local X = math.clamp((Input.Position.X - HueFrame.AbsolutePosition.X) / HueFrame.AbsoluteSize.X, 0, 1)
+                            ColorH = X
+                        elseif Mode == "Alpha" then
+                            local X = math.clamp((Input.Position.X - AlphaFrame.AbsolutePosition.X) / AlphaFrame.AbsoluteSize.X, 0, 1)
+                            Alpha = X
+                        end
+                        UpdateVisuals()
+                    end
+
+                    local Dragging = nil
+                    local function InputBegan(Obj, Mode)
+                        Obj.InputBegan:Connect(function(i) if i.UserInputType.Name:match("MouseButton1") or i.UserInputType.Name:match("Touch") then Dragging = Mode HandleInput(i, Mode) end end)
+                    end
+                    InputBegan(SV, "SV") InputBegan(HueFrame, "Hue") InputBegan(AlphaFrame, "Alpha")
+
+                    UserInputService.InputChanged:Connect(function(i) if Dragging and (i.UserInputType == Enum.UserInputType.MouseMovement or i.UserInputType == Enum.UserInputType.Touch) then HandleInput(i, Dragging) end end)
+                    UserInputService.InputEnded:Connect(function(i) if i.UserInputType.Name:match("MouseButton1") or i.UserInputType.Name:match("Touch") then Dragging = nil end end)
+
+                    P.MouseButton1Click:Connect(function()
                         if Win.Visible then Win.Visible = false Library.ActivePicker = nil else
                             if Library.ActivePicker then Library.ActivePicker.Visible = false end
                             Win.Visible = true
-                            Win.Position = UDim2.new(0, P.AbsolutePosition.X + 50, 0, P.AbsolutePosition.Y)
+                            -- Smart pos
+                            local Abs = P.AbsolutePosition
+                            local WX, WY = Abs.X + 50, Abs.Y - 50
+                            if WX + 220 > workspace.CurrentCamera.ViewportSize.X then WX = Abs.X - 230 end
+                            if WY + 230 > workspace.CurrentCamera.ViewportSize.Y then WY = workspace.CurrentCamera.ViewportSize.Y - 240 end
+                            if WY < 0 then WY = 10 end
+                            Win.Position = UDim2.new(0, WX, 0, WY)
                             Library.ActivePicker = Win
                         end
                     end)
-                    DropdownHolder.InputBegan:Connect(function(i) if i.UserInputType==Enum.UserInputType.MouseButton1 then Win.Visible=false if Library.ActivePicker==Win then Library.ActivePicker=nil end end end)
-                
+
+                    Library.Flags[Flag] = {R = Def.R, G = Def.G, B = Def.B, Alpha = DefAlpha, Hex = Library:ToHex(Def)}
+                    UpdateVisuals()
                     RegisterItem(Text, F)
                 end
 
@@ -4306,5 +4560,3 @@ end
     end
     return WindowFuncs
 end
-
-return Library
