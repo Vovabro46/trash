@@ -1810,6 +1810,22 @@ local Library = {
     }
 }
 
+--// COLOR HELPERS //--
+function Library:ToHex(Color)
+    return string.format("#%02X%02X%02X", math.floor(Color.R * 255), math.floor(Color.G * 255), math.floor(Color.B * 255))
+end
+
+function Library:FromHex(Hex)
+    Hex = Hex:gsub("#", "")
+    local R = tonumber("0x" .. Hex:sub(1, 2))
+    local G = tonumber("0x" .. Hex:sub(3, 4))
+    local B = tonumber("0x" .. Hex:sub(5, 6))
+    if R and G and B then
+        return Color3.fromRGB(R, G, B)
+    end
+    return nil
+end
+
 local ThemeObjects = {}
 function Library:RegisterTheme(Obj, Prop, Key)
     if not ThemeObjects[Key] then ThemeObjects[Key] = {} end
@@ -2115,18 +2131,121 @@ function Library:Watermark(Name)
     Library.WatermarkObj = ScreenGui
 end
 
-function Library:Window(TitleText)
+function Library:Window(TitleText, KeySettings)
     local ScreenGui = Instance.new("ScreenGui")
     ScreenGui.Name = "RedOnyx"
     ScreenGui.ResetOnSpawn = false
     ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Global 
     if RunService:IsStudio() then ScreenGui.Parent = Player:WaitForChild("PlayerGui") else pcall(function() ScreenGui.Parent = CoreGui end) end
 
+    -- [KEY SYSTEM LOGIC]
+    if KeySettings and KeySettings.Enabled then
+        local ValidKey = KeySettings.Key or "Key"
+        local Link = KeySettings.Link or "https://discord.gg/"
+        local SiteName = KeySettings.SiteName or "Key Link"
+        local Verified = false
+
+        local KeyFrame = Instance.new("Frame")
+        KeyFrame.Size = UDim2.new(1, 0, 1, 0)
+        KeyFrame.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
+        KeyFrame.Parent = ScreenGui
+        KeyFrame.ZIndex = 10000
+
+        local KeyBox = Instance.new("Frame")
+        KeyBox.Size = UDim2.new(0, 350, 0, 180)
+        KeyBox.AnchorPoint = Vector2.new(0.5, 0.5)
+        KeyBox.Position = UDim2.new(0.5, 0, 0.5, 0)
+        KeyBox.BackgroundColor3 = Library.Theme.Background
+        KeyBox.Parent = KeyFrame
+        Instance.new("UICorner", KeyBox).CornerRadius = UDim.new(0, 6)
+        Instance.new("UIStroke", KeyBox).Color = Library.Theme.Outline
+        
+        local KTitle = Instance.new("TextLabel", KeyBox)
+        KTitle.Size = UDim2.new(1, 0, 0, 40)
+        KTitle.BackgroundTransparency = 1
+        KTitle.Text = "Key System required"
+        KTitle.Font = Enum.Font.GothamBold
+        KTitle.TextColor3 = Library.Theme.Accent
+        KTitle.TextSize = 18
+        KTitle.Parent = KeyBox
+
+        local KInput = Instance.new("TextBox", KeyBox)
+        KInput.Size = UDim2.new(0.8, 0, 0, 35)
+        KInput.Position = UDim2.new(0.1, 0, 0.3, 0)
+        KInput.BackgroundColor3 = Library.Theme.ItemBackground
+        KInput.TextColor3 = Library.Theme.Text
+        KInput.PlaceholderText = "Enter Key..."
+        KInput.Text = ""
+        KInput.Font = Enum.Font.Gotham
+        KInput.TextSize = 14
+        KInput.Parent = KeyBox
+        Instance.new("UICorner", KInput).CornerRadius = UDim.new(0, 4)
+
+        local KCheck = Instance.new("TextButton", KeyBox)
+        KCheck.Size = UDim2.new(0.35, 0, 0, 30)
+        KCheck.Position = UDim2.new(0.1, 0, 0.6, 0)
+        KCheck.BackgroundColor3 = Library.Theme.Accent
+        KCheck.Text = "Check Key"
+        KCheck.TextColor3 = Library.Theme.Text
+        KCheck.Font = Enum.Font.GothamBold
+        KCheck.TextSize = 12
+        KCheck.Parent = KeyBox
+        Instance.new("UICorner", KCheck).CornerRadius = UDim.new(0, 4)
+
+        local KLink = Instance.new("TextButton", KeyBox)
+        KLink.Size = UDim2.new(0.35, 0, 0, 30)
+        KLink.Position = UDim2.new(0.55, 0, 0.6, 0)
+        KLink.BackgroundColor3 = Library.Theme.Sidebar
+        KLink.Text = "Get Key"
+        KLink.TextColor3 = Library.Theme.Text
+        KLink.Font = Enum.Font.GothamBold
+        KLink.TextSize = 12
+        KLink.Parent = KeyBox
+        Instance.new("UICorner", KLink).CornerRadius = UDim.new(0, 4)
+
+        local KStatus = Instance.new("TextLabel", KeyBox)
+        KStatus.Size = UDim2.new(1, 0, 0, 20)
+        KStatus.Position = UDim2.new(0, 0, 0.85, 0)
+        KStatus.BackgroundTransparency = 1
+        KStatus.Text = ""
+        KStatus.Font = Enum.Font.Gotham
+        KStatus.TextSize = 12
+        KStatus.TextColor3 = Library.Theme.TextDark
+        KStatus.Parent = KeyBox
+
+        KLink.MouseButton1Click:Connect(function()
+            setclipboard(Link)
+            KStatus.Text = "Link copied to clipboard!"
+            KStatus.TextColor3 = Color3.fromRGB(0, 255, 150)
+        end)
+
+        KCheck.MouseButton1Click:Connect(function()
+            if KInput.Text == ValidKey then
+                KStatus.Text = "Key Valid! Loading..."
+                KStatus.TextColor3 = Color3.fromRGB(0, 255, 100)
+                wait(0.5)
+                TweenService:Create(KeyFrame, TweenInfo.new(0.5), {BackgroundTransparency = 1}):Play()
+                TweenService:Create(KeyBox, TweenInfo.new(0.5), {Position = UDim2.new(0.5, 0, 1.5, 0)}):Play()
+                wait(0.5)
+                KeyFrame:Destroy()
+                Verified = true
+            else
+                KStatus.Text = "Invalid Key!"
+                KStatus.TextColor3 = Color3.fromRGB(255, 50, 50)
+                KInput.Text = ""
+            end
+        end)
+
+        -- Блокируем поток (yield), пока не введен ключ
+        repeat task.wait(0.1) until Verified
+    end
+
     CreateTooltipSystem(ScreenGui)
 
+    -- Auto-Size Logic for Mobile/PC
     local VP = workspace.CurrentCamera.ViewportSize
-    local StartWidth = math.min(480, VP.X - 50)
-    local StartHeight = math.min(360, VP.Y - 50)
+    local StartWidth = math.min(550, VP.X - 20) -- Чуть шире для удобства
+    local StartHeight = math.min(400, VP.Y - 50)
     
     if StartWidth < 350 then StartWidth = 350 end
     if StartHeight < 250 then StartHeight = 250 end
