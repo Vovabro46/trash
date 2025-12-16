@@ -3458,7 +3458,7 @@ TabIcon.Image = "rbxassetid://" .. tostring(RealIconId)
                 function BoxFuncs:AddColorPicker(Config)
                     local Text = Config.Title or "Color"
                     local Def = Config.Default or Color3.new(1,1,1)
-                    local DefAlpha = Config.Transparency or 0
+                    local DefAlpha = Config.Transparency or 1
                     local Callback = Config.Callback or function() end
                     local Flag = Config.Flag or Text
                     local Desc = Config.Description
