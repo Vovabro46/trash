@@ -1,11 +1,3 @@
---[[ 
-    ETERNESUS UI REMASTERED v12.5 (PLATINUM + ICONS + PROFILE)
-    Language: LuaU
-    Added: 
-    1. Player Profile (Sidebar Bottom)
-    2. RadioButton Element
-]]
-
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
@@ -18,7 +10,6 @@ local Camera = Workspace.CurrentCamera
 
 local Library = {}
 
---// ICON LIBRARY (Названия вместо цифр)
 local Icons = {
     a_arrow_down = "92867583610071",
     a_arrow_up = "132318504999733",
@@ -1667,12 +1658,11 @@ local Icons = {
     zoom_out = "108334162607319",
 }
 
---// THEME & CONFIG
 local Theme = {
     Main = Color3.fromRGB(18, 18, 22),
     Sidebar = Color3.fromRGB(25, 25, 30),
     Section = Color3.fromRGB(28, 28, 33),
-    Accent = Color3.fromRGB(0, 255, 127),     -- Ядовитый Неон
+    Accent = Color3.fromRGB(0, 255, 127)
     TextMain = Color3.fromRGB(255, 255, 255),
     TextDim = Color3.fromRGB(145, 145, 155),
     Stroke = Color3.fromRGB(45, 45, 50),
@@ -1680,7 +1670,6 @@ local Theme = {
     Font = Enum.Font.GothamBold
 }
 
---// UTILITY
 local function Create(class, props)
     local obj = Instance.new(class)
     for k, v in pairs(props) do obj[k] = v end
@@ -1718,11 +1707,9 @@ local function MakeDraggable(topbar, object)
     end)
 end
 
---// LIBRARY START
 function Library:Window(name)
     local Window = {}
-    
-    -- ScreenGui
+    i
     local ScreenGui = Create("ScreenGui", {
         Name = "EternesusUltimate",
         Parent = RunService:IsStudio() and LocalPlayer.PlayerGui or CoreGui,
@@ -1730,7 +1717,6 @@ function Library:Window(name)
         ZIndexBehavior = Enum.ZIndexBehavior.Sibling
     })
 
-    -- TOOLTIP SYSTEM
     local Tooltip = Create("Frame", {
         Name = "Tooltip",
         Parent = ScreenGui,
@@ -1770,15 +1756,13 @@ function Library:Window(name)
         end)
     end
 
-    -- Auto-Detect Screen Size
     local Viewport = Camera.ViewportSize
-    local StartSize = UDim2.new(0, 700, 0, 500)
-    
-    if Viewport.X < 800 then
-        StartSize = UDim2.new(0.7, 0, 0.6, 0)
-    end
+local StartSize = UDim2.new(0, 480, 0, 360)
 
-    -- Main Frame
+if Viewport.X < 800 then
+    StartSize = UDim2.new(0, 480, 0, 360)
+end
+
     local Main = Create("Frame", {
         Name = "Main",
         Parent = ScreenGui,
@@ -1791,7 +1775,6 @@ function Library:Window(name)
     Create("UICorner", {Parent = Main, CornerRadius = UDim.new(0, 8)})
     Create("UIStroke", {Parent = Main, Color = Theme.Stroke, Thickness = 1})
 
-    -- Glow
     local Glow = Create("ImageLabel", {
         Parent = Main,
         BackgroundTransparency = 1,
@@ -1805,7 +1788,6 @@ function Library:Window(name)
         SliceCenter = Rect.new(20, 20, 280, 280)
     })
 
-    -- Sidebar (Background only)
     local Sidebar = Create("Frame", {
         Parent = Main,
         BackgroundColor3 = Theme.Sidebar,
@@ -1815,7 +1797,6 @@ function Library:Window(name)
     Create("UICorner", {Parent = Sidebar, CornerRadius = UDim.new(0, 8)})
     Create("Frame", {Parent = Sidebar, BackgroundColor3 = Theme.Sidebar, Size = UDim2.new(0, 10, 1, 0), Position = UDim2.new(1, -10, 0, 0), BorderSizePixel = 0})
 
-    -- Title
     local Title = Create("TextLabel", {
         Parent = Main, 
         Text = name,
@@ -1829,7 +1810,6 @@ function Library:Window(name)
         TextXAlignment = Enum.TextXAlignment.Center
     })
 
-    -- Drag Area
     local TopbarArea = Create("Frame", {
         Parent = Main,
         BackgroundTransparency = 1,
@@ -1838,7 +1818,6 @@ function Library:Window(name)
     })
     MakeDraggable(TopbarArea, Main)
 
-    -- WINDOW CONTROLS
     local ControlHolder = Create("Frame", {
         Parent = Main,
         BackgroundTransparency = 1,
@@ -1869,7 +1848,7 @@ function Library:Window(name)
         Position = UDim2.new(0, 30, 0, 0)
     })
 
-    local ContentArea -- Forward decl
+    local ContentArea
     local Minimized = false
     local OldSize = Main.Size
     
@@ -1901,7 +1880,6 @@ function Library:Window(name)
     CloseBtn.MouseEnter:Connect(function() CloseBtn.ImageColor3 = Color3.fromRGB(255, 80, 80) end)
     CloseBtn.MouseLeave:Connect(function() CloseBtn.ImageColor3 = Theme.TextDim end)
 
-    -- RESIZE HANDLE
     local ResizeHandle = Create("TextButton", {
         Parent = Main,
         BackgroundTransparency = 1,
@@ -1943,7 +1921,6 @@ function Library:Window(name)
         end
     end)
 
-    -- // PLAYER PROFILE (NEW)
     local ProfileFrame = Create("Frame", {
         Parent = Sidebar,
         BackgroundColor3 = Theme.Section,
@@ -1959,11 +1936,10 @@ function Library:Window(name)
         BackgroundTransparency = 1,
         Size = UDim2.new(0, 34, 0, 34),
         Position = UDim2.new(0, 8, 0, 8),
-        Image = "rbxassetid://0" -- Placeholder
+        Image = "rbxassetid://0"
     })
     Create("UICorner", {Parent = AvatarImg, CornerRadius = UDim.new(1, 0)})
     
-    -- Async load avatar
     task.spawn(function()
         local content = Players:GetUserThumbnailAsync(LocalPlayer.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size48x48)
         AvatarImg.Image = content
@@ -1995,19 +1971,17 @@ function Library:Window(name)
         TextTruncate = Enum.TextTruncate.AtEnd
     })
 
-    -- Tab Container (Уменьшили размер, чтобы вместить профиль)
     local TabContainer = Create("ScrollingFrame", {
         Parent = Sidebar,
         BackgroundTransparency = 1,
         Position = UDim2.new(0, 0, 0, 80),
-        Size = UDim2.new(1, 0, 1, -150), -- Изменено с -80 на -150
+        Size = UDim2.new(1, 0, 1, -150),
         ScrollBarThickness = 0,
         CanvasSize = UDim2.new(0,0,0,0),
         ZIndex = 2
     })
     local TabList = Create("UIListLayout", {Parent = TabContainer, SortOrder = Enum.SortOrder.LayoutOrder, Padding = UDim.new(0, 5)})
 
-    -- Content Area
     ContentArea = Create("Frame", {
         Parent = Main,
         BackgroundTransparency = 1,
@@ -2021,7 +1995,6 @@ function Library:Window(name)
     local CurrentTab = nil
 
     function Window:Tab(text, icon)
-        --// АВТОМАТИЧЕСКАЯ ЗАМЕНА ИКОНКИ ПО НАЗВАНИЮ
         if icon and Icons[icon] then
             icon = Icons[icon]
         end
@@ -2243,7 +2216,6 @@ function Library:Window(name)
 
             local Elements = {}
 
-            --// LABEL
             function Elements:Label(text)
                 local Lab = Create("TextLabel", {
                     Parent = Container,
@@ -2259,9 +2231,6 @@ function Library:Window(name)
                 return Lab 
             end
 
-            --// PARAGRAPH
-            --// PARAGRAPH (ИСПРАВЛЕНО)
---// PARAGRAPH (ИСПРАВЛЕНО)
 function Elements:Paragraph(title, content)
     local ParaFrame = Create("Frame", {
         Parent = Container,
@@ -2311,7 +2280,6 @@ function Elements:Paragraph(title, content)
     Resize()
 end
 
-            --// CHECKBOX
             function Elements:Checkbox(text, default, callback, tooltip)
                 local State = default or false
                 local CBFrame = Create("TextButton", {
@@ -2333,7 +2301,7 @@ end
 
                 local CheckIcon = Create("ImageLabel", {
                     Parent = BoxOutline,
-                    Image = "rbxassetid://6031094667", -- Checkmark
+                    Image = "rbxassetid://6031094667",
                     BackgroundTransparency = 1,
                     Size = UDim2.new(0, 16, 0, 16),
                     Position = UDim2.new(0.5, -8, 0.5, -8),
@@ -2371,12 +2339,11 @@ end
                 Resize()
             end
 
-            --// RADIO BUTTON (NEW)
             function Elements:RadioButton(text, options, default, callback)
                 local RadioFrame = Create("Frame", {
                     Parent = Container,
                     BackgroundTransparency = 1,
-                    Size = UDim2.new(1, 0, 0, 0), -- Auto sized
+                    Size = UDim2.new(1, 0, 0, 0),
                     AutomaticSize = Enum.AutomaticSize.Y
                 })
 
@@ -2451,14 +2418,12 @@ end
                     OptBtn.MouseButton1Click:Connect(function()
                         if CurrentSelected == opt then return end
                         
-                        -- Reset old
                         if Visuals[CurrentSelected] then
                             TweenService:Create(Visuals[CurrentSelected].Dot, TweenInfo.new(0.2), {BackgroundTransparency = 1}):Play()
                             TweenService:Create(Visuals[CurrentSelected].Label, TweenInfo.new(0.2), {TextColor3 = Theme.TextDim}):Play()
                         end
 
                         CurrentSelected = opt
-                        -- Set new
                         TweenService:Create(Visuals[CurrentSelected].Dot, TweenInfo.new(0.2), {BackgroundTransparency = 0}):Play()
                         TweenService:Create(Visuals[CurrentSelected].Label, TweenInfo.new(0.2), {TextColor3 = Theme.TextMain}):Play()
                         
@@ -2897,7 +2862,6 @@ end
                     Size = UDim2.new(1, 0, 0, 195)
                 })
 
-                -- 1. SV
                 local SVMap = Create("Frame", {
                     Parent = Palette,
                     Size = UDim2.new(1, 0, 0, 100),
@@ -2940,7 +2904,6 @@ end
                     ZIndex = 4
                 })
 
-                -- 2. Hue
                 local HueBar = Create("Frame", {
                     Parent = Palette,
                     Size = UDim2.new(1, 0, 0, 18),
@@ -2972,7 +2935,6 @@ end
                 })
                 Create("UIStroke", {Parent = HueCursor, Color = Color3.new(0,0,0), Thickness = 1})
 
-                -- 3. Alpha
                 local AlphaBar = Create("ImageLabel", {
                     Parent = Palette,
                     Image = "rbxassetid://382766746",
