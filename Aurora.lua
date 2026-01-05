@@ -1952,127 +1952,194 @@ function Library:Window(title, iconId)
                 I.MouseButton1Click:Connect(function() Library:Notification("Info", text, 4) end)
             end
 
-            function Elems:Label(text, s)
-                local LContainer = Instance.new("Frame") LContainer.Size = UDim2.new(1, 0, 0, 25) LContainer.BackgroundTransparency = 1 LContainer.Parent = col(s)
-                local LText = RegisterTheme(Instance.new("TextLabel"), "TextColor3", "TextDim") LText.Text = text LText.Size = UDim2.new(1, -10, 1, 0) LText.Position = UDim2.new(0, 5, 0, 0) LText.BackgroundTransparency = 1 LText.FontFace = FontBold LText.TextSize = 13 LText.TextXAlignment = Enum.TextXAlignment.Left LText.TextYAlignment = Enum.TextYAlignment.Bottom LText.Parent = LContainer
-                local Line = RegisterTheme(Instance.new("Frame"), "BackgroundColor3", "Sidebar") Line.Size = UDim2.new(1, -10, 0, 1) Line.Position = UDim2.new(0, 5, 1, 0) Line.BorderSizePixel = 0 Line.Parent = LContainer
-                return LText 
+            function Elems:Label(t,s)
+                local c=col(s) local LC=Instance.new("Frame") LC.Size=UDim2.new(1,0,0,25) LC.BackgroundTransparency=1 LC.Parent=c
+                local LT=RegisterTheme(Instance.new("TextLabel"), "TextColor3", "TextDim") LT.Text=t LT.Size=UDim2.new(1,-10,1,0) LT.Position=UDim2.new(0,5,0,0) LT.BackgroundTransparency=1 LT.FontFace=FontBold LT.TextSize=13 LT.TextXAlignment=Enum.TextXAlignment.Left LT.TextYAlignment=Enum.TextYAlignment.Bottom LT.Parent=LC
+                local Li=RegisterTheme(Instance.new("Frame"), "BackgroundColor3", "Sidebar") Li.Size=UDim2.new(1,-10,0,1) Li.Position=UDim2.new(0,5,1,0) Li.BorderSizePixel=0 Li.Parent=LC
             end
-
-            function Elems:Checkbox(t,f,tip,s,cb)
-                local st=false Library.Flags[f]=st
-                local B=RegisterTheme(Instance.new("TextButton"), "BackgroundColor3", "Element") B.Size=UDim2.new(1,0,0,40) B.Text="" B.Parent=col(s)
-                Instance.new("UICorner",B).CornerRadius=UDim.new(0,6)
-                local BoxOut = Instance.new("Frame") BoxOut.Size=UDim2.new(0,20,0,20) BoxOut.Position=UDim2.new(0,10,0.5,-10) BoxOut.BackgroundColor3=Theme.Background BoxOut.Parent=B
-                Instance.new("UICorner",BoxOut).CornerRadius=UDim.new(0,4)
-                local CheckImg = RegisterTheme(Instance.new("ImageLabel"), "ImageColor3", "Text") CheckImg.Size=UDim2.new(0,14,0,14) CheckImg.Position=UDim2.new(0.5,-7,0.5,-7) CheckImg.BackgroundTransparency=1 CheckImg.Image=Icons["check"] CheckImg.ImageTransparency=1 CheckImg.Parent=BoxOut
+            
+            function Elems:Button(t,tip,s,cb)
+                local c=col(s) local B=RegisterTheme(Instance.new("TextButton"), "BackgroundColor3", "Element") B.Size=UDim2.new(1,0,0,38) B.Text=t RegisterTheme(B, "TextColor3", "Text") B.FontFace=FontMain B.TextSize=14 B.Parent=c Instance.new("UICorner",B).CornerRadius=UDim.new(0,6) AddTooltip(B,tip) B.MouseButton1Click:Connect(function() pcall(cb) Tween(B,{TextSize=12}) task.wait(0.1) Tween(B,{TextSize=14}) end)
+            end
+            
+            function Elems:Keybind(t, f, def, s, cb, tip)
+                local c=col(s) Library.Flags[f] = def or Enum.KeyCode.E
+                local B=RegisterTheme(Instance.new("TextButton"), "BackgroundColor3", "Element") B.Size=UDim2.new(1,0,0,40) B.Text="" B.Parent=c Instance.new("UICorner",B).CornerRadius=UDim.new(0,6)
+                local L=RegisterTheme(Instance.new("TextLabel"), "TextColor3", "Text") L.Text=t L.Size=UDim2.new(0.6,0,1,0) L.Position=UDim2.new(0,10,0,0) L.BackgroundTransparency=1 L.FontFace=FontMain L.TextSize=14 L.TextXAlignment=Enum.TextXAlignment.Left L.Parent=B
+                local BindBtn = RegisterTheme(Instance.new("TextButton"), "BackgroundColor3", "Background") BindBtn.Size=UDim2.new(0,80,0,20) BindBtn.Position=UDim2.new(1,-90,0.5,-10) BindBtn.Parent=B Instance.new("UICorner",BindBtn).CornerRadius=UDim.new(0,4)
+                local BindTxt = RegisterTheme(Instance.new("TextLabel"), "TextColor3", "TextDim") BindTxt.Text = tostring(def or "None"):gsub("Enum.KeyCode.","") BindTxt.Size=UDim2.new(1,0,1,0) BindTxt.BackgroundTransparency=1 BindTxt.FontFace=FontMain BindTxt.TextSize=12 BindTxt.Parent=BindBtn
+                AddTooltip(B, tip)
+                local binding = false
+                BindBtn.MouseButton1Click:Connect(function()
+                    if binding then return end binding = true BindTxt.Text = "..."
+                    local connection; connection = UserInputService.InputBegan:Connect(function(input)
+                        if input.UserInputType == Enum.UserInputType.Keyboard or input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.MouseButton2 then
+                            local key = (input.UserInputType == Enum.UserInputType.Keyboard) and input.KeyCode or input.UserInputType
+                            if key.Name == "Unknown" then return end
+                            if key == Enum.KeyCode.Escape then Library.Flags[f] = nil BindTxt.Text = "None" else Library.Flags[f] = key BindTxt.Text = key.Name end
+                            binding = false connection:Disconnect() pcall(cb, Library.Flags[f])
+                        end
+                    end)
+                end)
+                Library.Elements[f] = { Set = function(v) Library.Flags[f]=v BindTxt.Text=v and v.Name or "None" end }
+            end
+            
+            function Elems:Checkbox(t,f,d,tip,s,cb)
+                local c=col(s) local st=false Library.Flags[f]=st
+                local B=RegisterTheme(Instance.new("TextButton"), "BackgroundColor3", "Element") B.Size=UDim2.new(1,0,0,40) B.Text="" B.Parent=c Instance.new("UICorner",B).CornerRadius=UDim.new(0,6)
+                local BoxOut=RegisterTheme(Instance.new("Frame"), "BackgroundColor3", "Background") BoxOut.Size=UDim2.new(0,20,0,20) BoxOut.Position=UDim2.new(0,10,0.5,-10) BoxOut.Parent=B Instance.new("UICorner",BoxOut).CornerRadius=UDim.new(0,4)
+                local CheckImg=RegisterTheme(Instance.new("ImageLabel"), "ImageColor3", "Text") CheckImg.Size=UDim2.new(0,14,0,14) CheckImg.Position=UDim2.new(0.5,-7,0.5,-7) CheckImg.BackgroundTransparency=1 CheckImg.Image=Icons["check"] CheckImg.ImageTransparency=1 CheckImg.Parent=BoxOut
                 local L=RegisterTheme(Instance.new("TextLabel"), "TextColor3", "Text") L.Text=t L.Size=UDim2.new(1,-40,1,0) L.Position=UDim2.new(0,40,0,0) L.BackgroundTransparency=1 L.FontFace=FontMain L.TextSize=14 L.TextXAlignment=Enum.TextXAlignment.Left L.Parent=B
                 AddTooltip(B, tip)
-                
-                local function UpdateState()
-                    Tween(BoxOut,{BackgroundColor3 = st and Theme.Accent1 or Theme.Background})
-                end
-                RegisterCustomUpdate(B, UpdateState)
-
-                local function Set(b) st=b Library.Flags[f]=st Tween(CheckImg,{ImageTransparency=st and 0 or 1}) UpdateState() pcall(cb, st) end
-                B.MouseButton1Click:Connect(function() Set(not st) end)
+                local function Set(b) st=b Library.Flags[f]=st Tween(CheckImg,{ImageTransparency=st and 0 or 1}) Tween(BoxOut,{BackgroundColor3=st and Theme.Accent1 or Theme.Background}) pcall(cb, st) end 
+                B.MouseButton1Click:Connect(function() Set(not st) end) 
+                if d then Set(true) end
                 Library.Elements[f]={Set=Set}
             end
-
-            function Elems:Toggle(t, f, tip, s, cb)
-                local st=false Library.Flags[f]=st
-                local B=RegisterTheme(Instance.new("TextButton"), "BackgroundColor3", "Element") B.Size=UDim2.new(1,0,0,40) B.Text="" B.Parent=col(s)
-                Instance.new("UICorner",B).CornerRadius=UDim.new(0,6)
-                local SwitchBg = Instance.new("Frame") SwitchBg.Size=UDim2.new(0,32,0,18) SwitchBg.Position=UDim2.new(1,-70,0.5,-9) SwitchBg.BackgroundColor3=Theme.Background SwitchBg.Parent=B
-                Instance.new("UICorner",SwitchBg).CornerRadius=UDim.new(1,0)
-                local Circle = Instance.new("Frame") Circle.Size=UDim2.new(0,14,0,14) Circle.Position=UDim2.new(0,2,0.5,-7) Circle.BackgroundColor3=Theme.TextDim Circle.Parent=SwitchBg
-                Instance.new("UICorner",Circle).CornerRadius=UDim.new(1,0)
+            
+            function Elems:Toggle(t, f, d, tip, s, cb)
+                local c=col(s) local st=false Library.Flags[f]=st
+                local B=RegisterTheme(Instance.new("TextButton"), "BackgroundColor3", "Element") B.Size=UDim2.new(1,0,0,40) B.Text="" B.Parent=c Instance.new("UICorner",B).CornerRadius=UDim.new(0,6)
+                local SwitchBg=RegisterTheme(Instance.new("Frame"), "BackgroundColor3", "Background") SwitchBg.Size=UDim2.new(0,32,0,18) SwitchBg.Position=UDim2.new(1,-70,0.5,-9) SwitchBg.Parent=B Instance.new("UICorner",SwitchBg).CornerRadius=UDim.new(1,0)
+                local Circle=RegisterTheme(Instance.new("Frame"), "BackgroundColor3", "TextDim") Circle.Size=UDim2.new(0,14,0,14) Circle.Position=UDim2.new(0,2,0.5,-7) Circle.Parent=SwitchBg Instance.new("UICorner",Circle).CornerRadius=UDim.new(1,0)
                 local L=RegisterTheme(Instance.new("TextLabel"), "TextColor3", "Text") L.Text=t L.Size=UDim2.new(1,-80,1,0) L.Position=UDim2.new(0,10,0,0) L.BackgroundTransparency=1 L.FontFace=FontMain L.TextSize=14 L.TextXAlignment=Enum.TextXAlignment.Left L.Parent=B
                 AddTooltip(B, tip)
-                
-                local function UpdateState()
-                    Tween(SwitchBg, {BackgroundColor3 = st and Theme.Accent1 or Theme.Background})
-                    Tween(Circle, {BackgroundColor3 = st and Theme.Text or Theme.TextDim})
-                end
-                RegisterCustomUpdate(B, UpdateState)
-
-                local function Set(b) st=b Library.Flags[f]=st Tween(Circle,{Position=UDim2.new(st and 1 or 0, st and -16 or 2, 0.5, -7)}) UpdateState() pcall(cb, st) end
-                B.MouseButton1Click:Connect(function() Set(not st) end)
+                local function Set(b) st=b Library.Flags[f]=st Tween(Circle,{Position=UDim2.new(st and 1 or 0, st and -16 or 2, 0.5, -7), BackgroundColor3=st and Theme.Text or Theme.TextDim}) Tween(SwitchBg,{BackgroundColor3=st and Theme.Accent1 or Theme.Background}) pcall(cb, st) end 
+                B.MouseButton1Click:Connect(function() Set(not st) end) 
+                if d then Set(true) end
                 Library.Elements[f]={Set=Set}
             end
-
+            
             function Elems:Slider(t,f,min,max,def,s,cb,tip)
-                local v=def or min Library.Flags[f]=v
-                local F=RegisterTheme(Instance.new("Frame"), "BackgroundColor3", "Element") F.Size=UDim2.new(1,0,0,55) F.Parent=col(s)
-                Instance.new("UICorner",F).CornerRadius=UDim.new(0,6)
+                local c=col(s) local v=def or min Library.Flags[f]=v
+                local F=RegisterTheme(Instance.new("Frame"), "BackgroundColor3", "Element") F.Size=UDim2.new(1,0,0,55) F.Parent=c Instance.new("UICorner",F).CornerRadius=UDim.new(0,6)
                 local L=RegisterTheme(Instance.new("TextLabel"), "TextColor3", "Text") L.Text=t L.Size=UDim2.new(0.7,0,0,25) L.Position=UDim2.new(0,10,0,2) L.BackgroundTransparency=1 L.FontFace=FontMain L.TextSize=14 L.TextXAlignment=Enum.TextXAlignment.Left L.Parent=F
                 AddTooltip(F, tip)
                 local V=RegisterTheme(Instance.new("TextLabel"), "TextColor3", "TextDim") V.Text=tostring(v) V.Size=UDim2.new(0.3,-10,0,25) V.Position=UDim2.new(0.7,-40,0,2) V.BackgroundTransparency=1 V.TextXAlignment=Enum.TextXAlignment.Right V.Parent=F
-                local B=RegisterTheme(Instance.new("TextButton"), "BackgroundColor3", "Sidebar") B.Size=UDim2.new(1,-20,0,6) B.Position=UDim2.new(0,10,0,35) B.Text="" B.Parent=F
-                Instance.new("UICorner",B).CornerRadius=UDim.new(1,0)
-                local Fill=Instance.new("Frame") Fill.Size=UDim2.new((v-min)/(max-min),0,1,0) Fill.BackgroundColor3=Color3.new(1,1,1) Fill.Parent=B
-                Instance.new("UICorner",Fill).CornerRadius=UDim.new(1,0)
-                RegisterGradient(Instance.new("UIGradient"), "Accent1", "Accent2").Parent = Fill
+                local B=RegisterTheme(Instance.new("TextButton"), "BackgroundColor3", "Sidebar") B.Size=UDim2.new(1,-20,0,6) B.Position=UDim2.new(0,10,0,35) B.Text="" B.Parent=F Instance.new("UICorner",B).CornerRadius=UDim.new(1,0)
+                local Fill=Instance.new("Frame") Fill.Size=UDim2.new((v-min)/(max-min),0,1,0) Fill.BackgroundColor3=Color3.new(1,1,1) Fill.Parent=B Instance.new("UICorner",Fill).CornerRadius=UDim.new(1,0)
+                local FG=Instance.new("UIGradient") RegisterGradient(FG, "Accent1", "Accent2") FG.Parent=Fill
                 local function Set(n) v=math.clamp(n,min,max) Library.Flags[f]=v V.Text=tostring(v) Tween(Fill,{Size=UDim2.new((v-min)/(max-min),0,1,0)},0.05) pcall(cb,v) end
                 local d=false B.InputBegan:Connect(function(i) if i.UserInputType==Enum.UserInputType.MouseButton1 or i.UserInputType==Enum.UserInputType.Touch then d=true local m=i.Position.X local p=math.clamp((m-B.AbsolutePosition.X)/B.AbsoluteSize.X,0,1) Set(math.floor(min+(max-min)*p)) end end)
                 UserInputService.InputEnded:Connect(function(i) if i.UserInputType==Enum.UserInputType.MouseButton1 or i.UserInputType==Enum.UserInputType.Touch then d=false end end)
                 UserInputService.InputChanged:Connect(function(i) if d and (i.UserInputType==Enum.UserInputType.MouseMovement or i.UserInputType==Enum.UserInputType.Touch) then local m=i.Position.X local p=math.clamp((m-B.AbsolutePosition.X)/B.AbsoluteSize.X,0,1) Set(math.floor(min+(max-min)*p)) end end)
-                Library.Elements[f]={Set=Set}
+                Set(def) Library.Elements[f]={Set=Set}
             end
-
+            
+            function Elems:TextBox(t,f,def,s,cb,tip)
+                 local c=col(s) Library.Flags[f]=def or ""
+                 local C=RegisterTheme(Instance.new("Frame"), "BackgroundColor3", "Element") C.Size=UDim2.new(1,0,0,45) C.Parent=c Instance.new("UICorner",C).CornerRadius=UDim.new(0,6)
+                 local T=RegisterTheme(Instance.new("TextLabel"), "TextColor3", "Text") T.Text=t T.Size=UDim2.new(0.4,0,1,0) T.Position=UDim2.new(0,10,0,0) T.BackgroundTransparency=1 T.FontFace=FontMain T.TextSize=14 T.TextXAlignment=Enum.TextXAlignment.Left T.Parent=C
+                 AddTooltip(C,tip)
+                 local B=RegisterTheme(Instance.new("Frame"), "BackgroundColor3", "Background") B.Size=UDim2.new(0.55,0,0,30) B.Position=UDim2.new(1,-10,0.5,0) B.AnchorPoint=Vector2.new(1,0.5) B.Parent=C Instance.new("UICorner",B).CornerRadius=UDim.new(0,6)
+                 local In=RegisterTheme(Instance.new("TextBox"), "TextColor3", "Text") In.Size=UDim2.new(1,-10,1,0) In.Position=UDim2.new(0,5,0,0) In.BackgroundTransparency=1 In.Text=def or "" In.PlaceholderText="..." In.TextXAlignment=Enum.TextXAlignment.Left In.Parent=B
+                 In.FocusLost:Connect(function() Library.Flags[f]=In.Text pcall(cb,In.Text) end)
+                 Library.Elements[f]={Set=function(v) In.Text=v Library.Flags[f]=v end}
+            end
+            
             function Elems:Dropdown(t,f,items,s,cb,tip)
-                local sel=items[1] or "None" Library.Flags[f]=sel local exp=false
-                local Con=RegisterTheme(Instance.new("Frame"), "BackgroundColor3", "Element") Con.Size=UDim2.new(1,0,0,45) Con.ClipsDescendants=true Con.Parent=col(s)
-                Instance.new("UICorner",Con).CornerRadius=UDim.new(0,6)
+                local c=col(s) local sel=items[1] or "None" Library.Flags[f]=sel local exp=false
+                local Con=RegisterTheme(Instance.new("Frame"), "BackgroundColor3", "Element") Con.Size=UDim2.new(1,0,0,45) Con.ClipsDescendants=true Con.Parent=c Instance.new("UICorner",Con).CornerRadius=UDim.new(0,6)
                 local B=Instance.new("TextButton") B.Size=UDim2.new(1,0,0,45) B.BackgroundTransparency=1 B.Text="" B.Parent=Con
                 local L=RegisterTheme(Instance.new("TextLabel"), "TextColor3", "Text") L.Text=t L.Size=UDim2.new(0.5,-10,1,0) L.Position=UDim2.new(0,10,0,0) L.BackgroundTransparency=1 L.FontFace=FontMain L.TextSize=14 L.TextXAlignment=Enum.TextXAlignment.Left L.Parent=B
-                AddTooltip(B, tip)
+                AddTooltip(B,tip)
                 local S=RegisterTheme(Instance.new("TextLabel"), "TextColor3", "TextDim") S.Text=sel S.Size=UDim2.new(0.5,-60,1,0) S.Position=UDim2.new(0.5,0,0,0) S.BackgroundTransparency=1 S.FontFace=FontMain S.TextSize=14 S.TextXAlignment=Enum.TextXAlignment.Right S.Parent=B
                 local I=RegisterTheme(Instance.new("ImageLabel"), "ImageColor3", "TextDim") I.Size=UDim2.new(0,16,0,16) I.Position=UDim2.new(1,-55,0.5,-8) I.BackgroundTransparency=1 I.Image=Icons["chevron"] I.Parent=B
-                local List=Instance.new("ScrollingFrame") List.Size=UDim2.new(1,-10,1,-45) List.Position=UDim2.new(0,5,0,45) List.BackgroundTransparency=1 List.BorderSizePixel=0 List.ScrollBarThickness=2 List.AutomaticCanvasSize=Enum.AutomaticSize.Y List.CanvasSize=UDim2.new(0,0,0,0) List.Parent=Con
-                Instance.new("UIListLayout", List).Padding=UDim.new(0,2)
-                
-                local function Upd() 
-                    for _,v in pairs(List:GetChildren()) do if v:IsA("TextButton") then v:Destroy() end end 
-                    for _,v in pairs(items) do 
-                        local IB=Instance.new("TextButton") IB.Size=UDim2.new(1,0,0,30) IB.BackgroundColor3=Theme.Sidebar IB.Text="  "..v IB.TextColor3=sel==v and Theme.Accent2 or Theme.TextDim IB.FontFace=FontMain IB.TextSize=14 IB.TextXAlignment=Enum.TextXAlignment.Left IB.Parent=List 
-                        Instance.new("UICorner",IB).CornerRadius=UDim.new(0,4) 
-                        
-                        RegisterCustomUpdate(IB, function()
-                             IB.BackgroundColor3 = Theme.Sidebar
-                             IB.TextColor3 = sel==v and Theme.Accent2 or Theme.TextDim
-                        end)
-
-                        IB.MouseButton1Click:Connect(function() 
-                            sel=v S.Text=v Library.Flags[f]=v exp=false 
-                            Tween(Con,{Size=UDim2.new(1,0,0,45)}) 
-                            Upd() 
-                            pcall(cb,v) 
-                        end) 
-                    end 
-                end
-                
+                local List=Instance.new("ScrollingFrame") List.Size=UDim2.new(1,-10,1,-45) List.Position=UDim2.new(0,5,0,45) List.BackgroundTransparency=1 List.BorderSizePixel=0 List.ScrollBarThickness=2 List.AutomaticCanvasSize=Enum.AutomaticSize.Y List.CanvasSize=UDim2.new(0,0,0,0) List.Parent=Con Instance.new("UIListLayout", List).Padding=UDim.new(0,2)
+                local function Upd() for _,v in pairs(List:GetChildren()) do if v:IsA("TextButton") then v:Destroy() end end for _,v in pairs(items) do local IB=RegisterTheme(Instance.new("TextButton"), "BackgroundColor3", "Sidebar") IB.Size=UDim2.new(1,0,0,30) IB.Text="  "..v RegisterTheme(IB, "TextColor3", sel==v and "Accent2" or "TextDim") IB.FontFace=FontMain IB.TextSize=14 IB.TextXAlignment=Enum.TextXAlignment.Left IB.Parent=List Instance.new("UICorner",IB).CornerRadius=UDim.new(0,4) IB.MouseButton1Click:Connect(function() sel=v S.Text=v Library.Flags[f]=v exp=false Tween(Con,{Size=UDim2.new(1,0,0,45)}) Upd() pcall(cb,v) end) end end
                 B.MouseButton1Click:Connect(function() exp=not exp Tween(I,{Rotation=exp and 180 or 0}) Tween(Con,{Size=UDim2.new(1,0,0,exp and math.min(150,#items*32+50) or 45)}) end) Upd()
                 Library.Elements[f]={Set=function(v) sel=v S.Text=v Library.Flags[f]=v Upd() pcall(cb,v) end, Refresh=function(n) items=n Upd() end}
             end
-
-            function Elems:Button(t,tip,s,cb)
-                local B=RegisterTheme(Instance.new("TextButton"), "BackgroundColor3", "Element") B.Size=UDim2.new(1,0,0,38) B.Text=t RegisterTheme(B, "TextColor3", "Text") B.FontFace=FontMain B.TextSize=14 B.Parent=col(s)
-                Instance.new("UICorner",B).CornerRadius=UDim.new(0,6) AddTooltip(B, tip)
-                B.MouseButton1Click:Connect(function() pcall(cb) Tween(B,{TextSize=12}) task.wait(0.1) Tween(B,{TextSize=14}) end)
+            
+            function Elems:MultiDropdown(t,f,items,s,cb,tip)
+                local c=col(s) local sel={} Library.Flags[f]=sel local exp=false
+                local Con=RegisterTheme(Instance.new("Frame"), "BackgroundColor3", "Element") Con.Size=UDim2.new(1,0,0,45) Con.ClipsDescendants=true Con.Parent=c Instance.new("UICorner",Con).CornerRadius=UDim.new(0,6)
+                local B=Instance.new("TextButton") B.Size=UDim2.new(1,0,0,45) B.BackgroundTransparency=1 B.Text="" B.Parent=Con
+                local L=RegisterTheme(Instance.new("TextLabel"), "TextColor3", "Text") L.Text=t L.Size=UDim2.new(0.5,-10,1,0) L.Position=UDim2.new(0,10,0,0) L.BackgroundTransparency=1 L.FontFace=FontMain L.TextSize=14 L.TextXAlignment=Enum.TextXAlignment.Left L.Parent=B
+                AddTooltip(B,tip)
+                local S=RegisterTheme(Instance.new("TextLabel"), "TextColor3", "TextDim") S.Text="..." S.Size=UDim2.new(0.5,-60,1,0) S.Position=UDim2.new(0.5,0,0,0) S.BackgroundTransparency=1 S.FontFace=FontMain S.TextSize=14 S.TextXAlignment=Enum.TextXAlignment.Right S.Parent=B
+                local I=RegisterTheme(Instance.new("ImageLabel"), "ImageColor3", "TextDim") I.Size=UDim2.new(0,16,0,16) I.Position=UDim2.new(1,-55,0.5,-8) I.BackgroundTransparency=1 I.Image=Icons["chevron"] I.Parent=B
+                local List=Instance.new("ScrollingFrame") List.Size=UDim2.new(1,-10,1,-45) List.Position=UDim2.new(0,5,0,45) List.BackgroundTransparency=1 List.BorderSizePixel=0 List.ScrollBarThickness=2 List.AutomaticCanvasSize=Enum.AutomaticSize.Y List.CanvasSize=UDim2.new(0,0,0,0) List.Parent=Con
+                Instance.new("UIListLayout", List).Padding=UDim.new(0,2)
+                local function UpdText() local n=0 for _,_ in pairs(sel) do n=n+1 end S.Text = n==0 and "None" or n.." Selected" end
+                local function Upd() for _,v in pairs(List:GetChildren()) do if v:IsA("TextButton") then v:Destroy() end end for _,v in pairs(items) do local IB=RegisterTheme(Instance.new("TextButton"), "BackgroundColor3", "Sidebar") IB.Size=UDim2.new(1,0,0,30) IB.Text="  "..v IB.TextColor3=sel[v] and Theme.Accent2 or Theme.TextDim IB.FontFace=FontMain IB.TextSize=14 IB.TextXAlignment=Enum.TextXAlignment.Left IB.Parent=List Instance.new("UICorner",IB).CornerRadius=UDim.new(0,4) IB.MouseButton1Click:Connect(function() if sel[v] then sel[v]=nil else sel[v]=true end UpdText() IB.TextColor3=sel[v] and Theme.Accent2 or Theme.TextDim pcall(cb,sel) end) end end
+                B.MouseButton1Click:Connect(function() exp=not exp Tween(I,{Rotation=exp and 180 or 0}) Tween(Con,{Size=UDim2.new(1,0,0,exp and math.min(150,#items*32+50) or 45)}) end) Upd()
             end
+            
+            -- // V37 COLOR PICKER (Compact & Smooth) //
+            function Elems:ColorPicker(t,f,def,alpha,s,cb,tip)
+                local c=col(s) local cur=def or Color3.new(1,1,1) local al=alpha or 0 local h,st,v=cur:ToHSV()
+                Library.Flags[f]={Color=cur, Transparency=al}
+                local Main=RegisterTheme(Instance.new("Frame"), "BackgroundColor3", "Element") Main.Size=UDim2.new(1,0,0,40) Main.ClipsDescendants=true Main.Parent=c Instance.new("UICorner",Main).CornerRadius=UDim.new(0,6)
+                local Tit=RegisterTheme(Instance.new("TextLabel"), "TextColor3", "Text") Tit.Text=t Tit.Size=UDim2.new(0.6,0,0,40) Tit.Position=UDim2.new(0,10,0,0) Tit.BackgroundTransparency=1 Tit.FontFace=FontMain Tit.TextSize=14 Tit.TextXAlignment=Enum.TextXAlignment.Left Tit.Parent=Main
+                AddTooltip(Main,tip)
+                
+                local Trig=RegisterTheme(Instance.new("TextButton"), "BackgroundColor3", "Background") Trig.Size=UDim2.new(0,40,0,20) Trig.Position=UDim2.new(1,-70,0,10) Trig.Text="" Trig.Parent=Main Instance.new("UICorner",Trig).CornerRadius=UDim.new(0,4)
+                local TC=Instance.new("Frame") TC.Size=UDim2.new(1,0,1,0) TC.BackgroundColor3=cur TC.BackgroundTransparency=1-al TC.Parent=Trig Instance.new("UICorner",TC).CornerRadius=UDim.new(0,4)
+                
+                local Picker=Instance.new("Frame") Picker.Size=UDim2.new(1,-20,0,210) Picker.Position=UDim2.new(0,10,0,45) Picker.BackgroundTransparency=1 Picker.Parent=Main
+                local SV=Instance.new("TextButton") SV.Size=UDim2.new(0,120,0,120) SV.BackgroundColor3=Color3.fromHSV(h,1,1) SV.Text="" SV.Parent=Picker
+                local SatG=Instance.new("UIGradient") SatG.Color=ColorSequence.new(Color3.new(1,1,1),Color3.new(1,1,1)) SatG.Transparency=NumberSequence.new{NumberSequenceKeypoint.new(0,0),NumberSequenceKeypoint.new(1,1)} SatG.Parent=Instance.new("Frame",{Size=UDim2.new(1,0,1,0),Parent=SV})
+                local ValG=Instance.new("UIGradient") ValG.Rotation=-90 ValG.Color=ColorSequence.new(Color3.new(0,0,0),Color3.new(0,0,0)) ValG.Transparency=NumberSequence.new{NumberSequenceKeypoint.new(0,0),NumberSequenceKeypoint.new(1,1)} ValG.Parent=Instance.new("Frame",{Size=UDim2.new(1,0,1,0),Parent=SV})
+                local SVP=Instance.new("Frame") SVP.Size=UDim2.new(0,8,0,8) SVP.Position=UDim2.new(st,-4,1-v,-4) SVP.BackgroundColor3=Color3.new(1,1,1) SVP.Parent=SV Instance.new("UICorner",SVP).CornerRadius=UDim.new(1,0)
+                
+                local Hue=Instance.new("TextButton") Hue.Size=UDim2.new(0,20,0,120) Hue.Position=UDim2.new(0,130,0,0) Hue.Text="" Hue.Parent=Picker local HG=Instance.new("UIGradient") HG.Rotation=90 HG.Color=ColorSequence.new{ColorSequenceKeypoint.new(0,Color3.fromRGB(255,0,0)),ColorSequenceKeypoint.new(1,Color3.fromRGB(255,0,0))} HG.Parent=Hue
+                local HP=Instance.new("Frame") HP.Size=UDim2.new(1,2,0,4) HP.Position=UDim2.new(0,-1,h,-2) HP.BackgroundColor3=Color3.new(1,1,1) HP.Parent=Hue
+                local Alp=Instance.new("TextButton") Alp.Size=UDim2.new(1,0,0,15) Alp.Position=UDim2.new(0,0,0,130) Alp.Text="" Alp.Parent=Picker 
+                local AG=Instance.new("UIGradient") AG.Color=ColorSequence.new(cur,cur) AG.Transparency=NumberSequence.new{NumberSequenceKeypoint.new(0,1),NumberSequenceKeypoint.new(1,0)} AG.Parent=Instance.new("Frame",{Size=UDim2.new(1,0,1,0),Parent=Alp})
+                local AP=Instance.new("Frame") AP.Size=UDim2.new(0,4,1,2) AP.Position=UDim2.new(al,-2,0,-1) AP.BackgroundColor3=Color3.new(1,1,1) AP.Parent=Alp
 
-            function Elems:TextBox(text, flag, default, side, callback, tip)
-                Library.Flags[flag] = default or ""
-                local C = RegisterTheme(Instance.new("Frame"), "BackgroundColor3", "Element") C.Size=UDim2.new(1,0,0,45) C.Parent=col(side)
-                Instance.new("UICorner", C).CornerRadius=UDim.new(0,6)
-                local T = RegisterTheme(Instance.new("TextLabel"), "TextColor3", "Text") T.Text=text T.Size=UDim2.new(0.4,0,1,0) T.Position=UDim2.new(0,10,0,0) T.BackgroundTransparency=1 T.FontFace=FontMain T.TextSize=14 T.TextXAlignment=Enum.TextXAlignment.Left T.Parent=C
-                AddTooltip(C, tip)
-                local B = RegisterTheme(Instance.new("Frame"), "BackgroundColor3", "Background") B.Size=UDim2.new(0.55,0,0,30) B.Position=UDim2.new(1,-10,0.5,0) B.AnchorPoint=Vector2.new(1,0.5) B.Parent=C
-                Instance.new("UICorner", B).CornerRadius=UDim.new(0,6)
-                local In = RegisterTheme(Instance.new("TextBox"), "TextColor3", "Text") In.Size=UDim2.new(1,-10,1,0) In.Position=UDim2.new(0,5,0,0) In.BackgroundTransparency=1 In.Text=default or "" In.PlaceholderText="..." In.TextXAlignment=Enum.TextXAlignment.Left In.Parent=B
-                In.FocusLost:Connect(function() Library.Flags[flag]=In.Text pcall(callback, In.Text) end)
-                Library.Elements[flag]={Set=function(v) In.Text=v Library.Flags[flag]=v end}
+                local Inp=Instance.new("Frame") Inp.Size=UDim2.new(0.4,0,0,120) Inp.Position=UDim2.new(1,-100,0,0) Inp.BackgroundTransparency=1 Inp.Parent=Picker
+                local HB=RegisterTheme(Instance.new("TextBox"),"BackgroundColor3","Background") HB.Size=UDim2.new(1,0,0,25) HB.Text=RGBtoHex(cur) RegisterTheme(HB,"TextColor3","Text") HB.TextSize=12 HB.Parent=Inp Instance.new("UICorner",HB).CornerRadius=UDim.new(0,4)
+                
+                local expanded=false
+                Trig.MouseButton1Click:Connect(function() expanded=not expanded Tween(Main,{Size=UDim2.new(1,0,0,expanded and 265 or 40)}) end) -- Fixed height
+                
+                local dragging=false local dType=""
+                local function Update()
+                    cur=Color3.fromHSV(h,st,v) Library.Flags[f]={Color=cur, Transparency=al}
+                    TC.BackgroundColor3=cur TC.BackgroundTransparency=1-al
+                    SV.BackgroundColor3=Color3.fromHSV(h,1,1) AG.Color=ColorSequence.new(cur,cur) HB.Text=RGBtoHex(cur)
+                    pcall(cb,cur,al)
+                end
+                
+                -- HEX Input Fix
+                HB.FocusLost:Connect(function()
+                     local nc = HexToRGB(HB.Text)
+                     if nc then 
+                        cur=nc h,st,v=cur:ToHSV() 
+                        SVP.Position=UDim2.new(st,-4,1-v,-4) HP.Position=UDim2.new(0,-1,h,-2) 
+                        Update() 
+                     else 
+                        HB.Text=RGBtoHex(cur) 
+                     end
+                end)
+                
+                local function Input(input)
+                    if input.UserInputType==Enum.UserInputType.MouseButton1 or input.UserInputType==Enum.UserInputType.Touch then
+                        dragging=true
+                        if input.UserInputState==Enum.UserInputState.End then dragging=false end
+                    end
+                    if dragging and input.UserInputType==Enum.UserInputType.MouseMovement then
+                         if dType=="SV" then st=math.clamp((input.Position.X-SV.AbsolutePosition.X)/SV.AbsoluteSize.X,0,1) v=1-math.clamp((input.Position.Y-SV.AbsolutePosition.Y)/SV.AbsoluteSize.Y,0,1) SVP.Position=UDim2.new(st,-4,1-v,-4)
+                         elseif dType=="Hue" then h=math.clamp((input.Position.Y-Hue.AbsolutePosition.Y)/Hue.AbsoluteSize.Y,0,1) HP.Position=UDim2.new(0,-1,h,-2)
+                         elseif dType=="Alpha" then al=math.clamp((input.Position.X-Alp.AbsolutePosition.X)/Alp.AbsoluteSize.X,0,1) AP.Position=UDim2.new(al,-2,0,-1) end
+                         Update()
+                    end
+                end
+                SV.InputBegan:Connect(function(i) if i.UserInputType==Enum.UserInputType.MouseButton1 then dType="SV" dragging=true end end)
+                Hue.InputBegan:Connect(function(i) if i.UserInputType==Enum.UserInputType.MouseButton1 then dType="Hue" dragging=true end end)
+                Alp.InputBegan:Connect(function(i) if i.UserInputType==Enum.UserInputType.MouseButton1 then dType="Alpha" dragging=true end end)
+                UserInputService.InputChanged:Connect(Input) UserInputService.InputEnded:Connect(function(i) if i.UserInputType==Enum.UserInputType.MouseButton1 then dragging=false end end)
+                
+                Library.Elements[f]={Set=function(v) if type(v)=="table" then cur=v.Color or cur al=v.Transparency or al h,st,v=cur:ToHSV() Update() end end}
+            end
+            
+            function Elems:Paragraph(t,txt,s)
+                local c=col(s) local P=RegisterTheme(Instance.new("Frame"), "BackgroundColor3", "Element") P.Size=UDim2.new(1,0,0,0) P.Parent=c P.AutomaticSize=Enum.AutomaticSize.Y Instance.new("UICorner",P).CornerRadius=UDim.new(0,6)
+                local T=RegisterTheme(Instance.new("TextLabel"), "TextColor3", "Text") T.Text=t T.Size=UDim2.new(1,-20,0,20) T.Position=UDim2.new(0,10,0,8) T.BackgroundTransparency=1 T.FontFace=FontBold T.TextSize=14 T.TextXAlignment=Enum.TextXAlignment.Left T.Parent=P
+                local C=RegisterTheme(Instance.new("TextLabel"), "TextColor3", "TextDim") C.Text=txt C.Size=UDim2.new(1,-20,0,0) C.Position=UDim2.new(0,10,0,32) C.BackgroundTransparency=1 C.FontFace=FontMain C.TextSize=13 C.TextXAlignment=Enum.TextXAlignment.Left C.TextWrapped=true C.AutomaticSize=Enum.AutomaticSize.Y C.Parent=P
+                Instance.new("UIPadding",P).PaddingBottom=UDim.new(0,12)
             end
 
             return Elems
