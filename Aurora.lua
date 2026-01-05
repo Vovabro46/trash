@@ -1851,7 +1851,7 @@ function Library:Window(title, iconId)
     NotifyList = Instance.new("Frame") NotifyList.Size=UDim2.new(0,250,1,-40) NotifyList.Position=UDim2.new(1,-260,0,20) NotifyList.BackgroundTransparency=1 NotifyList.Parent=ScreenGui
     local NIL = Instance.new("UIListLayout") NIL.Padding=UDim.new(0,10) NIL.VerticalAlignment=Enum.VerticalAlignment.Bottom NIL.HorizontalAlignment=Enum.HorizontalAlignment.Right NIL.Parent=NotifyList
     
-    local Main = RegisterTheme(Instance.new("Frame"), "BackgroundColor3", "Background") Main.Size=UDim2.new(0,750,0,500) Main.AnchorPoint=Vector2.new(0.5,0.5) Main.Position=UDim2.new(0.5,0,0.5,0) Main.Parent=ScreenGui
+    local Main = RegisterTheme(Instance.new("Frame"), "BackgroundColor3", "Background") Main.Size=UDim2.new(0,500,0,360) Main.AnchorPoint=Vector2.new(0.5,0.5) Main.Position=UDim2.new(0.5,0,0.5,0) Main.Parent=ScreenGui
     local UIScale = Instance.new("UIScale") UIScale.Scale=0 UIScale.Parent=Main Tween(UIScale,{Scale=1},0.4)
     Instance.new("UICorner", Main).CornerRadius=UDim.new(0,8)
     
