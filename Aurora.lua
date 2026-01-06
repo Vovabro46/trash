@@ -21,34 +21,184 @@ local Theme = {
 
 local ThemePresets = {
     ["Eternal (Default)"] = {
-        Background = Color3.fromRGB(20, 20, 28), Sidebar = Color3.fromRGB(25, 25, 35), Element = Color3.fromRGB(32, 32, 42),
-        Text = Color3.fromRGB(245, 245, 255), TextDim = Color3.fromRGB(160, 160, 180),
-        Accent1 = Color3.fromRGB(140, 20, 255), Accent2 = Color3.fromRGB(255, 50, 180)
+        Background = Color3.fromRGB(20, 20, 28), 
+        Sidebar = Color3.fromRGB(25, 25, 35), 
+        Element = Color3.fromRGB(32, 32, 42),
+        Text = Color3.fromRGB(245, 245, 255), 
+        TextDim = Color3.fromRGB(160, 160, 180),
+        Accent1 = Color3.fromRGB(140, 20, 255), 
+        Accent2 = Color3.fromRGB(255, 50, 180)
     },
     ["Ocean Breeze"] = {
-        Background = Color3.fromRGB(10, 20, 30), Sidebar = Color3.fromRGB(15, 25, 40), Element = Color3.fromRGB(20, 35, 55),
-        Text = Color3.fromRGB(240, 250, 255), TextDim = Color3.fromRGB(140, 160, 180),
-        Accent1 = Color3.fromRGB(0, 190, 255), Accent2 = Color3.fromRGB(0, 100, 255)
+        Background = Color3.fromRGB(10, 20, 30), 
+        Sidebar = Color3.fromRGB(15, 25, 40), 
+        Element = Color3.fromRGB(20, 35, 55),
+        Text = Color3.fromRGB(240, 250, 255), 
+        TextDim = Color3.fromRGB(140, 160, 180),
+        Accent1 = Color3.fromRGB(0, 190, 255), 
+        Accent2 = Color3.fromRGB(0, 100, 255)
     },
     ["Toxic Nature"] = {
-        Background = Color3.fromRGB(20, 25, 20), Sidebar = Color3.fromRGB(25, 35, 25), Element = Color3.fromRGB(35, 45, 35),
-        Text = Color3.fromRGB(240, 255, 240), TextDim = Color3.fromRGB(150, 180, 150),
-        Accent1 = Color3.fromRGB(100, 255, 50), Accent2 = Color3.fromRGB(50, 180, 0)
+        Background = Color3.fromRGB(20, 25, 20), 
+        Sidebar = Color3.fromRGB(25, 35, 25), 
+        Element = Color3.fromRGB(35, 45, 35),
+        Text = Color3.fromRGB(240, 255, 240), 
+        TextDim = Color3.fromRGB(150, 180, 150),
+        Accent1 = Color3.fromRGB(100, 255, 50), 
+        Accent2 = Color3.fromRGB(50, 180, 0)
     },
     ["Blood Moon"] = {
-        Background = Color3.fromRGB(25, 10, 10), Sidebar = Color3.fromRGB(35, 15, 15), Element = Color3.fromRGB(45, 20, 20),
-        Text = Color3.fromRGB(255, 240, 240), TextDim = Color3.fromRGB(180, 140, 140),
-        Accent1 = Color3.fromRGB(255, 50, 50), Accent2 = Color3.fromRGB(180, 0, 0)
+        Background = Color3.fromRGB(25, 10, 10), 
+        Sidebar = Color3.fromRGB(35, 15, 15), 
+        Element = Color3.fromRGB(45, 20, 20),
+        Text = Color3.fromRGB(255, 240, 240), 
+        TextDim = Color3.fromRGB(180, 140, 140),
+        Accent1 = Color3.fromRGB(255, 50, 50), 
+        Accent2 = Color3.fromRGB(180, 0, 0)
     },
     ["Midnight Sky"] = {
-        Background = Color3.fromRGB(15, 15, 20), Sidebar = Color3.fromRGB(25, 25, 30), Element = Color3.fromRGB(35, 35, 45),
-        Text = Color3.fromRGB(255, 255, 255), TextDim = Color3.fromRGB(160, 160, 170),
-        Accent1 = Color3.fromRGB(100, 100, 255), Accent2 = Color3.fromRGB(180, 180, 255)
+        Background = Color3.fromRGB(15, 15, 20), 
+        Sidebar = Color3.fromRGB(25, 25, 30), 
+        Element = Color3.fromRGB(35, 35, 45),
+        Text = Color3.fromRGB(255, 255, 255), 
+        TextDim = Color3.fromRGB(160, 160, 170),
+        Accent1 = Color3.fromRGB(100, 100, 255), 
+        Accent2 = Color3.fromRGB(180, 180, 255)
     },
     ["Cotton Candy"] = {
-        Background = Color3.fromRGB(30, 20, 30), Sidebar = Color3.fromRGB(40, 25, 40), Element = Color3.fromRGB(50, 35, 50),
-        Text = Color3.fromRGB(255, 245, 255), TextDim = Color3.fromRGB(200, 160, 200),
-        Accent1 = Color3.fromRGB(255, 100, 200), Accent2 = Color3.fromRGB(100, 200, 255)
+        Background = Color3.fromRGB(30, 20, 30), 
+        Sidebar = Color3.fromRGB(40, 25, 40), 
+        Element = Color3.fromRGB(50, 35, 50),
+        Text = Color3.fromRGB(255, 245, 255), 
+        TextDim = Color3.fromRGB(200, 160, 200),
+        Accent1 = Color3.fromRGB(255, 100, 200), 
+        Accent2 = Color3.fromRGB(100, 200, 255)
+    },
+    ["Sunset Dunes"] = {
+        Background = Color3.fromRGB(30, 20, 15), 
+        Sidebar = Color3.fromRGB(40, 25, 20), 
+        Element = Color3.fromRGB(55, 35, 25),
+        Text = Color3.fromRGB(255, 245, 235), 
+        TextDim = Color3.fromRGB(200, 170, 150),
+        Accent1 = Color3.fromRGB(255, 150, 50), 
+        Accent2 = Color3.fromRGB(255, 100, 0)
+    },
+    ["Arctic Frost"] = {
+        Background = Color3.fromRGB(20, 25, 30), 
+        Sidebar = Color3.fromRGB(25, 35, 40), 
+        Element = Color3.fromRGB(35, 45, 55),
+        Text = Color3.fromRGB(240, 250, 255), 
+        TextDim = Color3.fromRGB(180, 200, 220),
+        Accent1 = Color3.fromRGB(100, 220, 255), 
+        Accent2 = Color3.fromRGB(50, 150, 255)
+    },
+    ["Cyberpunk Neon"] = {
+        Background = Color3.fromRGB(10, 5, 20), 
+        Sidebar = Color3.fromRGB(15, 10, 30), 
+        Element = Color3.fromRGB(25, 15, 40),
+        Text = Color3.fromRGB(255, 255, 255), 
+        TextDim = Color3.fromRGB(180, 180, 220),
+        Accent1 = Color3.fromRGB(255, 0, 255), 
+        Accent2 = Color3.fromRGB(0, 255, 255)
+    },
+    ["Forest Guardian"] = {
+        Background = Color3.fromRGB(15, 25, 20), 
+        Sidebar = Color3.fromRGB(20, 35, 25), 
+        Element = Color3.fromRGB(30, 45, 35),
+        Text = Color3.fromRGB(230, 255, 240), 
+        TextDim = Color3.fromRGB(160, 200, 170),
+        Accent1 = Color3.fromRGB(80, 220, 120), 
+        Accent2 = Color3.fromRGB(40, 180, 100)
+    },
+    ["Royal Purple"] = {
+        Background = Color3.fromRGB(25, 15, 35), 
+        Sidebar = Color3.fromRGB(35, 20, 50), 
+        Element = Color3.fromRGB(45, 30, 65),
+        Text = Color3.fromRGB(255, 245, 255), 
+        TextDim = Color3.fromRGB(200, 180, 220),
+        Accent1 = Color3.fromRGB(180, 80, 255), 
+        Accent2 = Color3.fromRGB(140, 40, 220)
+    },
+    ["Golden Hour"] = {
+        Background = Color3.fromRGB(30, 25, 15), 
+        Sidebar = Color3.fromRGB(40, 30, 20), 
+        Element = Color3.fromRGB(55, 40, 25),
+        Text = Color3.fromRGB(255, 250, 235), 
+        TextDim = Color3.fromRGB(220, 200, 160),
+        Accent1 = Color3.fromRGB(255, 200, 50), 
+        Accent2 = Color3.fromRGB(220, 160, 30)
+    },
+    ["Abyssal Deep"] = {
+        Background = Color3.fromRGB(5, 10, 20), 
+        Sidebar = Color3.fromRGB(10, 15, 30), 
+        Element = Color3.fromRGB(15, 25, 45),
+        Text = Color3.fromRGB(230, 240, 255), 
+        TextDim = Color3.fromRGB(150, 170, 200),
+        Accent1 = Color3.fromRGB(0, 150, 200), 
+        Accent2 = Color3.fromRGB(0, 100, 150)
+    },
+    ["Crimson Dawn"] = {
+        Background = Color3.fromRGB(30, 10, 15), 
+        Sidebar = Color3.fromRGB(40, 15, 20), 
+        Element = Color3.fromRGB(55, 20, 25),
+        Text = Color3.fromRGB(255, 235, 240), 
+        TextDim = Color3.fromRGB(220, 160, 170),
+        Accent1 = Color3.fromRGB(255, 60, 80), 
+        Accent2 = Color3.fromRGB(200, 30, 50)
+    },
+    ["Matrix Green"] = {
+        Background = Color3.fromRGB(5, 15, 10), 
+        Sidebar = Color3.fromRGB(10, 25, 15), 
+        Element = Color3.fromRGB(15, 35, 20),
+        Text = Color3.fromRGB(220, 255, 220), 
+        TextDim = Color3.fromRGB(150, 220, 150),
+        Accent1 = Color3.fromRGB(0, 255, 100), 
+        Accent2 = Color3.fromRGB(0, 180, 70)
+    },
+    ["Pastel Dream"] = {
+        Background = Color3.fromRGB(240, 235, 245), 
+        Sidebar = Color3.fromRGB(245, 240, 250), 
+        Element = Color3.fromRGB(250, 245, 255),
+        Text = Color3.fromRGB(40, 35, 50), 
+        TextDim = Color3.fromRGB(120, 110, 140),
+        Accent1 = Color3.fromRGB(255, 150, 200), 
+        Accent2 = Color3.fromRGB(150, 200, 255)
+    },
+    ["Industrial Gray"] = {
+        Background = Color3.fromRGB(35, 35, 40), 
+        Sidebar = Color3.fromRGB(45, 45, 50), 
+        Element = Color3.fromRGB(55, 55, 60),
+        Text = Color3.fromRGB(240, 240, 245), 
+        TextDim = Color3.fromRGB(180, 180, 190),
+        Accent1 = Color3.fromRGB(255, 100, 50), 
+        Accent2 = Color3.fromRGB(200, 150, 50)
+    },
+    ["Solar Flare"] = {
+        Background = Color3.fromRGB(40, 25, 10), 
+        Sidebar = Color3.fromRGB(50, 30, 15), 
+        Element = Color3.fromRGB(65, 40, 20),
+        Text = Color3.fromRGB(255, 250, 240), 
+        TextDim = Color3.fromRGB(220, 200, 170),
+        Accent1 = Color3.fromRGB(255, 180, 50), 
+        Accent2 = Color3.fromRGB(255, 120, 30)
+    },
+    ["Twilight Zone"] = {
+        Background = Color3.fromRGB(20, 15, 30), 
+        Sidebar = Color3.fromRGB(30, 20, 40), 
+        Element = Color3.fromRGB(40, 30, 55),
+        Text = Color3.fromRGB(245, 240, 255), 
+        TextDim = Color3.fromRGB(180, 170, 200),
+        Accent1 = Color3.fromRGB(180, 100, 255), 
+        Accent2 = Color3.fromRGB(100, 200, 255)
+    },
+    ["Mono Chrome"] = {
+        Background = Color3.fromRGB(20, 20, 20), 
+        Sidebar = Color3.fromRGB(30, 30, 30), 
+        Element = Color3.fromRGB(40, 40, 40),
+        Text = Color3.fromRGB(255, 255, 255), 
+        TextDim = Color3.fromRGB(180, 180, 180),
+        Accent1 = Color3.fromRGB(255, 255, 255), 
+        Accent2 = Color3.fromRGB(200, 200, 200)
     }
 }
 
