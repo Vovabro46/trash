@@ -6,6 +6,7 @@ local CoreGui = game:GetService("CoreGui")
 
 -- // ⚙️ CONFIG
 local ConfigFolder = "EternalV36_Configs"
+if not isfolder(ConfigFolder) then makefolder(ConfigFolder) end
 
 -- // 🎨 THEME SYSTEM
 local Theme = {
@@ -66,11 +67,6 @@ local function RegisterGradient(gradient, key1, key2)
     return gradient
 end
 
-local function RegisterCustomUpdate(obj, func)
-    table.insert(ThemeRegistry.Customs, {Object=obj, Func=func})
-    return func
-end
-
 local function UpdateTheme(themeName)
     local newTheme = ThemePresets[themeName] or ThemePresets["Eternal (Default)"]
     for k, v in pairs(newTheme) do Theme[k] = v end
@@ -94,16 +90,6 @@ local function UpdateTheme(themeName)
             table.remove(ThemeRegistry.Gradients, i)
         end
     end
-
-    -- Dynamic Logic
-    for i = #ThemeRegistry.Customs, 1, -1 do
-        local data = ThemeRegistry.Customs[i]
-        if data.Object and data.Object.Parent then
-            task.spawn(data.Func)
-        else
-            table.remove(ThemeRegistry.Customs, i)
-        end
-    end
 end
 
 -- // ASSETS
@@ -111,9 +97,9 @@ local FontID = "rbxassetid://12187365364"
 local FontMain = Font.new(FontID, Enum.FontWeight.Medium, Enum.FontStyle.Normal)
 local FontBold = Font.new(FontID, Enum.FontWeight.Bold, Enum.FontStyle.Normal)
 
--- // ICONS TABLE
+-- // ICONS TABLE (Shortened for brevity, full list works)
 local Icons = {
-    ["a-arrow-down"] = "rbxassetid://92867583610071",
+["a-arrow-down"] = "rbxassetid://92867583610071",
 ["a-arrow-up"] = "rbxassetid://132318504999733",
 ["a-large-small"] = "rbxassetid://111491496660216",
 ["accessibility"] = "rbxassetid://114029945302017",
@@ -1758,7 +1744,7 @@ local Icons = {
 ["zap"] = "rbxassetid://130551565616516",
 ["zoom-in"] = "rbxassetid://127956924984803",
 ["zoom-out"] = "rbxassetid://108334162607319",
-    
+
     ["search"] = "rbxassetid://121018724060431",
     ["home"] = "rbxassetid://98755624629571",
     ["settings"] = "rbxassetid://80758916183665",
@@ -1769,25 +1755,26 @@ local Icons = {
     ["check"] = "rbxassetid://93898873302694",
     ["chevron"] = "rbxassetid://134243273101015",
     ["resize_custom"] = "rbxassetid://122360365318466",
-    
-    -- ОСТАЛЬНЫЕ ИКОНКИ СЮДА...
+    ["folder"] = "rbxassetid://109080612832751",
+    ["paint-bucket"] = "rbxassetid://124275586663284",
+    ["save"] = "rbxassetid://126116963775616",
+    ["trash"] = "rbxassetid://106723740584310"
 }
 
--- // HELPER FUNCTIONS FOR COLOR PICKER //
-            local function RGBtoHex(color)
-                local r, g, b = math.floor(color.R*255), math.floor(color.G*255), math.floor(color.B*255)
-                return string.format("#%02X%02X%02X", r, g, b)
-            end
-            local function HexToRGB(hex)
-                hex = hex:gsub("#","")
-                local r = tonumber("0x"..hex:sub(1,2))
-                local g = tonumber("0x"..hex:sub(3,4))
-                local b = tonumber("0x"..hex:sub(5,6))
-                if r and g and b then return Color3.fromRGB(r,g,b) end
-                return nil
-            end
-
 -- // HELPER FUNCTIONS
+local function RGBtoHex(color)
+    local r, g, b = math.floor(color.R*255), math.floor(color.G*255), math.floor(color.B*255)
+    return string.format("#%02X%02X%02X", r, g, b)
+end
+local function HexToRGB(hex)
+    hex = hex:gsub("#","")
+    local r = tonumber("0x"..hex:sub(1,2))
+    local g = tonumber("0x"..hex:sub(3,4))
+    local b = tonumber("0x"..hex:sub(5,6))
+    if r and g and b then return Color3.fromRGB(r,g,b) end
+    return nil
+end
+
 local function Tween(obj, props, time)
     TweenService:Create(obj, TweenInfo.new(time or 0.2, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), props):Play()
 end
@@ -1842,16 +1829,74 @@ function Library:Notification(title, text, duration)
     Tween(F,{Position=UDim2.new(0,0,0,0)}) task.delay(duration or 3, function() Tween(F,{Position=UDim2.new(1.2,0,0,0)}) task.wait(0.4) F:Destroy() end)
 end
 
+-- // CONFIG SYSTEM FUNCTIONS
+function Library:GetConfigs()
+    local files = listfiles(ConfigFolder)
+    local names = {}
+    for _, file in ipairs(files) do
+        local name = file:gsub(ConfigFolder .. "\\", ""):gsub(ConfigFolder .. "/", ""):gsub(".json", "")
+        table.insert(names, name)
+    end
+    return names
+end
+
+function Library:SaveConfig(name)
+    if not name or name == "" then Library:Notification("Config", "Invalid Config Name", 3) return end
+    local data = {}
+    for flag, value in pairs(Library.Flags) do
+        if typeof(value) == "Color3" then
+            data[flag] = {Type = "Color3", R = value.R, G = value.G, B = value.B}
+        elseif typeof(value) == "EnumItem" then
+            data[flag] = {Type = "Enum", Name = tostring(value)}
+        elseif type(value) == "table" and value.Color and value.Transparency then -- ColorPicker Struct
+            data[flag] = {Type = "CP", R = value.Color.R, G = value.Color.G, B = value.Color.B, A = value.Transparency}
+        else
+            data[flag] = value
+        end
+    end
+    writefile(ConfigFolder .. "/" .. name .. ".json", HttpService:JSONEncode(data))
+    Library:Notification("Config", "Saved config: " .. name, 3)
+end
+
+function Library:LoadConfig(name)
+    if not name or name == "" or not isfile(ConfigFolder .. "/" .. name .. ".json") then Library:Notification("Config", "Config not found", 3) return end
+    local content = readfile(ConfigFolder .. "/" .. name .. ".json")
+    local success, data = pcall(HttpService.JSONDecode, HttpService, content)
+    if not success then Library:Notification("Config", "Decode Error", 3) return end
+    
+    for flag, value in pairs(data) do
+        if Library.Elements[flag] then
+            if type(value) == "table" and value.Type == "Color3" then
+                Library.Elements[flag].Set(Color3.new(value.R, value.G, value.B))
+            elseif type(value) == "table" and value.Type == "Enum" then
+                -- Attempt to reconstruct enum, tricky without knowing Enum type, usually specific handling required or rely on string match in bind
+                -- For keybinds, we usually just pass the KeyCode if stored properly
+                -- This simple loader might need adjustment for complex Enums
+            elseif type(value) == "table" and value.Type == "CP" then
+                Library.Elements[flag].Set({Color = Color3.new(value.R, value.G, value.B), Transparency = value.A})
+            else
+                Library.Elements[flag].Set(value)
+            end
+        end
+    end
+    Library:Notification("Config", "Loaded config: " .. name, 3)
+end
+
+function Library:DeleteConfig(name)
+    if not name or name == "" or not isfile(ConfigFolder .. "/" .. name .. ".json") then return end
+    delfile(ConfigFolder .. "/" .. name .. ".json")
+    Library:Notification("Config", "Deleted config: " .. name, 3)
+end
+
 function Library:Window(title, iconId)
     if CoreGui:FindFirstChild("EternalV36") then CoreGui.EternalV36:Destroy() end
-    if not isfolder(ConfigFolder) then makefolder(ConfigFolder) end
     ScreenGui = Instance.new("ScreenGui") ScreenGui.Name="EternalV36"
     ScreenGui.Parent = gethui and gethui() or CoreGui
 
     NotifyList = Instance.new("Frame") NotifyList.Size=UDim2.new(0,250,1,-40) NotifyList.Position=UDim2.new(1,-260,0,20) NotifyList.BackgroundTransparency=1 NotifyList.Parent=ScreenGui
     local NIL = Instance.new("UIListLayout") NIL.Padding=UDim.new(0,10) NIL.VerticalAlignment=Enum.VerticalAlignment.Bottom NIL.HorizontalAlignment=Enum.HorizontalAlignment.Right NIL.Parent=NotifyList
     
-    local Main = RegisterTheme(Instance.new("Frame"), "BackgroundColor3", "Background") Main.Size=UDim2.new(0,500,0,360) Main.AnchorPoint=Vector2.new(0.5,0.5) Main.Position=UDim2.new(0.5,0,0.5,0) Main.Parent=ScreenGui
+    local Main = RegisterTheme(Instance.new("Frame"), "BackgroundColor3", "Background") Main.Size=UDim2.new(0,550,0,400) Main.AnchorPoint=Vector2.new(0.5,0.5) Main.Position=UDim2.new(0.5,0,0.5,0) Main.Parent=ScreenGui
     local UIScale = Instance.new("UIScale") UIScale.Scale=0 UIScale.Parent=Main Tween(UIScale,{Scale=1},0.4)
     Instance.new("UICorner", Main).CornerRadius=UDim.new(0,8)
     
@@ -2059,52 +2104,37 @@ function Library:Window(title, iconId)
                 Library.Elements[f]={Set=function(v) sel=v S.Text=v Library.Flags[f]=v Upd() pcall(cb,v) end, Refresh=function(n) items=n Upd() end}
             end
 
-            -- // PARAGRAPH //
             function Elems:Paragraph(title, text, s)
                 local c = col(s)
                 local P = RegisterTheme(Instance.new("Frame"), "BackgroundColor3", "Element") 
                 P.Size = UDim2.new(1, 0, 0, 0) P.Parent = c P.AutomaticSize = Enum.AutomaticSize.Y 
                 Instance.new("UICorner", P).CornerRadius = UDim.new(0, 6)
-                
                 local T = RegisterTheme(Instance.new("TextLabel"), "TextColor3", "Text") 
                 T.Text = title T.Size = UDim2.new(1, -20, 0, 20) T.Position = UDim2.new(0, 10, 0, 8) 
                 T.BackgroundTransparency = 1 T.FontFace = FontBold T.TextSize = 14 T.TextXAlignment = Enum.TextXAlignment.Left T.Parent = P
-                
                 local C = RegisterTheme(Instance.new("TextLabel"), "TextColor3", "TextDim") 
                 C.Text = text C.Size = UDim2.new(1, -20, 0, 0) C.Position = UDim2.new(0, 10, 0, 32) 
                 C.BackgroundTransparency = 1 C.FontFace = FontMain C.TextSize = 13 C.TextXAlignment = Enum.TextXAlignment.Left C.TextWrapped = true 
                 C.AutomaticSize = Enum.AutomaticSize.Y C.Parent = P
-                
                 local Pad = Instance.new("UIPadding") Pad.PaddingBottom = UDim.new(0, 12) Pad.Parent = P
             end
 
-            -- // MULTI DROPDOWN //
             function Elems:MultiDropdown(t,f,items,s,cb,tip)
-                local c = col(s) 
-                local sel = {} 
-                Library.Flags[f] = sel 
-                local exp = false
-
+                local c = col(s) local sel = {} Library.Flags[f] = sel local exp = false
                 local Con = RegisterTheme(Instance.new("Frame"), "BackgroundColor3", "Element") 
                 Con.Size = UDim2.new(1, 0, 0, 45) Con.ClipsDescendants = true Con.Parent = c
                 Instance.new("UICorner", Con).CornerRadius = UDim.new(0, 6)
-                
                 local B = Instance.new("TextButton") B.Size = UDim2.new(1, 0, 0, 45) B.BackgroundTransparency = 1 B.Text = "" B.Parent = Con
-                
                 local L = RegisterTheme(Instance.new("TextLabel"), "TextColor3", "Text") 
                 L.Text = t L.Size = UDim2.new(0.5, -10, 1, 0) L.Position = UDim2.new(0, 10, 0, 0) 
                 L.BackgroundTransparency = 1 L.FontFace = FontMain L.TextSize = 14 L.TextXAlignment = Enum.TextXAlignment.Left L.Parent = B
-                
                 AddTooltip(B, tip)
-                
                 local S = RegisterTheme(Instance.new("TextLabel"), "TextColor3", "TextDim") 
                 S.Text = "None" S.Size = UDim2.new(0.5, -60, 1, 0) S.Position = UDim2.new(0.5, 0, 0, 0) 
                 S.BackgroundTransparency = 1 S.FontFace = FontMain S.TextSize = 14 S.TextXAlignment = Enum.TextXAlignment.Right S.Parent = B
-                
                 local I = RegisterTheme(Instance.new("ImageLabel"), "ImageColor3", "TextDim") 
                 I.Size = UDim2.new(0, 16, 0, 16) I.Position = UDim2.new(1, -55, 0.5, -8) 
                 I.BackgroundTransparency = 1 I.Image = Icons["chevron"] or "rbxassetid://134243273101015" I.Parent = B
-                
                 local List = Instance.new("ScrollingFrame") 
                 List.Size = UDim2.new(1, -10, 1, -45) List.Position = UDim2.new(0, 5, 0, 45) 
                 List.BackgroundTransparency = 1 List.BorderSizePixel = 0 List.ScrollBarThickness = 2 
@@ -2125,7 +2155,6 @@ function Library:Window(title, iconId)
                         IB.TextColor3 = sel[v] and Theme.Accent2 or Theme.TextDim 
                         IB.FontFace = FontMain IB.TextSize = 14 IB.TextXAlignment = Enum.TextXAlignment.Left IB.Parent = List
                         Instance.new("UICorner", IB).CornerRadius = UDim.new(0, 4)
-                        
                         IB.MouseButton1Click:Connect(function() 
                             if sel[v] then sel[v] = nil else sel[v] = true end
                             Library.Flags[f] = sel
@@ -2137,16 +2166,13 @@ function Library:Window(title, iconId)
                 end
                 
                 B.MouseButton1Click:Connect(function() 
-                    exp = not exp 
-                    Tween(I, {Rotation = exp and 180 or 0}) 
+                    exp = not exp Tween(I, {Rotation = exp and 180 or 0}) 
                     Tween(Con, {Size = UDim2.new(1, 0, 0, exp and math.min(150, #items * 32 + 50) or 45)}) 
                 end)
-                
                 Upd()
                 Library.Elements[f] = {Set = function(v) sel = v or {} Library.Flags[f] = sel UpdateText() Upd() end}
             end
 
-            -- // COLOR PICKER //
             function Elems:ColorPicker(t, f, def, alpha, s, cb, tip)
                 local c = col(s)
                 local curColor = def or Color3.fromRGB(255, 255, 255)
@@ -2265,4 +2291,37 @@ function Library:Window(title, iconId)
     return WinObj
 end
 
-return Library 
+-- // CONFIG UI CREATOR
+function Library:ConfigSystem(Window)
+    local S = Window:Tab("settings")
+    local Cfg = S:Page("Configs", "folder")
+    local ThemePage = S:Page("Themes", "paint-bucket")
+    
+    local selConfig = ""
+    local configDropdown = nil
+    
+    local function RefreshConfigs()
+        local configs = Library:GetConfigs()
+        if configDropdown and Library.Elements["ConfigList"] then
+            Library.Elements["ConfigList"].Refresh(configs)
+        end
+    end
+
+    -- Config Section
+    Cfg:Dropdown("Available Configs", "ConfigList", Library:GetConfigs(), "Left", function(v) selConfig = v end)
+    Cfg:TextBox("New Config Name", "ConfigName", "", "Left", function(v) selConfig = v end)
+    
+    Cfg:Button("Save Config", "Saves settings", "Left", function() Library:SaveConfig(selConfig) RefreshConfigs() end)
+    Cfg:Button("Load Config", "Loads settings", "Left", function() Library:LoadConfig(selConfig) end)
+    Cfg:Button("Delete Config", "Deletes settings", "Right", function() Library:DeleteConfig(selConfig) RefreshConfigs() end)
+    Cfg:Button("Refresh List", "Reloads file list", "Right", function() RefreshConfigs() end)
+
+    -- Theme Section
+    local presets = {}
+    for k, v in pairs(ThemePresets) do table.insert(presets, k) end
+    table.sort(presets)
+    
+    ThemePage:Dropdown("Theme Presets", "ThemePreset", presets, "Left", function(v) UpdateTheme(v) end)
+end
+
+return Library
