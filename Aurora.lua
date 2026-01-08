@@ -2038,7 +2038,7 @@ function Library:Window(title, iconId, footerText, useTooltips)
     -- ВАЖНО: BackgroundColor3 должен быть белым, чтобы градиент был виден
     local Main = Instance.new("Frame") 
     Main.BackgroundColor3 = Color3.new(1, 1, 1) 
-    Main.Size=UDim2.new(0,600,0,450) 
+    Main.Size=UDim2.new(0,480,0,360) 
     Main.AnchorPoint=Vector2.new(0.5,0.5) 
     Main.Position=UDim2.new(0.5,0,0.5,0) 
     Main.Parent=ScreenGui
