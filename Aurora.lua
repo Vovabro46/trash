@@ -2025,8 +2025,8 @@ function Library:DeleteConfig(name)
 end
 
 function Library:Window(title, iconId, footerText, useTooltips)
-    if CoreGui:FindFirstChild("EternalV36") then CoreGui.EternalV36:Destroy() end
-    ScreenGui = Instance.new("ScreenGui") ScreenGui.Name="EternalV36"
+    if CoreGui:FindFirstChild("Eternal") then CoreGui.Eternal:Destroy() end
+    ScreenGui = Instance.new("ScreenGui") ScreenGui.Name="Eternal"
     ScreenGui.Parent = gethui and gethui() or CoreGui
 
     local UIMainKeybind = Enum.KeyCode.RightControl
@@ -2034,7 +2034,7 @@ function Library:Window(title, iconId, footerText, useTooltips)
     NotifyList = Instance.new("Frame") NotifyList.Size=UDim2.new(0,250,1,-40) NotifyList.Position=UDim2.new(1,-260,0,20) NotifyList.BackgroundTransparency=1 NotifyList.Parent=ScreenGui
     local NIL = Instance.new("UIListLayout") NIL.Padding=UDim.new(0,10) NIL.VerticalAlignment=Enum.VerticalAlignment.Bottom NIL.HorizontalAlignment=Enum.HorizontalAlignment.Right NIL.Parent=NotifyList
     
-    local Main = RegisterTheme(Instance.new("Frame"), "BackgroundColor3", "Background") Main.Size=UDim2.new(0,600,0,450) Main.AnchorPoint=Vector2.new(0.5,0.5) Main.Position=UDim2.new(0.5,0,0.5,0) Main.Parent=ScreenGui
+    local Main = RegisterTheme(Instance.new("Frame"), "BackgroundColor3", "Background") Main.Size=UDim2.new(0,460,0,380) Main.AnchorPoint=Vector2.new(0.5,0.5) Main.Position=UDim2.new(0.5,0,0.5,0) Main.Parent=ScreenGui
     local UIScale = Instance.new("UIScale") UIScale.Scale=0 UIScale.Parent=Main Tween(UIScale,{Scale=1},0.4)
     Instance.new("UICorner", Main).CornerRadius=UDim.new(0,8)
     
@@ -2052,7 +2052,7 @@ function Library:Window(title, iconId, footerText, useTooltips)
 
     local VersionLabel = RegisterTheme(Instance.new("TextLabel"), "TextColor3", "TextDim")
     VersionLabel.Name = "FooterInfo"
-    VersionLabel.Text = footerText or "Eternal V36" 
+    VersionLabel.Text = footerText or "Eternal" 
     VersionLabel.Size = UDim2.new(1, 0, 0, 20)
     VersionLabel.AnchorPoint = Vector2.new(0.5, 1) 
     VersionLabel.Position = UDim2.new(0.5, 0, 1, -2) 
@@ -2062,7 +2062,6 @@ function Library:Window(title, iconId, footerText, useTooltips)
     VersionLabel.ZIndex = 10 
     VersionLabel.Parent = Main
 
-    -- // TOOLTIP SYSTEM
     local TabTooltip = Instance.new("Frame")
     local TooltipText = Instance.new("TextLabel")
     
@@ -2095,7 +2094,6 @@ function Library:Window(title, iconId, footerText, useTooltips)
         end)
     end
 
-    -- // SIDEBAR
     local SidebarWidth = 110
     local Sidebar = RegisterTheme(Instance.new("Frame"), "BackgroundColor3", "Sidebar") Sidebar.Size=UDim2.new(0,SidebarWidth,1,0) Sidebar.Parent=Main
     Instance.new("UICorner", Sidebar).CornerRadius=UDim.new(0,8)
@@ -2117,13 +2115,11 @@ function Library:Window(title, iconId, footerText, useTooltips)
     TabScroll.ScrollBarThickness = 0 TabScroll.AutomaticCanvasSize = Enum.AutomaticSize.Y TabScroll.CanvasSize = UDim2.new(0, 0, 0, 0) TabScroll.Parent = Sidebar
     local TL = Instance.new("UIListLayout") TL.HorizontalAlignment = Enum.HorizontalAlignment.Center TL.Padding = UDim.new(0, 5) TL.SortOrder = Enum.SortOrder.LayoutOrder TL.Parent = TabScroll
     
-    -- // Content Area
     local Content = Instance.new("Frame") Content.Size=UDim2.new(1,-SidebarWidth,1,0) Content.Position=UDim2.new(0,SidebarWidth,0,0) Content.BackgroundTransparency=1 Content.ClipsDescendants=true Content.Parent=Main
     
-    local MenuTitle = RegisterTheme(Instance.new("TextLabel"), "TextColor3", "Text") MenuTitle.Text = title or "Eternal Menu" MenuTitle.Size = UDim2.new(1, -40, 0, 50) MenuTitle.Position = UDim2.new(0, 25, 0, 0) MenuTitle.BackgroundTransparency = 1 MenuTitle.FontFace = FontBold MenuTitle.TextSize = 22 MenuTitle.TextXAlignment = Enum.TextXAlignment.Left MenuTitle.ZIndex = 5 MenuTitle.Parent = Content
+    local MenuTitle = RegisterTheme(Instance.new("TextLabel"), "TextColor3", "Text") MenuTitle.Text = title or "Eternal" MenuTitle.Size = UDim2.new(1, -40, 0, 50) MenuTitle.Position = UDim2.new(0, 25, 0, 0) MenuTitle.BackgroundTransparency = 1 MenuTitle.FontFace = FontBold MenuTitle.TextSize = 22 MenuTitle.TextXAlignment = Enum.TextXAlignment.Left MenuTitle.ZIndex = 5 MenuTitle.Parent = Content
     RegisterGradient(Instance.new("UIGradient"), "Accent1", "Accent2").Parent = MenuTitle
 
-    -- // Logic to Toggle UI
     UserInputService.InputBegan:Connect(function(input, gpe)
         if not gpe and input.KeyCode == UIMainKeybind then
             Main.Visible = not Main.Visible
@@ -2131,7 +2127,6 @@ function Library:Window(title, iconId, footerText, useTooltips)
         end
     end)
 
-    -- // FLOAT FRAME (Small Bottom-Left Panel)
     local FloatFrame = RegisterTheme(Instance.new("Frame"), "BackgroundColor3", "Sidebar") FloatFrame.Size = UDim2.new(0, 110, 0, 45) FloatFrame.Position = UDim2.new(0, 20, 1, -80) FloatFrame.Parent = ScreenGui
     Instance.new("UICorner", FloatFrame).CornerRadius = UDim.new(0, 8)
     local FloatStroke = Instance.new("UIStroke") FloatStroke.Thickness = 2 FloatStroke.Parent = FloatFrame RegisterGradient(Instance.new("UIGradient"), "Accent1", "Accent2").Parent = FloatStroke
@@ -2168,8 +2163,7 @@ function Library:Window(title, iconId, footerText, useTooltips)
     function WinObj:Tab(name, icon, description)
         SidebarSortIndex = SidebarSortIndex + 1
         local TabBtn = Instance.new("TextButton") TabBtn.Size=UDim2.new(1, -10, 0, 35) TabBtn.BackgroundTransparency=1 TabBtn.Text="" TabBtn.LayoutOrder = SidebarSortIndex TabBtn.Parent=TabScroll
-        
-        -- // ЛОГИКА ОТОБРАЖЕНИЯ (ИКОНКА ИЛИ ТЕКСТ+ИКОНКА) //
+       
         local hasText = (name and name ~= "")
         
         local TabIcon = RegisterTheme(Instance.new("ImageLabel"), "ImageColor3", "TextDim") 
@@ -2192,15 +2186,12 @@ function Library:Window(title, iconId, footerText, useTooltips)
         TabLabel.Parent = TabBtn
 
         if hasText then
-            -- Стандартный режим: Иконка слева, текст справа
             TabIcon.Position = UDim2.new(0, 8, 0.5, -9)
             TabLabel.Visible = true
         else
-            -- Режим "Только иконка": Иконка по центру
             TabIcon.Position = UDim2.new(0.5, -9, 0.5, -9)
             TabLabel.Visible = false
         end
-        -- // КОНЕЦ ЛОГИКИ //
 
         if useTooltips and description then
             TabBtn.MouseEnter:Connect(function() TooltipText.Text = description TabTooltip.Visible = true end)
@@ -2244,7 +2235,6 @@ function Library:Window(title, iconId, footerText, useTooltips)
             if FirstPage then FirstPage=false PCont.Visible=true for _, c in pairs(PBtn:GetChildren()) do if c:IsA("TextLabel") then c.TextColor3 = Theme.Text end if c:IsA("ImageLabel") then c.ImageColor3 = Theme.Text end end task.spawn(function() task.wait(0.1) Line(true) end) end
             local function col(s) return s=="Right" and Right or Left end
 
-            -- // Helper: Add Info Icon
             local function AddInfoIcon(parent, text)
                 local I = RegisterTheme(Instance.new("ImageButton"), "ImageColor3", "TextDim") 
                 I.Name = "InfoIcon" 
@@ -2490,10 +2480,8 @@ function Library:Window(title, iconId, footerText, useTooltips)
                 Update()
             end
 
-            -- // ELEMENT FUNCTIONS
             local Elems = {}
 
-            -- // COLLAPSIBLE SECTION //
             function Elems:Section(text, side)
                 local parent = col(side)
                 
@@ -2567,7 +2555,6 @@ function Library:Window(title, iconId, footerText, useTooltips)
                 
                 return SectionElems
             end
-            -- // END SECTION //
 
             function Elems:Label(t,s) Generators.Label(col(s), t) end
             function Elems:Button(t,desc,s,cb) Generators.Button(col(s), t, desc, cb) end
